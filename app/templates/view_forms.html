@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block app_content %}
+
+{% if forms %}
+  <a class="btn btn-primary" style="margin-bottom:1vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
+  <div class="table-responsive ">
+  <table class="table table-hover">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Time created</th>
+      <th>Sent</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+      {% for form in forms %}
+        <tr id="override">
+          <td>{{ form.filename }}</td>
+          <td>{{ form.description }}</td>
+          <td>{{ form.date_created.strftime("%H:%M %d/%m/%Y") }}</td>
+          <td>{{ form.sent }}</td>
+          <td class="fit">
+            <a class="btn btn-default" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Show Details</a>
+            <a class="btn btn-success" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+            <a class="btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
+            <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+{% else %}
+<div class="centerdiv">
+  <i class="fas fa-10x fa-comments-dollar"></i>
+  <h1>No reclaim forms found</h1>
+  <a class="btn btn-primary" style="margin-bottom:1vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
+  </div>
+{% endif %}
+{% endblock %}

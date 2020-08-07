@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block app_content %}
+    <h1>Choose a file</h1>
+    <form class="form" method="post" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        {{ form.file() }}<br>
+            {% for error in form.file.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        {{ wtf.form_field(form.submit, class="btn btn-primary") }}
+
+    </form>
+{% endblock %}

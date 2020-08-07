@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>Hi, {{ user }}!</h1>
+    <a class="btn btn-default" href="{{ url_for('new_form') }}">New reclaim form</a>
+    <a class="btn btn-default" href="{{ url_for('view_forms') }}">View reclaim forms</a>
+    <a class="btn btn-default" href="{{ url_for('settings') }}">Settings</a>
+
+{% endblock %}

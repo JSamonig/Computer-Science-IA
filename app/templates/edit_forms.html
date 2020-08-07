@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block app_content %}
+<a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('view_forms') }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
+{% if forms %}
+  <h3>{{ name }}</h3>
+    <a class="btn btn-success" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
+    <a class="btn btn-info" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
+    <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+  <div style="margin-top: 1vh;" class="table-responsive">
+  <table class="table table-hover">
+    <thead style="position: sticky;top: 0">
+    <tr>
+      <th>Row</th>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Miles</th>
+      <th>Account code</th>
+      <th>Amount</th>
+      <th class="fit"></th>
+    </tr>
+    </thead>
+    <tbody>
+      {% for form in forms %}
+        <tr id="override">
+          <td>{{ form.row_id-6 }}</td>
+          <td>{{ form.date_receipt }}</td>
+          <td>{{ form.description }}</td>
+          <td>{{ form.miles }}</td>
+          <td>{{ form.account_id }}</td>
+          <td>£ {{ "{:.2f}".format(form.Total) }}</td>
+          <td class="fit">
+            <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id, adding=False) }}"><i class="fas fa-edit"></i> Edit row</a>
+            <a class="btn btn-danger" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete row</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tr id="total_row">
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th>Total: £ {{ "{:.2f}".format(mysum) }}</th>
+      <th></th>
+      </tr>
+  </table>
+  </div>
+<a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add new row</a>
+{% else %}
+<div class="centerdiv">
+  <i class="fas fa-10x fa-comments-dollar"></i>
+  <h1>No data inside reclaim form found</h1>
+  <a class="btn btn-info" style="margin-bottom:1vh"href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add new row</a>
+  </div>
+{% endif %}
+{% endblock %}
