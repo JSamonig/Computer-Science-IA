@@ -64,6 +64,8 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
+migrations/
+app.db
 
 # Scrapy stuff:
 .scrapy
@@ -127,3 +129,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#PyCharm
+.idea/
