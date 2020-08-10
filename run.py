@@ -7,5 +7,3 @@ def make_shell_context():
     return {'db': db, 'User': User,
             'Account_codes': Account_codes, 'reclaim_forms': reclaim_forms,
             "reclaim_forms_details": reclaim_forms_details}
-
-# set FLASK_ENV=development

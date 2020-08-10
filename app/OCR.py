@@ -55,6 +55,7 @@ def recognise(fname, taggun=False):
         date = getDate(text)
         total = findTotal(text)
     else:
+        # <-- adapted from https://www.taggun.io/
         url = 'https://api.taggun.io/api/receipt/v1/simple/file'
 
         headers = {'apikey': '7c9356e0d8c111eaafc7c5a18819396c'}
@@ -70,6 +71,7 @@ def recognise(fname, taggun=False):
                 'false')  # value for the parameters
         }
         response = requests.post(url, files=files, headers=headers).json()
+        # -->
         try:
             date = datetime.datetime.strptime(response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d").date()
             date = str(date.strftime("%d/%m/%Y"))

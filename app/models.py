@@ -6,7 +6,7 @@ import jwt
 import uuid
 import time
 
-
+#  --> Adapted from https://blog.miguelgrinberg.com/
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -44,6 +44,7 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
+# <--
 
 
 class reclaim_forms(db.Model):

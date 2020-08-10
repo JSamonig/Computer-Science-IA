@@ -6,6 +6,7 @@ from app import app, db
 def bad_request(error):
     return render_template('400.html'), 400
 
+#  --> Adapted from https://blog.miguelgrinberg.com/
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -16,3 +17,5 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html', error=error), 500
+
+# <--

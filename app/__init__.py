@@ -7,7 +7,7 @@ from flask_login import LoginManager
 from flask_fontawesome import FontAwesome
 from flask_mail import Mail
 
-
+#  --> Adapted from https://blog.miguelgrinberg.com/
 app = Flask(__name__)
 app.config.from_object(c.Config)
 db = SQLAlchemy(app)
@@ -21,3 +21,4 @@ mail = Mail(app)
 
 from app import routes, models, errors
 
+# <--

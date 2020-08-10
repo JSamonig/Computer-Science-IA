@@ -7,6 +7,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config["ALLOWED_EXTENSIONS_IMAGES"]
 
 
+#  --> Adapted from https://blog.miguelgrinberg.com/
 def validate_image(stream):
     header = stream.read(512)
     stream.seek(0)
@@ -14,7 +15,7 @@ def validate_image(stream):
     if not format:
         return None
     return format
-
+# <--
 
 def validate_excel(filename):
     filename = secure_filename(filename)

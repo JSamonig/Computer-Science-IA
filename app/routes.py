@@ -1,5 +1,5 @@
 # routes.py
-from app import app, handlefiles, OCR, forms, preprocess, db, handleExcel
+from app import app, handlefiles, OCR, forms, db, handleExcel
 from app.models import reclaim_forms, reclaim_forms_details, User
 from app.emails import send_password_reset_email, send_email
 from flask import Flask, request, redirect, flash, render_template, abort, url_for, send_file, after_this_request
@@ -198,6 +198,7 @@ def new_form():
         myform.filename.data = "Expenses_form_"+user.last_name+".xlsx"
     return render_template('new_form.html', form=myform, title="Create a new form")
 
+#  --> Adapted from https://blog.miguelgrinberg.com/
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -223,7 +224,6 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -238,7 +238,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form_title='Register',
                            form=myform)
-
+# <--
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -283,6 +283,7 @@ def send(file_id):
         flash("Error sending email. Please try again later.", category="alert alert-danger")
     return redirect(url_for("view_forms"))
 
+#  --> Adapted from https://blog.miguelgrinberg.com/
 
 @app.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
@@ -312,3 +313,5 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=myform)
+
+# <--

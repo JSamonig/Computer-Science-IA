@@ -4,6 +4,8 @@ from flask import render_template
 from threading import Thread
 import config as c
 
+#  --> Adapted from https://blog.miguelgrinberg.com/
+
 def send_async_email(app, msg):
     mail.connect()
     with app.app_context():
@@ -27,3 +29,5 @@ def send_password_reset_email(user):
                                          user=user, token=token),
                html_body=render_template('email/reset_password.html',
                                          user=user, token=token))
+
+# <--
