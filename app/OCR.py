@@ -51,10 +51,14 @@ def recognise(fname, taggun=False):
     filename = c.Config.IMAGE_UPLOADS + fname
     img = cv2.imread(filename)
     if taggun is False:
-        custom_config = r'--oem 3 --psm 6'
-        text = pytesseract.image_to_data(img, output_type=Output.DICT, config=custom_config)
-        date = getDate(text)
-        total = findTotal(text)
+        try:
+            custom_config = r'--oem 3 --psm 6'
+            text = pytesseract.image_to_data(img, output_type=Output.DICT, config=custom_config)
+            date = getDate(text)
+            total = findTotal(text)
+        except:
+            date = ""
+            total = 0
     else:
         # <-- adapted from https://www.taggun.io/
         url = 'https://api.taggun.io/api/receipt/v1/simple/file'
