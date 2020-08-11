@@ -42,9 +42,12 @@ def upload(file_id, row, adding):
                 flash('Incorrect file extension', category="alert alert-danger")
                 abort(400)
             filename = str(uuid.uuid4()) + "." + detected_extension
+            handlefiles.addFile(filename,myform.file.data)
+            '''
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)
+            '''
             user = User.query.filter_by(id=current_user.id).first()
-            data = OCR.recognise(filename, user.use_taggun)
+            data = OCR.run(filename, user.use_taggun)
             if not details:
                 details = reclaim_forms_details(date_receipt=data["date_receipt"], Total=data["Total"],
                                                 image_name=filename, made_by=current_user.id, row_id=row,
@@ -58,7 +61,6 @@ def upload(file_id, row, adding):
 
                 flash(details.date_receipt)
                 db.session.commit()
-
         except AttributeError:
             flash("Please try again or use a different file.", category="alert alert-danger")
             return render_template('upload.html', form=myform)

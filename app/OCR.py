@@ -8,6 +8,7 @@ from collections import defaultdict
 import config as c
 import requests
 import datetime
+import concurrent.futures
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -47,7 +48,7 @@ def locatePrices(text, start):
 
 
 def recognise(fname, taggun=False):
-    filename =c.Config.IMAGE_UPLOADS + fname
+    filename = c.Config.IMAGE_UPLOADS + fname
     img = cv2.imread(filename)
     if taggun is False:
         custom_config = r'--oem 3 --psm 6'
@@ -76,10 +77,19 @@ def recognise(fname, taggun=False):
             date = datetime.datetime.strptime(response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d").date()
             date = str(date.strftime("%d/%m/%Y"))
         except:
-            date=""
+            date = ""
         try:
             total = response["totalAmount"]["data"]
         except:
-            total=0
-
+            total = 0
     return {"date_receipt": date, "Total": total}
+
+
+def run(fname, taggun=False):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(recognise, fname, taggun=False)
+        try:
+            return_value = future.result(timeout=30)
+        except:
+            return_value = {"date_receipt": "", "Total": 0}
+        return return_value
