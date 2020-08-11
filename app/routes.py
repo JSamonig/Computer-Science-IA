@@ -42,10 +42,7 @@ def upload(file_id, row, adding):
                 flash('Incorrect file extension', category="alert alert-danger")
                 abort(400)
             filename = str(uuid.uuid4()) + "." + detected_extension
-            handlefiles.addFile(filename,myform.file.data)
-            '''
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)
-            '''
             user = User.query.filter_by(id=current_user.id).first()
             data = OCR.run(filename, user.use_taggun)
             if not details:
