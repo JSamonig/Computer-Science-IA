@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap&libraries=&v=weekly"
+      defer
+    ></script>
+    <style type="text/css">
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+
+      /* Optional: Makes the sample page fill the window. */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      "use strict";
+      function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 3,
+          center: {
+            lat: 0,
+            lng: -180
+          },
+          mapTypeId: "terrain"
+        });
+        const flightPlanCoordinates = {{ cords|safe }};
+        var bounds = new google.maps.LatLngBounds();
+          for (var i = 0; i < flightPlanCoordinates.length; i++) {
+            bounds.extend(flightPlanCoordinates[i]);
+          }
+        const flightPath = new google.maps.Polyline({
+          path: flightPlanCoordinates,
+          geodesic: true,
+          strokeColor: "#FF0000",
+          strokeOpacity: 1.0,
+          strokeWeight: 7
+        });
+        flightPath.setMap(map);
+        map.fitBounds(bounds);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>
