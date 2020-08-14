@@ -86,11 +86,17 @@ def edit_data(file_id, row, adding):
 
             today = datetime.datetime.now().date()
             string = details.date_receipt
-            receipt = datetime.datetime.strptime(string, '%d{}%m{}%Y'.format(string[2], string[5])).date()
+            symbols = ''.join([i for i in string if not i.isdigit()])
+            if len(string.split(symbols[1])[2]) != 4:
+                string = string.split(symbols[1])
+                string[2] = "20" + string[2]
+                string = symbols[0].join(string)
+            receipt = datetime.datetime.strptime(string, '%d{}%m{}%Y'.format(symbols[0], symbols[1])).date()
 
             result = (today - receipt).days > 29
             if result:
-                flash("Warning: the date of expense for row {} is older than 4 weeks.".format(row), category="alert alert-warning ")
+                flash("Warning: the date of expense for row {} is older than 4 weeks.".format(str(int(row) - 6)),
+                      category="alert alert-warning ")
         else:
             flash("This row doesn't exist.", category="alert alert-danger")
         return redirect(url_for('edit_forms', file_id=file_id))
@@ -155,7 +161,6 @@ def delete_row(file_id, row):
         db.session.commit()
         return redirect(url_for('edit_forms', file_id=file_id))
     except:
-        flash("huh")
         return redirect(url_for('edit_forms', file_id=file_id))
 
 
@@ -169,21 +174,22 @@ def delete_file(file_id):
     return redirect(url_for('view_forms'))
 
 
-@app.route('/download/<file_id>', methods=['GET', 'POST'])
+@app.route('/download/<file_id>', methods=['GET'])
 @login_required
 def download(file_id):
-    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
+    handleExcel.deleteAllSheets()
+    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first_or_404()
     rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(form_id=file_id).all()
     user = User.query.get(current_user.id)
     date = datetime.datetime.now().strftime("%d/%m/%Y")
-    handleExcel.requirements([user.first_name, user.last_name], str(date), file.filename)
+    handleExcel.requirements([str(user.first_name), str(user.last_name)], str(date), str(file.filename))
     for row in rows:
         info = [row.date_receipt, row.description, row.miles, row.account_id,
                 row.Total]
         handleExcel.editRow(info, file.filename, row.row_id)
         if row.image_name:
             handleExcel.addImages(file.filename, row.row_id, row.image_name)
-    return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True)
+    return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True, cache_timeout=0)
 
 
 @app.route('/view_forms', methods=['GET', 'POST'])

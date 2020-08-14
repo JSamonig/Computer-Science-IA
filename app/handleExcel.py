@@ -5,7 +5,6 @@ import config as c
 import re
 import os
 
-
 # wscell1 = ws.cell(number, letter (number))
 # Cells B7 - B26 = Date
 # Cells C7 - C26 = Description
@@ -80,6 +79,10 @@ def findAvailableRow(ws):
         row += 1
     return row
 
+def deleteAllSheets():
+    files = [f for f in os.listdir(c.Config.RECLAIM_ROUTE)]
+    for f in files:
+        os.remove(os.path.join(c.Config.RECLAIM_ROUTE,f))
 
 def createNewsheet(bookname):
     wb = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
@@ -87,5 +90,8 @@ def createNewsheet(bookname):
 
 
 def getBook(bookname):
-    createNewsheet(bookname)
+    try:
+       load_workbook(c.Config.RECLAIM_ROUTE + bookname)
+    except:
+        createNewsheet(bookname)
     return load_workbook(c.Config.RECLAIM_ROUTE + bookname)
