@@ -181,7 +181,7 @@ def download(file_id):
         info = [row.date_receipt, row.description, row.miles, row.account_id,
                 row.Total]
         handleExcel.editRow(info, file.filename, row.row_id)
-        if row.miles:
+        if row.image_name:
             handleExcel.addImages(file.filename, row.row_id, row.image_name)
     return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True)
 
