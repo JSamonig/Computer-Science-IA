@@ -1,14 +1,17 @@
 # routes.py
-from app import app, handlefiles, OCR, forms, db, handleExcel
+from app import app, handlefiles, OCR, forms, db, handleExcel, map
+from flask_googlemaps import Map
 from app.models import reclaim_forms, reclaim_forms_details, User
 from app.emails import send_password_reset_email, send_email
 from flask import Flask, request, redirect, flash, render_template, abort, url_for, send_file, after_this_request
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
+import urllib.parse
 import config as c
 import uuid
 import datetime
 import os
+import urllib.request, json, polyline
 
 
 @app.route('/')
@@ -55,8 +58,6 @@ def upload(file_id, row, adding):
                 details.date_receipt = data["date_receipt"]
                 details.Total = data["Total"]
                 details.image_name = filename
-
-                flash(details.date_receipt)
                 db.session.commit()
         except AttributeError:
             flash("Please try again or use a different file.", category="alert alert-danger")
@@ -73,11 +74,6 @@ def edit_data(file_id, row, adding):
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()
     if myform.validate_on_submit():
-        if str(myform.miles.data) == "None" or str(myform.total.data) == "None":
-            flash("Row successfully added", category="alert alert-success")
-        else:
-            flash("Either enter miles or total: miles is automatically calculated.", category="alert alert-danger")
-            return redirect(url_for("edit_data", file_id=file_id, row=row, adding=adding))
         details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).filter_by(row_id=int(row)).first()
         if details:
@@ -87,16 +83,30 @@ def edit_data(file_id, row, adding):
             details.account_id = myform.accountCode.data
             details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
             db.session.commit()
+
+            today = datetime.datetime.now().date()
+            string = details.date_receipt
+            receipt = datetime.datetime.strptime(string, '%d{}%m{}%Y'.format(string[2], string[5])).date()
+
+            result = (today - receipt).days > 29
+            if result:
+                flash("Warning: the date of expense for row {} is older than 4 weeks.".format(row), category="alert alert-warning ")
         else:
             flash("This row doesn't exist.", category="alert alert-danger")
-        return redirect('/edit_forms/' + file_id)
+        return redirect(url_for('edit_forms', file_id=file_id))
     elif request.method == 'GET':
         myform.date.data = details.date_receipt
         myform.description.data = details.description
-        myform.miles.data = details.miles
         myform.accountCode.data = details.account_id
         myform.total.data = details.Total
-    return render_template('form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name)
+        if details.start:
+            origin = urllib.parse.quote_plus(details.destination)
+            destination = urllib.parse.quote_plus(details.start)
+            results = map.getMap(origin, destination)
+            myform.total.data = results[2]
+            myform.miles.data = results[1]
+            return render_template('form.html', form=myform, include=True, start=origin, end=destination)
+        return render_template('form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name)
 
 
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
@@ -115,7 +125,7 @@ def edit_forms(file_id):
                 mysum += float(row.Total)
             else:
                 row.Total = 0
-            if not row.description:
+            if not row.account_id:
                 return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
@@ -131,7 +141,10 @@ def delete_row(file_id, row):
         myrow = row
         row = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).filter_by(row_id=int(row)).first_or_404()
-        os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
+        try:
+            os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
+        except:
+            pass
         row = reclaim_forms_details.query.filter_by(id=row.id)
         row.delete()
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
@@ -142,6 +155,7 @@ def delete_row(file_id, row):
         db.session.commit()
         return redirect(url_for('edit_forms', file_id=file_id))
     except:
+        flash("huh")
         return redirect(url_for('edit_forms', file_id=file_id))
 
 
@@ -194,8 +208,9 @@ def new_form():
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
-        myform.filename.data = "Expenses_form_"+user.last_name+".xlsx"
+        myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
     return render_template('new_form.html', form=myform, title="Create a new form")
+
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
 
@@ -223,6 +238,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -237,6 +253,8 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form_title='Register',
                            form=myform)
+
+
 # <--
 
 @app.route('/settings', methods=['GET', 'POST'])
@@ -282,6 +300,7 @@ def send(file_id):
         flash("Error sending email. Please try again later.", category="alert alert-danger")
     return redirect(url_for("view_forms"))
 
+
 #  --> Adapted from https://blog.miguelgrinberg.com/
 
 @app.route('/reset_password_request', methods=['GET', 'POST'])
@@ -313,4 +332,63 @@ def reset_password(token):
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=myform)
 
+
 # <--
+
+@app.route('/mileage/<file_id>/<row>', defaults={'adding': True}, methods=['GET', 'POST'])
+@app.route('/mileage/<file_id>/<row>/<adding>', methods=['GET', 'POST'])
+@login_required
+def mileage(file_id, row, adding):
+    if adding == "True" or row == "0":
+        details = \
+            db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(made_by=current_user.id).filter_by(
+                form_id=file_id).first()[0]
+        if details:
+            row = int(details) + 1
+        else:
+            row = 7
+    myform = forms.description()
+    details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+        form_id=file_id).filter_by(row_id=int(row)).first()
+    if myform.validate_on_submit():
+        description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data
+        results = map.getMap(myform.start.data, myform.destination.data)
+        if not details:
+            details = reclaim_forms_details(description=description, date_receipt=myform.date_end.data,
+                                            made_by=current_user.id, row_id=row,
+                                            form_id=file_id, start=myform.start.data,
+                                            destination=myform.destination.data, miles=results[1], Total=results[2],
+                                            end_date=myform.date_end.data, purpose=myform.description.data)
+            db.session.add(details)
+            db.session.commit()
+        else:
+            details.description = description
+            details.date_receipt = myform.date_end.data
+            details.start = myform.start.data
+            details.destination = myform.destination.data
+            details.miles = results[1]
+            details.Total = results[2]
+            details.end_date = myform.date_end.data
+            details.purpose = myform.description.data
+            db.session.commit()
+        return redirect("/edit_data/{}/{}/{}".format(file_id, row, adding))
+    elif request.method == 'GET':
+        if details:
+            myform.date_start.data = details.date_receipt
+            myform.start.data = details.start
+            myform.destination.data = details.destination
+            myform.description.data = details.purpose
+            myform.date_end.data = details.end_date
+            if details.start:
+                origin = urllib.parse.quote_plus(details.destination)
+                destination = urllib.parse.quote_plus(details.start)
+                return render_template('miles.html', form=myform, start=origin, end=destination)
+        myform.start.data = "Wellington College, Duke's Ride, RG457PU"
+    return render_template('miles.html', title="Add from mileage", form=myform)
+
+
+@app.route('/load_map/<start>/<end>', methods=['GET', 'POST'])
+@login_required
+def load_map(end, start):
+    cords = map.getMap(start, end)[0]
+    return render_template("map.html", cords=cords, key="AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4")

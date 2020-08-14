@@ -13,7 +13,7 @@ class uploadForm(FlaskForm):
 
 class editOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
-    description = StringField('Description', validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Length(min=0, max=200)])
     miles = FloatField('Miles', validators=[Optional()])
     accountCode = IntegerField('Account Code', validators=[DataRequired()])
     total = FloatField('Total', validators=[Optional()])
@@ -79,4 +79,12 @@ class settings(FlaskForm):
 class newReclaim(FlaskForm):
     filename = StringField('File name', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[Length(min=0, max=140)])
+    submit = SubmitField('Submit')
+
+class description(FlaskForm):
+    description = TextAreaField('Purpose of journey', validators=[DataRequired(),Length(min=0, max=140)])
+    start = StringField('Starting location', validators=[DataRequired(),Length(min=0, max=140)])
+    destination = StringField('Ending location', validators=[DataRequired(),Length(min=0, max=140)])
+    date_start = StringField('Starting date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
+    date_end = StringField('Ending date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     submit = SubmitField('Submit')

@@ -12,7 +12,7 @@ class Config(object):
     STATIC = "./app/static/"
     ALLOWED_EXTENSIONS_IMAGES = {'png', 'jpg', 'jpeg', 'heif', 'heic'}
     PRICE_PATTERN = '^(([$€£]?)( *)(\d{1,})((,|\.)(\d{0,}))?)( *)([$€£]?)$'
-    DATE_PATTERN = '(^(0?[1-9]|[1-2]\d|3[01])(\/|\.|-|\\| )(0?[1-9]|1[012])(\/|\.|-|\\| )(\d\d)?(\d\d)$)|(^(0?[1-9]|1[012])(\/|\.|-|\\| )(0?\d|[1-2]\d|3[01])(\/|\.|-|\\| )(\d\d)?(\d\d)$)|(^((\d\d)?(\d\d))(\/|\.|-|\\| )(0?[1-9]|1[012])(\/|\.|-|\\| )(0?[1-9]|[1-2]\d]|3[01])$)'
+    DATE_PATTERN = '(^(0?[1-9]|[1-2]\d|3[01])(\/|\.|-|\\| )(0?[1-9]|1[012])(\/|\.|-|\\| )(\d\d)?(\d\d)$)'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAIL_SERVER = 'smtp.sendgrid.net'
@@ -22,5 +22,5 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('SENDGRID_API_KEY')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     ADMINS = ['jakob@em1781.welly.org.uk']
-    #test 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
-    #”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”
+    GOOGLEMAPS_KEY = os.environ.get('GOOGLE_API')
+    MAPBOX_ACCESS_KEY = 'pk.eyJ1Ijoic2Ftb25paiIsImEiOiJja2R0Y3dpaWsxaDRjMnNvZGNmNjlxY3IwIn0.ISeSOe0iRfd0SCBksquOig'

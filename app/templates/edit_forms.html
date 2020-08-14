@@ -12,9 +12,9 @@
     <tr>
       <th>Row</th>
       <th>Date</th>
-      <th>Description</th>
+      <th style="word-wrap: break-word;;">Description</th>
       <th>Miles</th>
-      <th>Account code</th>
+      <th style="white-space: nowrap;">Account code</th>
       <th>Amount</th>
       <th class="fit"></th>
     </tr>
@@ -27,7 +27,7 @@
           <td>{{ form.description }}</td>
           <td>{{ form.miles }}</td>
           <td>{{ form.account_id }}</td>
-          <td>£ {{ "{:.2f}".format(form.Total) }}</td>
+          <td>£&nbsp;{{ "{:.2f}".format(form.Total) }}</td>
           <td class="fit">
             <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id, adding=False) }}"><i class="fas fa-edit"></i> Edit row</a>
             <a class="btn btn-danger" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete row</a>
@@ -41,17 +41,52 @@
       <th></th>
       <th></th>
       <th></th>
-      <th>Total: £ {{ "{:.2f}".format(mysum) }}</th>
+      <th>Total: £&nbsp;{{ "{:.2f}".format(mysum) }}</th>
       <th></th>
       </tr>
   </table>
   </div>
-<a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add new row</a>
+
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new row</button>
+                <!-- The modal -->
+                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
+                        </div>
+                        <div class="modal-footer">
+                            <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
+                            <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add other item</a>
+                        </div>
+                        </div>
+                    </div>
+                </div>
 {% else %}
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
   <h1>No data inside reclaim form found</h1>
-  <a class="btn btn-info" style="margin-bottom:1vh"href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add new row</a>
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new row</button>
+                <!-- The modal -->
+                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
+                        </div>
+                        <div class="modal-footer">
+                            <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
+                            <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add other item</a>
+                        </div>
+                        </div>
+                    </div>
+                </div>
   </div>
 {% endif %}
 {% endblock %}

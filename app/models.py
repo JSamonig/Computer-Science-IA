@@ -72,6 +72,10 @@ class reclaim_forms_details(db.Model):
     account_id = db.Column(db.Integer, db.ForeignKey('account_codes.account_id'), index=True)
     image_name = db.Column(db.String(60), index=True)
     form_id = db.Column(db.Integer, db.ForeignKey('reclaim_forms.id'), index=True)
+    start= db.Column(db.String(120), index=True)
+    destination= db.Column(db.String(120), index=True)
+    purpose= db.Column(db.String(120), index=True)
+    end_date= db.Column(db.String(10), index=True)
 
 
 class Account_codes(db.Model):

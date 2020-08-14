@@ -13,6 +13,12 @@ Accounting application
 <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
 {% endblock %}
 
+
+{% block scripts %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
+{{super()}}
+{% endblock %}
+
 {% block head %}
 {{ fontawesome_html() }}
 {{super()}}
@@ -29,21 +35,17 @@ Accounting application
             <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-
-            <li {% if request.path=="/settings" %} class="active"{% endif %}>
-                <a href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a></li>
-
             {% if current_user.is_anonymous %}
             <li {% if request.path=='/login' %} class=" active"{% endif %}><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a></li>
             {% else %}
+            <li {% if request.path=="/settings" %} class="active"{% endif %}>
+                <a href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a></li>
             <li {% if request.path=="/logout" %} class="active"{% endif %}><a href="{{ url_for('logout') }}">
                 <i class="fas fa-sign-out-alt"></i> Logout</a></li>
             {% endif %}
         </ul>
     </div>
 </nav>
-
-
 {% endblock %}
 
 {% block content %}
