@@ -380,6 +380,26 @@ def mileage(file_id, row, adding):
     return render_template('miles.html', title="Add from mileage", form=myform)
 
 
+@app.route('/delete_user', methods=['GET', 'POST'])
+@login_required
+def delete_user():
+    files = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).all()
+    for file in files:
+        rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+        form_id=file.id).all()
+        for row in rows:
+            try:
+                os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
+            except:
+                pass
+        reclaim_forms_details.query.filter_by(form_id=file.id).delete()
+    db.session.query(reclaim_forms).filter_by(made_by=current_user.id).delete()
+    User.query.filter_by(id=current_user.id).delete()
+    db.session.commit()
+    flash("Successfully deleted user account", category="alert alert-success")
+    return redirect(url_for("logout"))
+
+
 @app.route('/load_map/<start>/<end>', methods=['GET', 'POST'])
 @login_required
 def load_map(end, start):
