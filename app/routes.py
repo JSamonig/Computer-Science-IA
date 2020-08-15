@@ -1,9 +1,8 @@
 # routes.py
 from app import app, handlefiles, OCR, forms, db, handleExcel, map
-from flask_googlemaps import Map
 from app.models import reclaim_forms, reclaim_forms_details, User
 from app.emails import send_password_reset_email, send_email
-from flask import Flask, request, redirect, flash, render_template, abort, url_for, send_file, after_this_request
+from flask import Flask, request, redirect, flash, render_template, abort, url_for, send_file
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 import urllib.parse
@@ -11,7 +10,7 @@ import config as c
 import uuid
 import datetime
 import os
-import urllib.request, json, polyline
+import urllib.request
 
 
 @app.route('/')
@@ -289,17 +288,17 @@ def settings():
 @login_required
 def send(file_id):
     user = User.query.filter_by(id=current_user.id).first()
-    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
+    file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     sender = app.config['ADMINS'][0]
     subject = "Reclaim form from " + user.first_name + user.last_name
     recipients = [user.accounting_email]
     text_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
     html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
-    file = file.filename
+    file = file_db.filename
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, text_body=text_body, html_body=html_body,
                    file=file)
-        file.sent = 1
+        file_db.sent = 1
         db.session.commit()
         flash("Email successfully sent to {}".format(user.accounting_email), category="alert alert-success")
     except:
