@@ -2,7 +2,7 @@
 {% block app_content %}
 <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('view_forms') }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
 {% if forms %}
-  <h3>{{ name }}</h3>
+  <h3 style="margin-bottom:2vh">{{ name }}</h3>
     <a class="btn btn-success" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
     <a class="btn btn-info" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
     <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
@@ -53,14 +53,12 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                             <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
                         </div>
                         <div class="modal-footer">
                             <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
                             <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add other item</a>
+                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                         </div>
                     </div>
@@ -75,14 +73,12 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                             <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
                         </div>
                         <div class="modal-footer">
                             <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
                             <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add other item</a>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                         </div>
                     </div>

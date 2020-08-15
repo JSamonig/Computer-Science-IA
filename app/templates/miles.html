@@ -3,10 +3,9 @@
 
 {% block app_content %}
 <body onload="initialize()">
-<div class="col-lg-6 col-sm-12 left">
     <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('edit_forms', file_id=request.base_url.rpartition('//')[2].split('/')[2]) }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <h1>Add a route</h1>
             <form method="post" role="form">
                 {{ form.hidden_tag() }}
@@ -19,15 +18,14 @@
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
             </form>
         </div>
-    </div>
-</div>
 {% if start %}
-<div class="col-lg-6 col-sm-12 right" style="height: 45vw; width: 40vw; ">
+<div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
     <div class="row">
             <iframe style='position: absolute; background: transparent; width: 100%; height:100%;' src={{url_for('load_map',start=start,end=end)}} frameborder="0"></iframe>
         </div>
 </div>
 {% endif %}
+        </div>
 <script>
             var autocomplete;
             function initialize() {

@@ -1,53 +1,51 @@
-{% extends 'bootstrap/base.html' %}
-
-{% block title %}
-{% if title %}
-{{ title }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if title %}
+    {{ title }}
+    {% else %}
+    Accounting application
+        {% endif %}</title>
+    {% if dark %}
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/style_dark.css')}}">
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/darkly.css')}}">
+    {% else %}
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    {% endif %}
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
+    {{ fontawesome_html() }}
+</head>
+<body style="padding-top:0px;">
+{% if not dark %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-bottom:10px;">
 {% else %}
-Accounting application
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-bottom:10px;">
 {% endif %}
-{% endblock %}
-
-{% block styles %}
-{{super()}}
-<link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
-{% endblock %}
-
-
-{% block scripts %}
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
-{{super()}}
-{% endblock %}
-
-{% block head %}
-{{ fontawesome_html() }}
-{{super()}}
-{% endblock %}
-
-{% block navbar %}
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Jakob's IA</a>
-        </div>
-        <ul class="nav navbar-nav">
-            <li class="{% if request.path=='/view_forms' %} active {% endif %}">
-            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+    <a class="navbar-brand" href="{{ url_for('index') }}">Jakob's IA</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+         <ul class="navbar-nav mr-auto ">
+            <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
+            <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
         </ul>
-        <ul class="nav navbar-nav navbar-right">
+        <ul class="navbar-nav ml-auto">
             {% if current_user.is_anonymous %}
-            <li {% if request.path=='/login' %} class=" active"{% endif %}><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a></li>
+            <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
+                <a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+            </li>
             {% else %}
-            <li {% if request.path=="/settings" %} class="active"{% endif %}>
-                <a href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a></li>
-            <li {% if request.path=="/logout" %} class="active"{% endif %}><a href="{{ url_for('logout') }}">
-                <i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            <li class="nav-item {% if request.path=='/settings' %} active {% endif %}">
+                <a class="nav-link" href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a></li>
+            <li class="nav-item {% if request.path=='/logout' %} active {% endif %}">
+                <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             {% endif %}
         </ul>
     </div>
 </nav>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
     {% with messages = get_flashed_messages(with_categories=True) %}
@@ -60,3 +58,9 @@ Accounting application
     {% block app_content %}{% endblock %}
 </div>
 {% endblock content %}
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
+

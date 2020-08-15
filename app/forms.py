@@ -63,6 +63,7 @@ class settings(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     accounting_email = StringField('Accounting email', validators=[DataRequired(), Email()])
     taggun = BooleanField('Use TAGGUN API for OCR', validators=[])
+    dark = BooleanField('Dark mode', validators=[])
     submit = SubmitField('Apply')
 
     def __init__(self, user_id, **kwargs):

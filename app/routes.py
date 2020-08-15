@@ -60,9 +60,9 @@ def upload(file_id, row, adding):
                 db.session.commit()
         except AttributeError:
             flash("Please try again or use a different file.", category="alert alert-danger")
-            return render_template('upload.html', form=myform)
+            return render_template('upload.html', form=myform, dark=current_user.dark)
         return redirect("/edit_data/{}/{}/{}".format(file_id, row, adding))
-    return render_template('upload.html', form=myform)
+    return render_template('upload.html', form=myform, dark=current_user.dark)
 
 
 @app.route('/edit_data/<file_id>/<row>', defaults={'adding': True}, methods=['GET', 'POST'])
@@ -110,8 +110,8 @@ def edit_data(file_id, row, adding):
             results = map.getMap(origin, destination)
             myform.total.data = results[2]
             myform.miles.data = results[1]
-            return render_template('form.html', form=myform, include=True, start=origin, end=destination)
-        return render_template('form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name)
+            return render_template('form.html', form=myform, include=True, start=origin, end=destination, dark=current_user.dark)
+        return render_template('form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name, dark=current_user.dark)
 
 
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
@@ -134,7 +134,7 @@ def edit_forms(file_id):
                 return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
-        return render_template('edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=mysum)
+        return render_template('edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=mysum, dark=current_user.dark)
     except AttributeError:
         abort(404)
 
@@ -185,7 +185,7 @@ def download(file_id):
 def view_forms():
     forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
         reclaim_forms.date_created).all()
-    return render_template('view_forms.html', forms=forms)
+    return render_template('view_forms.html', forms=forms, dark=current_user.dark)
 
 
 @app.route('/new_form', methods=['GET', 'POST'])
@@ -203,7 +203,7 @@ def new_form():
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
         myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
-    return render_template('new_form.html', form=myform, title="Create a new form")
+    return render_template('new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
 
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
@@ -262,6 +262,7 @@ def settings():
         user.email = myform.email.data
         user.accounting_email = myform.accounting_email.data
         user.use_taggun = myform.taggun.data
+        user.dark = myform.dark.data
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
@@ -270,7 +271,8 @@ def settings():
         myform.email.data = user.email
         myform.accounting_email.data = user.accounting_email
         myform.taggun.data = user.use_taggun
-    return render_template('settings.html', form=myform, title="Settings")
+        myform.dark.data = user.dark
+    return render_template('settings.html', form=myform, title="Settings", dark=current_user.dark)
 
 
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
@@ -281,7 +283,7 @@ def send(file_id):
     sender = app.config['ADMINS'][0]
     subject = "Reclaim form from " + user.first_name + " " + user.last_name
     recipients = [user.accounting_email]
-    html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
+    html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name), dark=current_user.dark)
     file = handlefiles.createExcel(file_id=file_id, current_user=current_user)
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
@@ -375,9 +377,9 @@ def mileage(file_id, row, adding):
             if details.start:
                 origin = urllib.parse.quote_plus(details.destination)
                 destination = urllib.parse.quote_plus(details.start)
-                return render_template('miles.html', form=myform, start=origin, end=destination)
+                return render_template('miles.html', form=myform, start=origin, end=destination, dark=current_user.dark)
         myform.start.data = "Wellington College, Duke's Ride, RG457PU"
-    return render_template('miles.html', title="Add from mileage", form=myform)
+    return render_template('miles.html', title="Add from mileage", form=myform, dark=current_user.dark)
 
 
 @app.route('/delete_user', methods=['GET', 'POST'])
@@ -404,4 +406,4 @@ def delete_user():
 @login_required
 def load_map(end, start):
     cords = map.getMap(start, end)[0]
-    return render_template("map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY)
+    return render_template("map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY, dark=current_user.dark)
