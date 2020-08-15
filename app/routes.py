@@ -292,11 +292,10 @@ def send(file_id):
     sender = app.config['ADMINS'][0]
     subject = "Reclaim form from " + user.first_name + " " + user.last_name
     recipients = [user.accounting_email]
-    text_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
     html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
     file = file_db.filename
     try:
-        send_email(subject=subject, sender=sender, recipients=recipients, text_body=text_body, html_body=html_body,
+        send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                    file=file)
         file_db.sent = 1
         db.session.commit()
