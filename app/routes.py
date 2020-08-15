@@ -176,19 +176,8 @@ def delete_file(file_id):
 @app.route('/download/<file_id>', methods=['GET'])
 @login_required
 def download(file_id):
-    handleExcel.deleteAllSheets()
-    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first_or_404()
-    rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(form_id=file_id).all()
-    user = User.query.get(current_user.id)
-    date = datetime.datetime.now().strftime("%d/%m/%Y")
-    handleExcel.requirements([str(user.first_name), str(user.last_name)], str(date), str(file.filename))
-    for row in rows:
-        info = [row.date_receipt, row.description, row.miles, row.account_id,
-                row.Total]
-        handleExcel.editRow(info, file.filename, row.row_id)
-        if row.image_name:
-            handleExcel.addImages(file.filename, row.row_id, row.image_name)
-    return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True, cache_timeout=0)
+    file = handlefiles.createExcel(file_id, current_user)
+    return send_file(c.Config.DOWNLOAD_ROUTE + file, as_attachment=True, cache_timeout=0)
 
 
 @app.route('/view_forms', methods=['GET', 'POST'])
@@ -293,7 +282,7 @@ def send(file_id):
     subject = "Reclaim form from " + user.first_name + " " + user.last_name
     recipients = [user.accounting_email]
     html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
-    file = file_db.filename
+    file = handlefiles.createExcel(file_id=file_id, current_user=current_user)
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                    file=file)

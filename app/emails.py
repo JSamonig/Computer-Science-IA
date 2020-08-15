@@ -1,4 +1,3 @@
-from flask_mail import Message
 from app import app
 from flask import render_template
 from threading import Thread
