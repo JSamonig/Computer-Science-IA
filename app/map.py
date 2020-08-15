@@ -4,7 +4,7 @@ import config as c
 
 def getMap(start, end):
     endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
-    api_key = "AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4"
+    api_key = c.Config.GOOGLEMAPS_KEY
 
     origin = urllib.parse.quote_plus(start)
     destination = urllib.parse.quote_plus(end)

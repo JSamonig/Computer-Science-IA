@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
+from dotenv import load_dotenv
+
+load_dotenv('config.env', encoding="utf8")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,8 +23,7 @@ class Config(object):
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = 'apikey'
-    MAIL_PASSWORD = "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"#os.environ.get('SENDGRID_API_KEY')
+    MAIL_PASSWORD = os.environ.get('SENDGRID_API_KEY')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
-    ADMINS = ['reclaims@em1781.welly.org.uk']
+    ADMINS = [os.environ.get('MAIL_DEFAULT_SENDER')]
     GOOGLEMAPS_KEY = os.environ.get('GOOGLE_API')
-    MAPBOX_ACCESS_KEY = 'pk.eyJ1Ijoic2Ftb25paiIsImEiOiJja2R0Y3dpaWsxaDRjMnNvZGNmNjlxY3IwIn0.ISeSOe0iRfd0SCBksquOig'

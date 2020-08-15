@@ -290,7 +290,7 @@ def send(file_id):
     user = User.query.filter_by(id=current_user.id).first()
     file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     sender = app.config['ADMINS'][0]
-    subject = "Reclaim form from " + user.first_name + user.last_name
+    subject = "Reclaim form from " + user.first_name + " " + user.last_name
     recipients = [user.accounting_email]
     text_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
     html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name))
@@ -396,4 +396,4 @@ def mileage(file_id, row, adding):
 @login_required
 def load_map(end, start):
     cords = map.getMap(start, end)[0]
-    return render_template("map.html", cords=cords, key="AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4")
+    return render_template("map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY)
