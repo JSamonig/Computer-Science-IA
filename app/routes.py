@@ -57,7 +57,7 @@ def upload(file_id, row, adding):
                 db.session.commit()
             else:
                 details.date_receipt = data["date_receipt"]
-                details.Total = data["Total"]
+                details.Total = round(float(data["Total"]), 2)
                 details.image_name = filename
                 db.session.commit()
         except AttributeError:
@@ -110,7 +110,7 @@ def edit_data(file_id, row, adding):
             origin = urllib.parse.quote_plus(details.destination)
             destination = urllib.parse.quote_plus(details.start)
             results = map.getMap(origin, destination)
-            myform.total.data = results[2]
+            myform.total.data = round(float(results[2]), 2)
             myform.miles.data = results[1]
             return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
                                    dark=current_user.dark)
@@ -216,6 +216,7 @@ def new_form():
         myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
     return render_template('forms/new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
 
+
 @app.route('/edit_form/<file>', methods=['GET', 'POST'])
 @login_required
 def edit_form(file):
@@ -224,14 +225,14 @@ def edit_form(file):
     myfile = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file).first_or_404()
     if myform.validate_on_submit():
         filename = handlefiles.validate_excel(myform.filename.data)
-        myfile.description=myform.description.data
-        myfile.filename=filename
+        myfile.description = myform.description.data
+        myfile.filename = filename
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
         if myfile:
             myform.filename.data = myfile.filename
-            myform.description.data=myfile.description
+            myform.description.data = myfile.description
         else:
             myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
     return render_template('forms/new_form.html', form=myform, title="Edit form", dark=current_user.dark)
@@ -385,7 +386,8 @@ def mileage(file_id, row, adding):
             details = reclaim_forms_details(description=description, date_receipt=myform.date_end.data,
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
-                                            destination=myform.destination.data, miles=results[1], Total=results[2],
+                                            destination=myform.destination.data, miles=results[1],
+                                            Total=round(float(results[2]),2),
                                             end_date=myform.date_end.data, purpose=myform.description.data)
             db.session.add(details)
             db.session.commit()
@@ -395,7 +397,7 @@ def mileage(file_id, row, adding):
             details.start = myform.start.data
             details.destination = myform.destination.data
             details.miles = results[1]
-            details.Total = results[2]
+            details.Total = round(float(results[2]),2)
             details.end_date = myform.date_end.data
             details.purpose = myform.description.data
             db.session.commit()
@@ -462,7 +464,7 @@ def pie():
             else:
                 pass
 
-    colours=handlefiles.createDistinctColours(len(labels)+1)[:len(labels)]
+    colours = handlefiles.createDistinctColours(len(labels) + 1)[:len(labels)]
 
     return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
 
@@ -522,5 +524,5 @@ def line():
     total = list(total)
     data.append(total)
     label.append("Total")
-    colours=handlefiles.createDistinctColours(len(unique_accounts))
+    colours = handlefiles.createDistinctColours(len(unique_accounts))
     return render_template('iframes/line.html', labels=labels, set=zip(data, label, colours))
