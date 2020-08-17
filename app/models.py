@@ -6,6 +6,7 @@ import jwt
 import uuid
 import time
 
+
 #  --> Adapted from https://blog.miguelgrinberg.com/
 @login.user_loader
 def load_user(id):
@@ -45,6 +46,8 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
+
+
 # <--
 
 
@@ -56,10 +59,11 @@ class reclaim_forms(db.Model):
     sent = db.Column(db.Boolean, index=True, nullable=False, default=False)
     made_by = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     date_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    date_sent = db.Column(db.DateTime, index=True, default=None)
 
     def __repr__(self):
-        return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} >' \
-            .format(self.id, self.filename, self.description, self.sent, self.made_by)
+        return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {} >' \
+            .format(self.id, self.filename, self.description, self.sent, self.made_by,self.date_sent)
 
 
 class reclaim_forms_details(db.Model):
@@ -73,10 +77,10 @@ class reclaim_forms_details(db.Model):
     account_id = db.Column(db.Integer, db.ForeignKey('account_codes.account_id'), index=True)
     image_name = db.Column(db.String(60), index=True)
     form_id = db.Column(db.Integer, db.ForeignKey('reclaim_forms.id'), index=True)
-    start= db.Column(db.String(120), index=True)
-    destination= db.Column(db.String(120), index=True)
-    purpose= db.Column(db.String(120), index=True)
-    end_date= db.Column(db.String(10), index=True)
+    start = db.Column(db.String(120), index=True)
+    destination = db.Column(db.String(120), index=True)
+    purpose = db.Column(db.String(120), index=True)
+    end_date = db.Column(db.String(10), index=True)
 
 
 class Account_codes(db.Model):

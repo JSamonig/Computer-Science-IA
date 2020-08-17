@@ -21,6 +21,9 @@ big {
     font-size: 70px;
 }
 
+#total_row{
+    background-color:#222222;
+}
 #total_row:hover{
     background-color:#222222;
 }

@@ -3,7 +3,11 @@
 
 {% block app_content %}
     <div>
-    <h1>Create a new form</h1>
+        {% if title %}
+        <h1>{{ title }}</h1>
+        {% else %}
+        <h1>Create a new form</h1>
+        {% endif %}
         <div class="col-md-4">
             <form method="post" role="form">
                 {{ form.hidden_tag() }}
