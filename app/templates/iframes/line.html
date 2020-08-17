@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.bundle.min.js'></script>
+</head>
+<body>
+    <canvas id="line-chart" width="800" height="450"></canvas>
+    <script>
+    Chart.defaults.global.elements.line.fill = false;
+   new Chart(document.getElementById("line-chart"), {
+  type: 'line',
+  data: {
+    labels: {{ labels|safe }},
+    datasets:
+      [
+       {% for item, label, colors in set %}
+          {
+            data: {{item}},
+            label: "{{label}}",
+            borderColor : "{{colors}}"
+          },
+        {% endfor %}
+
+        ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Amount reclaimed this year in £'
+    }
+  }
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }}</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.bundle.min.js'></script>
+</head>
+    <body style="width=40vw; height=60vh">
+    <canvas width="400px" height="400px" id="pie-chart"></canvas>
+    <script>
+    Chart.defaults.global.responsive = false;
+    new Chart(document.getElementById("pie-chart"), {
+    type: 'pie',
+    data: {
+      labels: {{ labels|safe }},
+      datasets: [{
+        label: "Amount reclaimed per account id in £",
+        backgroundColor: {{ colours|safe }},
+        data: {{ values|safe }}
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Amount reclaimed per account id in £'
+      }
+    }
+});
+    </script>
+    </body>
+</html>
