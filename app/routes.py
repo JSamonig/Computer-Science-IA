@@ -320,7 +320,7 @@ def send(file_id):
     file = handlefiles.createExcel(file_id=file_id, current_user=current_user)
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
-                   file=file)
+                   file=file.filename)
         file_db.sent = 1
         file_db.date_sent = datetime.datetime.utcnow()
         db.session.commit()
