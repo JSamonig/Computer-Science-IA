@@ -195,7 +195,7 @@ def download(file_id):
 @login_required
 def view_forms():
     forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
-        reclaim_forms.date_created).all()
+        reclaim_forms.date_created.desc()).all()
     return render_template('forms/view_forms.html', forms=forms, dark=current_user.dark)
 
 
@@ -357,7 +357,7 @@ def reset_password(token):
     if myform.validate_on_submit():
         user.set_password(myform.password.data)
         db.session.commit()
-        flash('Your password has been reset.')
+        flash('Your password has been reset.', category="alert alert-success")
         return redirect(url_for('login'))
     return render_template('user/reset_password.html', form=myform)
 
@@ -469,16 +469,17 @@ def pie():
     return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
 
 
-@app.route('/line')  # total reclaim per month per account
+@app.route('/line/<year>')  # total reclaim per month per account
+@app.route('/line', defaults={'year': 2020})
 @login_required
-def line():
+def line(year):
     labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
               'November', 'December']
     colours = []
     accounts = [{} for i in range(len(labels))]
     unique_accounts = []
     for i in range(1, 13):
-        datestart = datetime.datetime(datetime.datetime.today().year, i, 1)
+        datestart = datetime.datetime(int(year), i, 1)
         dateend = datestart + datetime.timedelta(days=31)
         files = reclaim_forms.query.filter(reclaim_forms.date_sent >= datestart).filter(
             reclaim_forms.date_sent < dateend).filter(
