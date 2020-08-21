@@ -4,6 +4,9 @@
     width: 1%;
 }
 
+#override td{
+    vertical-align: middle;
+}
 
 .centerdiv{
     height:70vh;

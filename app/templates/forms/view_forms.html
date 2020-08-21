@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+
 {% block app_content %}
 
 {% if forms %}
@@ -16,10 +17,10 @@
     </thead>
     <tbody>
       {% for form in forms %}
-        <tr>
+        <tr id="override">
           <td><a href={{url_for('edit_form',file=form.id)}}>{{ form.filename }}<a></td>
-          <td style="word-wrap: break-word;">{{ form.description }}</td>
-          <td style="white-space: nowrap;">{{ moment(form.date_created).format('LLL') }}</td>
+          <td>{{ form.description }}</td>
+          <td>{{ moment(form.date_created).format('LLL') }}</td>
           <td>{{ form.sent }}</td>
           <td class="fit">
             <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Show Details</a>
