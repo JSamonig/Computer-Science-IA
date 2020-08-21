@@ -5,13 +5,12 @@ from app.emails import send_password_reset_email, send_email
 from flask import Flask, request, redirect, flash, render_template, abort, url_for, send_file
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
-import urllib.parse
 import config as c
+import urllib.parse
 import uuid
 import datetime
 import os
 import urllib.request
-import random
 import numpy as np
 
 
@@ -387,7 +386,7 @@ def mileage(file_id, row, adding):
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
                                             destination=myform.destination.data, miles=results[1],
-                                            Total=round(float(results[2]),2),
+                                            Total=round(float(results[2]), 2),
                                             end_date=myform.date_end.data, purpose=myform.description.data)
             db.session.add(details)
             db.session.commit()
@@ -397,7 +396,7 @@ def mileage(file_id, row, adding):
             details.start = myform.start.data
             details.destination = myform.destination.data
             details.miles = results[1]
-            details.Total = round(float(results[2]),2)
+            details.Total = round(float(results[2]), 2)
             details.end_date = myform.date_end.data
             details.purpose = myform.description.data
             db.session.commit()

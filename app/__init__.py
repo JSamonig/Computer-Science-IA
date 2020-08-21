@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_fontawesome import FontAwesome
+from flask_moment import Moment
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
 app = Flask(__name__)
@@ -16,6 +17,7 @@ login = LoginManager(app)
 login.login_view = 'login'
 login.login_message_category = "alert alert-danger"
 fa = FontAwesome(app)
+moment = Moment(app)
 
 from app import routes, models, errors
 

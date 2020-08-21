@@ -79,7 +79,7 @@ class settings(FlaskForm):
 
 class newReclaim(FlaskForm):
     filename = StringField('File name', validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[Length(min=0, max=140)])
+    description = TextAreaField('Description', validators=[Length(min=0, max=50)])
     submit = SubmitField('Submit')
 
 class description(FlaskForm):

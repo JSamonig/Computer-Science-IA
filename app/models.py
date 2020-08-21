@@ -62,8 +62,8 @@ class reclaim_forms(db.Model):
     date_sent = db.Column(db.DateTime, index=True, default=None)
 
     def __repr__(self):
-        return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {} >' \
-            .format(self.id, self.filename, self.description, self.sent, self.made_by,self.date_sent)
+        return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {}\n date_created = {} >' \
+            .format(self.id, self.filename, self.description, self.sent, self.made_by,self.date_sent,self.date_created)
 
 
 class reclaim_forms_details(db.Model):
