@@ -43,7 +43,7 @@ def upload(file_id, row, adding):
             detected_extension = handlefiles.validate_image(myform.file.data.stream)
             if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
                 flash('Incorrect file extension', category="alert alert-danger")
-                abort(400)
+                return render_template('forms/upload.html', form=myform, dark=current_user.dark)
             filename = str(uuid.uuid4()) + "." + detected_extension
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)
             user = User.query.filter_by(id=current_user.id).first()

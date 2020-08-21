@@ -2,7 +2,7 @@ from app.models import User
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField
-from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError, Optional
+from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError
 import config as c
 
 
@@ -14,9 +14,9 @@ class uploadForm(FlaskForm):
 class editOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     description = TextAreaField('Description', validators=[Length(min=0, max=200)])
-    miles = FloatField('Miles', validators=[Optional()])
+    miles = FloatField('Miles')
     accountCode = IntegerField('Account Code', validators=[DataRequired()])
-    total = FloatField('Total', validators=[Optional()])
+    total = FloatField('Total')
     submit = SubmitField('Submit')
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
