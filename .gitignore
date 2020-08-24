@@ -66,6 +66,8 @@ instance/
 .webassets-cache
 migrations/
 app.db
+app.static/reclaims
+app.static/uploads/images
 
 # Scrapy stuff:
 .scrapy
@@ -132,3 +134,4 @@ dmypy.json
 
 #PyCharm
 .idea/
+

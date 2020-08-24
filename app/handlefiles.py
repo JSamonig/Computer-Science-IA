@@ -23,9 +23,9 @@ def validate_image(stream):
 
 def validate_excel(filename):
     filename = secure_filename(filename)
-    file=filename.rsplit('.', 1)[0].lower() + ".xlsx"
+    file = filename.rsplit('.', 1)[0].lower() + ".xlsx"
     if file == ".xlsx":
-        file="reclaim_form.xlsx"
+        file = "reclaim_form.xlsx"
     return file
 
 
@@ -53,5 +53,5 @@ def createDistinctColours(n):
         txt = ""
         for j in i:
             txt = txt + str(hex(int(j * 255)).replace("0x", ""))
-        colors.append("#"+txt)
+        colors.append("#" + txt)
     return colors

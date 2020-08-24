@@ -5,14 +5,15 @@
 
 {% if forms %}
   <a class="btn btn-primary" style="margin-bottom:2vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
-    <table class="table table-responsive table-hover table-sm" cellspacing="0" style="height:20vh">
-    <thead>
+  <div style="margin-top: 1vh; width=100vw" class="table-responsive">
+    <table class="table table-responsive table-hover table-sm" cellspacing="0" width="100%" style="height:20vh">
+    <thead style="position: sticky;top: 0">
     <tr>
-      <th>Name</th>
-      <th style="word-wrap: break-word;">Description</th>
-      <th>Time created</th>
+      <th style="word-break:break-all">Name</th>
+      <th style="word-break:break-all">Description</th>
+      <th style="white-space: nowrap;">Time created</th>
       <th>Sent</th>
-      <th>Actions</th>
+      <th class="fit">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -31,6 +32,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 
 <div style="height:10vh;">
 <h3>Dashboard</h3>

@@ -1,4 +1,4 @@
-# routes.py
+# routes.py importing modules and libraries
 from app import app, handlefiles, OCR, forms, db, handleExcel, map
 from app.models import reclaim_forms, reclaim_forms_details, User
 from app.emails import send_password_reset_email, send_email
@@ -10,7 +10,6 @@ import urllib.parse
 import uuid
 import datetime
 import os
-import urllib.request
 import numpy as np
 
 
@@ -76,6 +75,14 @@ def edit_data(file_id, row, adding):
     if myform.validate_on_submit():
         details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).filter_by(row_id=int(row)).first()
+        if myform.miles.data:
+            if float(myform.miles.data) < 0 or float(myform.accountCode.data) < 0 or float(myform.total.data) < 0:
+                flash("Only input positive values", category="alert alert-danger")
+                return redirect(url_for('edit_data', file_id=file_id, row=row, adding=adding))
+        else:
+            if float(myform.accountCode.data) < 0 or float(myform.total.data) < 0:
+                flash("Only input positive values", category="alert alert-danger")
+                return redirect(url_for('edit_data', file_id=file_id, row=row, adding=adding))
         if details:
             details.date_receipt = myform.date.data
             details.description = myform.description.data
@@ -100,7 +107,7 @@ def edit_data(file_id, row, adding):
         else:
             flash("This row doesn't exist.", category="alert alert-danger")
         return redirect(url_for('edit_forms', file_id=file_id))
-    elif request.method == 'GET':
+    else:
         myform.date.data = details.date_receipt
         myform.description.data = details.description
         myform.accountCode.data = details.account_id
@@ -133,7 +140,7 @@ def edit_forms(file_id):
                 mysum += float(row.Total)
             else:
                 row.Total = 0
-            if not row.account_id:
+            if not (row.account_id) and row.account_id != 0:
                 return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
@@ -489,31 +496,49 @@ def line(year):
             for row in rows:
                 if row.account_id in accounts[i - 1].keys():
                     pass
-                elif row.account_id:
+                elif row.account_id != None:
                     try:
                         accounts[i - 1][row.account_id] = accounts[i - 1][row.account_id]
                     except:
                         accounts[i - 1][row.account_id] = 0
                 else:
                     pass
-                if row.account_id not in unique_accounts:
+                if row.account_id not in unique_accounts and row.account_id != None:
                     unique_accounts.append(row.account_id)
-                accounts[i - 1][row.account_id] += row.Total
+                try:
+                    accounts[i - 1][row.account_id] += row.Total
+                except KeyError:
+                    pass
 
     data = [[] for i in range(len(unique_accounts))]
     label = unique_accounts
     for i in accounts:
         for j in i.keys():
-            data[label.index(j)].append((i[j], accounts.index(i) + 1))
+            data[label.index(j)].append([i[j], accounts.index(i) + 1])
     month = datetime.datetime.today().month
     for account in data:
-        for i in range(1, int(account[len(account) - 1][1])):
-            data[data.index(account)].append((0, i))
+        for current_month in range(1, month + 1):
+            current_index = None
+            for i in account:
+                if i[1] == current_month:
+                    current_index = account.index(i)
+            if current_index != None:
+                pass
+            else:
+                indexBefore = None
+                for i in account:
+                    if i[1] == current_month:
+                        indexBefore = account.index(i)
+                if indexBefore != None:
+                    data[data.index(account)].append([account[indexBefore][0], current_month])
+                else:
+                    data[data.index(account)].append([0, current_month])
         data[data.index(account)] = sorted(account, key=lambda l: l[1])
-        account = sorted(account, key=lambda l: l[1])
-        for i in range(account[len(account) - 1][1], month):
-            data[data.index(account)].append((account[len(account) - 1][0], i + 1))
+    for account in data:
+        for j in range(1, len(account)):
+            data[data.index(account)][j][0] += account[j - 1][0]
     labels = labels[:month + 1]
+    print(data)
     for account in data:
         for j in account:
             data[data.index(account)][account.index(j)] = j[0]
