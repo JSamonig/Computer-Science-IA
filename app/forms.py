@@ -1,11 +1,9 @@
 from app.models import User
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField
+from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField,DateField
 from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError,InputRequired
 import config as c
-
-
 class uploadForm(FlaskForm):
     file = FileField(validators=[DataRequired(), FileAllowed(c.Config.ALLOWED_EXTENSIONS_IMAGES,
                                                              'Please input an image allowed extensions are ' + " ".join(

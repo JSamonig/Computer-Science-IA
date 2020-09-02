@@ -61,6 +61,8 @@ def upload(file_id, row, adding):
         except AttributeError:
             flash("Please try again or use a different file.", category="alert alert-danger")
             return render_template('forms/upload.html', form=myform, dark=current_user.dark)
+        flash("Please check the information is correct. Optical character recognition is never 100% accurate.",
+              category="alert alert-secondary")
         return redirect("/edit_data/{}/{}/{}".format(file_id, row, adding))
     return render_template('forms/upload.html', form=myform, dark=current_user.dark)
 
@@ -89,18 +91,9 @@ def edit_data(file_id, row, adding):
             details.miles = myform.miles.data
             details.account_id = myform.accountCode.data
             details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
-
-            today = datetime.datetime.now().date()
-            string = details.date_receipt
-            symbols = ''.join([i for i in string if not i.isdigit()])
-            if len(string.split(symbols[1])[2]) != 4:
-                string = string.split(symbols[1])
-                string[2] = "20" + string[2]
-                string = symbols[0].join(string)
-            details.date_receipt = string
-            receipt = datetime.datetime.strptime(string, '%d{}%m{}%Y'.format(symbols[0], symbols[1])).date()
             db.session.commit()
-            result = (today - receipt).days > 29
+            today = datetime.datetime.now().date()
+            result = (today - datetime.datetime.strptime(details.date_receipt, '%d/%m/%Y').date()).days > 29
             if result:
                 flash("Warning: the date of expense for row {} is older than 4 weeks.".format(str(int(row) - 6)),
                       category="alert alert-warning ")
@@ -140,7 +133,7 @@ def edit_forms(file_id):
                 mysum += float(row.Total)
             else:
                 row.Total = 0
-            if not (row.account_id) and row.account_id != 0:
+            if row.account_id == None:
                 return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
@@ -389,7 +382,7 @@ def mileage(file_id, row, adding):
         description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data
         results = map.getMap(myform.start.data, myform.destination.data)
         if not details:
-            details = reclaim_forms_details(description=description, date_receipt=myform.date_end.data,
+            details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
                                             destination=myform.destination.data, miles=results[1],
@@ -523,8 +516,8 @@ def line(year):
                 indexBefore = None
                 for i in account:  # for every month in the account code
                     if i[1] == current_month:  # if the month of a data point is equal to the month iterator
-                        indexBefore = account.index(i) # The indexBefore varaible is this datapoint index
-                if indexBefore is not None: # if the dataPoint for an account code does not exist
+                        indexBefore = account.index(i)  # The indexBefore varaible is this datapoint index
+                if indexBefore is not None:  # if the dataPoint for an account code does not exist
                     data[data.index(account)].append([account[indexBefore][0], current_month])
                     # append [the previous months value, month]
                 else:
@@ -536,13 +529,13 @@ def line(year):
             data[data.index(account)][j][0] += account[j - 1][0]  # Create a cumulative nature to the data points
     for account in data:
         for j in account:
-            data[data.index(account)][account.index(j)] = j[0] # Get rid of the month in [total, month]
+            data[data.index(account)][account.index(j)] = j[0]  # Get rid of the month in [total, month]
     total = np.array([0 for i in range(month)])  # Now create a np array for the totals (allows for array adding)
-    for account in data: # for every account
+    for account in data:  # for every account
         account = np.array(account)  # Make account and np array
         total = np.add(total, account)  # Add account totals to the overall Total
-    total = list(total) # Turn total back to a normal array
-    data.append(total) # Append to data
-    unique_accounts.append("Total") # Append to key at top
-    colours = handlefiles.createDistinctColours(len(unique_accounts)) # Create distinct colours
-    return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours)) # To template
+    total = list(total)  # Turn total back to a normal array
+    data.append(total)  # Append to data
+    unique_accounts.append("Total")  # Append to key at top
+    colours = handlefiles.createDistinctColours(len(unique_accounts))  # Create distinct colours
+    return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours))  # To template

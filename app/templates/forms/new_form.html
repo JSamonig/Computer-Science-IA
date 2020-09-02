@@ -9,7 +9,7 @@
         <h1>Create a new form</h1>
         {% endif %}
         <div class="col-md-4">
-            <form method="post" role="form">
+            <form method="post" role="form" autocomplete="off">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
                 {{ wtf.form_field(form.filename) }}

@@ -55,10 +55,15 @@ def recognise(fname, taggun=False):
             custom_config = r'--oem 3 --psm 6'
             text = pytesseract.image_to_data(img, output_type=Output.DICT, config=custom_config)
             date = getDate(text)
+            symbols = ''.join([i for i in date if not i.isdigit()])
+            if len(date.split(symbols[1])[2]) != 4:
+                date = date.split(symbols[1])
+                date[2] = "20" + date[2]
+                date = symbols[0].join(date)
             total = findTotal(text)
         except:
-            date = ""
-            total = 0
+            date = None
+            total = None
     else:
         # <-- adapted from https://www.taggun.io/
         url = 'https://api.taggun.io/api/receipt/v1/simple/file'
