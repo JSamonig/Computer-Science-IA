@@ -6,7 +6,7 @@
   <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.bundle.min.js'></script>
 </head>
 <body>
-    <canvas id="line-chart" width="800" height="450"></canvas>
+    <canvas id="line-chart" width="800" height="450"></canvas></div>
     <script>
     Chart.defaults.global.elements.line.fill = false;
    new Chart(document.getElementById("line-chart"), {
@@ -26,6 +26,8 @@
         ]
   },
   options: {
+    responsive: true,
+    maintainAspectRatio: false,
     title: {
       display: true,
       text: 'Amount reclaimed this year in £'
@@ -33,5 +35,5 @@
   }
 });
     </script>
-</body>
+
 </html>

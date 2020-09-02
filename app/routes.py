@@ -462,9 +462,9 @@ def pie():
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file.id).all()
         for row in rows:
-            if row.account_id in labels:
+            if row.account_id in labels and row.account_id != None:
                 values[labels.index(row.account_id)] += row.Total
-            elif row:
+            elif row and row.account_id != None:
                 labels.append(row.account_id)
                 values.append(row.Total)
             else:
@@ -475,79 +475,74 @@ def pie():
     return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
 
 
-@app.route('/line/<year>')  # total reclaim per month per account
-@app.route('/line', defaults={'year': 2020})
-@login_required
+@app.route('/line/<year>')  # define URL
+@app.route('/line', defaults={'year': datetime.datetime.today().year})
+@login_required  # user must be logged in to see content
 def line(year):
     labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-              'November', 'December']
+              'November', 'December']  # lables at bottom of graph
+    month = datetime.datetime.today().month  # current month
+    labels = labels[:month + 1]  # display up to current month +1
     colours = []
-    accounts = [{} for i in range(len(labels))]
-    unique_accounts = []
-    for i in range(1, 13):
-        datestart = datetime.datetime(int(year), i, 1)
-        dateend = datestart + datetime.timedelta(days=31)
+    accounts = [{} for i in range(len(labels))]  # 12 dictionaries for each month
+    unique_accounts = []  # keep track of unique accounts (for key at top)
+    for i in range(1, 13):  # for every month        ----- This part of the function queries the database -----
+        datestart = datetime.datetime(int(year), i, 1)  # starting date is first of month
+        dateend = datestart + datetime.timedelta(days=31)  # ending date is 31 days later
         files = reclaim_forms.query.filter(reclaim_forms.date_sent >= datestart).filter(
             reclaim_forms.date_sent < dateend).filter(
             reclaim_forms.made_by == current_user.id).all()  # files sent in that month
-        for file in files:
+        for file in files:  # for every file
             rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file.id).all()  # rows of files sent that month
-            for row in rows:
-                if row.account_id in accounts[i - 1].keys():
-                    pass
-                elif row.account_id != None:
-                    try:
-                        accounts[i - 1][row.account_id] = accounts[i - 1][row.account_id]
-                    except:
-                        accounts[i - 1][row.account_id] = 0
-                else:
-                    pass
-                if row.account_id not in unique_accounts and row.account_id != None:
-                    unique_accounts.append(row.account_id)
-                try:
-                    accounts[i - 1][row.account_id] += row.Total
-                except KeyError:
-                    pass
-
-    data = [[] for i in range(len(unique_accounts))]
-    label = unique_accounts
-    for i in accounts:
-        for j in i.keys():
-            data[label.index(j)].append([i[j], accounts.index(i) + 1])
-    month = datetime.datetime.today().month
-    for account in data:
-        for current_month in range(1, month + 1):
-            current_index = None
-            for i in account:
-                if i[1] == current_month:
-                    current_index = account.index(i)
-            if current_index != None:
-                pass
-            else:
+                form_id=file.id).all()  # rows of given file
+            for row in rows:  # for every row
+                if row.account_id is not None:  # if a row id exists (not None because a row id 0 could exist)
+                    if row.account_id in accounts[i - 1].keys():  # if the account is already added to dictionary
+                        pass  # I add all accounts to a dictionary in a list of months this way I can track Totals
+                    else:
+                        accounts[i - 1][row.account_id] = 0  # Add a account code to dictionary for month with value 0
+                    if row.account_id not in unique_accounts:
+                        unique_accounts.append(row.account_id)  # Add to key at top
+                    accounts[i - 1][row.account_id] += row.Total  # Adding to the total for account code that month
+    data = [[] for i in range(len(unique_accounts))]  # create a 2d array with length of all accounts
+    for i in accounts:  # for every month
+        for j in i.keys():  # for every account in that month
+            data[unique_accounts.index(j)].append([i[j], accounts.index(i) + 1])
+            # Append to account array the [ total reclaimed, month ]
+    # ----- This part of the function sorts the data-points and adds data in between (which have not changed) -----
+    for account in data:  # for every account in the data array
+        for current_month in range(1, month + 1):  # For every month
+            current_index = None  # ----Lines 515 to 518 find the index of the item that corresponds to a specific month
+            for i in account:  # For every data point in for the specific account
+                if i[1] == current_month:  # if the data point is equal to the month iterator
+                    current_index = account.index(i)  # Record position of data point
+            if current_index != None:  # if the data point is in the correct position
+                pass  # do nothing
+            else:  # if the data point is in the wrong position
+                # ----Lines 523 to 526 find the index of the total of the month before (if it remains constant)
                 indexBefore = None
-                for i in account:
-                    if i[1] == current_month:
-                        indexBefore = account.index(i)
-                if indexBefore != None:
+                for i in account:  # for every month in the account code
+                    if i[1] == current_month:  # if the month of a data point is equal to the month iterator
+                        indexBefore = account.index(i) # The indexBefore varaible is this datapoint index
+                if indexBefore is not None: # if the dataPoint for an account code does not exist
                     data[data.index(account)].append([account[indexBefore][0], current_month])
+                    # append [the previous months value, month]
                 else:
+                    # If there is no datapoint before, just append [0, month]
                     data[data.index(account)].append([0, current_month])
-        data[data.index(account)] = sorted(account, key=lambda l: l[1])
+        data[data.index(account)] = sorted(account, key=lambda l: l[1])  # Sort the array
     for account in data:
         for j in range(1, len(account)):
-            data[data.index(account)][j][0] += account[j - 1][0]
-    labels = labels[:month + 1]
-    print(data)
+            data[data.index(account)][j][0] += account[j - 1][0]  # Create a cumulative nature to the data points
     for account in data:
         for j in account:
-            data[data.index(account)][account.index(j)] = j[0]
-    total = np.array([0 for i in range(month)])
-    for account in data:
-        account = np.array(account)
-        total = np.add(total, account)
-    total = list(total)
-    data.append(total)
-    label.append("Total")
-    colours = handlefiles.createDistinctColours(len(unique_accounts))
-    return render_template('iframes/line.html', labels=labels, set=zip(data, label, colours))
+            data[data.index(account)][account.index(j)] = j[0] # Get rid of the month in [total, month]
+    total = np.array([0 for i in range(month)])  # Now create a np array for the totals (allows for array adding)
+    for account in data: # for every account
+        account = np.array(account)  # Make account and np array
+        total = np.add(total, account)  # Add account totals to the overall Total
+    total = list(total) # Turn total back to a normal array
+    data.append(total) # Append to data
+    unique_accounts.append("Total") # Append to key at top
+    colours = handlefiles.createDistinctColours(len(unique_accounts)) # Create distinct colours
+    return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours)) # To template
