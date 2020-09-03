@@ -379,6 +379,13 @@ def mileage(file_id, row, adding):
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
     if myform.validate_on_submit():
+        # date validator
+        end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()
+        start = datetime.datetime.strptime(myform.date_start.data, "%d/%m/%Y").date()
+        if start > end:
+            flash("Error: negative trip duration", category="alert alert-danger")
+            return render_template('forms/miles.html', title="Add from mileage", form=myform, dark=current_user.dark,
+                                   start=myform.start.data, end=myform.destination.data)
         description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data
         results = map.getMap(myform.start.data, myform.destination.data)
         if not details:
