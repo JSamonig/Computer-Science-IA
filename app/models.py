@@ -74,7 +74,7 @@ class reclaim_forms_details(db.Model):
     miles = db.Column(db.Float)
     Total = db.Column(db.Float)
     row_id = db.Column(db.Integer, nullable=False, default=0)
-    account_id = db.Column(db.Integer, db.ForeignKey('account_codes.account_id'), index=True)
+    account_id = db.Column(db.String(60), db.ForeignKey('account_codes.account_id'), index=True)
     image_name = db.Column(db.String(60), index=True)
     form_id = db.Column(db.Integer, db.ForeignKey('reclaim_forms.id'), index=True)
     start = db.Column(db.String(120), index=True)
@@ -85,5 +85,5 @@ class reclaim_forms_details(db.Model):
 
 class Account_codes(db.Model):
     __tablename__ = 'account_codes'
-    account_id = db.Column(db.Integer, primary_key=True)  #####
+    account_id = db.Column(db.String(60), primary_key=True)  #####
     account_name = db.Column(db.String(60), index=True)

@@ -15,7 +15,7 @@ class editOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     description = TextAreaField('Description', validators=[DataRequired(),Length(min=1, max=300)])
     miles = FloatField('Miles')
-    accountCode = IntegerField('Account Code', validators=[InputRequired()])
+    accountCode = StringField('Account Code', validators=[InputRequired(),Length(min=1, max=60)])
     total = FloatField('Total')
     submit = SubmitField('Submit')
 

@@ -3,7 +3,7 @@
 
 {% block app_content %}
 <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('edit_forms', file_id=request.base_url.rpartition('//')[2].split('/')[2]) }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
-    <h1>Choose a file</h1>
+    <h1>Upload your receipt</h1>
     <form class="form" method="post" role="form" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         {{ form.file() }}<br>

@@ -50,6 +50,7 @@ def locatePrices(text, start):
 def recognise(fname, taggun=False):
     filename = c.Config.IMAGE_UPLOADS + fname
     img = cv2.imread(filename)
+    print(taggun)
     if taggun is False:
         try:
             custom_config = r'--oem 3 --psm 6'
@@ -74,7 +75,6 @@ def recognise(fname, taggun=False):
             fname,  # set a filename for the file
             open(filename, 'rb'),  # the actual file
             'image/' + str(fname.split(".")[1])),  # content-type for the file
-
             # other optional parameters for Taggun API (eg: incognito, refresh, ipAddress, language)
             'incognito': (
                 None,  # set filename to none for optional parameters
@@ -96,7 +96,7 @@ def recognise(fname, taggun=False):
 
 def run(fname, taggun=False):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(recognise, fname, taggun=False)
+        future = executor.submit(recognise, fname, taggun)
         try:
             return_value = future.result(timeout=30)
         except:

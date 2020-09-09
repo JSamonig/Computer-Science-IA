@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
+{% from "field.html" import render_field %}
 
 {% block app_content %}
     <div>
@@ -10,7 +11,7 @@
                 {{ wtf.form_errors(form, hiddens="only") }}
                 {{ wtf.form_field(form.first_name) }}
                 {{ wtf.form_field(form.last_name) }}
-                {{ wtf.form_field(form.email) }}
+                {{ render_field(form.email, icon="fa-envelope") }}
                 {{ wtf.form_field(form.accounting_email) }}
                 {{ wtf.form_field(form.taggun) }}
                 {{ wtf.form_field(form.dark) }}

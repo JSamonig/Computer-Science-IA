@@ -78,11 +78,11 @@ def edit_data(file_id, row, adding):
         details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).filter_by(row_id=int(row)).first()
         if myform.miles.data:
-            if float(myform.miles.data) < 0 or float(myform.accountCode.data) < 0 or float(myform.total.data) < 0:
+            if float(myform.miles.data) < 0 or float(myform.total.data) < 0:
                 flash("Only input positive values", category="alert alert-danger")
                 return redirect(url_for('edit_data', file_id=file_id, row=row, adding=adding))
         else:
-            if float(myform.accountCode.data) < 0 or float(myform.total.data) < 0:
+            if float(myform.total.data) < 0:
                 flash("Only input positive values", category="alert alert-danger")
                 return redirect(url_for('edit_data', file_id=file_id, row=row, adding=adding))
         if details:
@@ -205,14 +205,16 @@ def new_form():
     user = User.query.filter_by(id=current_user.id).first()
     if myform.validate_on_submit():
         filename = handlefiles.validate_excel(myform.filename.data)
-        myform = reclaim_forms(id=str(uuid.uuid4()), filename=filename, description=myform.description.data,
+        id=str(uuid.uuid4())
+        myform = reclaim_forms(id=id, filename=filename, description=myform.description.data,
                                sent=False,
                                made_by=current_user.id)
         db.session.add(myform)
         db.session.commit()
-        return redirect(url_for('view_forms'))
+        return redirect(url_for('edit_forms', file_id=id))
     elif request.method == 'GET':
-        myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
+
+        myform.filename.data = datetime.datetime.today().strftime('%m-%Y')+"_Expenses_form_" + user.last_name + ".xlsx"
     return render_template('forms/new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
 
 

@@ -68,7 +68,7 @@
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
   <h1>No data inside reclaim form found</h1>
-  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new row</button>
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new expense</button>
                 <!-- The modal -->
                 <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
@@ -77,8 +77,8 @@
                             <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
                         </div>
                         <div class="modal-footer">
-                            <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
-                            <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Add other item</a>
+                            <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Mileage claim</a>
+                            <a class="btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Other expenses</a>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                         </div>
