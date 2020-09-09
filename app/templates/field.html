@@ -1,0 +1,25 @@
+{% macro render_field(field,icon) %}
+    <div class="form-group {% if field.errors %} has-error{% endif -%}
+                         {%- if field.flags.required %} required{% endif -%}
+  ">
+    {{ field.label(class="control label") }}
+        <div class="input-group">
+            {% if icon %}
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas {{icon}}"></i></span>
+                </div>
+            {% endif %}
+            {{ field(class="form-control rounded-right",**kwargs)|safe}}
+        {%- if field.errors %}
+              {%- for error in field.errors %}
+                <p class="help-block" style="margin-bottom:0px;">{{error}}</p>
+            {%- endfor %}
+                {%- elif field.description -%}
+                  <p class="help-block "style="margin-bottom:0px;">{{field.description|safe}}</p>
+            {%- endif %}
+        </div>
+
+    </div>
+
+
+{% endmacro %}
