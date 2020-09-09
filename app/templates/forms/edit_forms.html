@@ -4,7 +4,7 @@
 <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('view_forms') }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
 {% if forms %}
   <h3 style="margin-bottom:2vh">{{ name }}</h3>
-    <a class="btn btn-success" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
+    <a class="btn btn-success" onClick="return confirm('Are you sure you wish to send this?');"href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
     <a class="btn btn-info" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
     <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
   <div style="margin-top: 1vh;" class="table-responsive">
@@ -30,8 +30,8 @@
           <td>{{ form.account_id }}</td>
           <td>£&nbsp;{{ "{:.2f}".format(form.Total) }}</td>
           <td class="fit">
-            <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id, adding=False) }}"><i class="fas fa-edit"></i> Edit row</a>
-            <a class="btn btn-danger" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete row</a>
+            <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id, adding=False) }}"><i class="fas fa-edit"></i> Edit claim</a>
+            <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete claim</a>
           </td>
         </tr>
       {% endfor %}
@@ -48,7 +48,7 @@
   </table>
   </div>
 
-  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new row</button>
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new expense claim</button>
                 <!-- The modal -->
                 <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
@@ -68,13 +68,13 @@
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
   <h1>No data inside reclaim form found</h1>
-  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new expense</button>
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> New expense</button>
                 <!-- The modal -->
                 <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
+                            <h4 class="modal-title" id="modalLabel">Add a claim</h4>
                         </div>
                         <div class="modal-footer">
                             <a class="btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0,adding=True) }}"><i class="fas fa-plus"></i> Mileage claim</a>

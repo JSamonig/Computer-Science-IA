@@ -191,11 +191,24 @@ def download(file_id):
 
 
 @app.route('/view_forms', methods=['GET', 'POST'])
+@app.route('/view_forms', methods=['GET', 'POST'])
 @login_required
-def view_forms():
-    forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
+def view_forms(new_user=False):
+    allforms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
         reclaim_forms.date_created.desc()).all()
-    return render_template('forms/view_forms.html', forms=forms, dark=current_user.dark)
+    user = User.query.get(current_user.id)
+    if user.accounting_email == "accounts@example.com":
+        myform = forms.modalSettings()
+        new_user = True
+        if myform.validate_on_submit():
+            user.accounting_email = myform.accounting_email.data
+            user.dark = myform.dark.data
+            db.session.commit()
+            return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark)
+        return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark, setting=myform,
+                               new_user=new_user)
+    else:
+        return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark)
 
 
 @app.route('/new_form', methods=['GET', 'POST'])
@@ -205,16 +218,17 @@ def new_form():
     user = User.query.filter_by(id=current_user.id).first()
     if myform.validate_on_submit():
         filename = handlefiles.validate_excel(myform.filename.data)
-        id=str(uuid.uuid4())
+        id = str(uuid.uuid4())
         myform = reclaim_forms(id=id, filename=filename, description=myform.description.data,
                                sent=False,
                                made_by=current_user.id)
         db.session.add(myform)
         db.session.commit()
+        flash("Successfully created the form: {}".format(filename), category="alert alert-success")
         return redirect(url_for('edit_forms', file_id=id))
     elif request.method == 'GET':
-
-        myform.filename.data = datetime.datetime.today().strftime('%m-%Y')+"_Expenses_form_" + user.last_name + ".xlsx"
+        myform.filename.data = datetime.datetime.today().strftime(
+            '%m-%Y') + "_Expenses_form_" + user.last_name + ".xlsx"
     return render_template('forms/new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
 
 
@@ -277,7 +291,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!', category='alert alert-success')
-        return redirect(url_for('login'))
+        login_user(user, remember=False)
+        return redirect(url_for('view_forms'))
     return render_template('user/register.html', title='Register', form_title='Register',
                            form=myform)
 

@@ -1,8 +1,13 @@
 {% extends "base.html" %}
-
+{% import 'bootstrap/wtf.html' as wtf %}
+{% from "field.html" import render_field %}
 
 {% block app_content %}
-
+<script>
+    $(document).ready(function(){
+        $("#flipFlop").modal('show');
+    });
+</script>
 {% if forms %}
   <a class="btn btn-primary" style="margin-bottom:2vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
   <div style="margin-top: 1vh; width=100vw" class="table-responsive">
@@ -24,8 +29,8 @@
           <td>{{ moment(form.date_created).format('LLL') }}</td>
           <td>{{ form.sent }}</td>
           <td class="fit">
-            <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Show Details</a>
-            <a class="btn btn-success" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+            <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
+            <a class="btn btn-success" onClick="return confirm('Are you sure you wish to send this?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
             <a class="btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
             <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
         </tr>
@@ -39,6 +44,31 @@
   <iframe style='position:absolute;background: inherit; width: 60vw; height:60%;' src={{url_for('line')}} frameborder="0"></iframe>
 <iframe style='position:absolute; background: inherit; width: 30vw; height:60%; left: 63vw; overflow:hidden;' src={{url_for('pie')}} frameborder="0"></iframe></div>
 {% else %}
+    {% if new_user %}
+        <!-- The modal -->
+        <div class="modal fade" id="flipFlop" tabindex="-1" aria-labelledby="modalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalLabel">Hi {{current_user.first_name}}!</h4>
+                </div>
+                <div class="modal-body">
+                    <p class="alert alert-warning">Please finalise your account settings.</p>
+                    <form method="post" role="form" autocomplete="off"}>
+                        {{ setting.hidden_tag() }}
+                        {{ wtf.form_errors(setting, hiddens="only") }}
+                        {{ render_field(setting.accounting_email, icon="fa-envelope",placeholder="accounts@example.com") }}
+                        {{ wtf.form_field(setting.dark) }}
+                        {{ wtf.form_field(setting.submit, class="btn btn-primary") }}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Later</button>
+                </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
   <h1>No reclaim forms found</h1>

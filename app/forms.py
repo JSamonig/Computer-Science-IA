@@ -93,3 +93,8 @@ class description(FlaskForm):
     date_end = StringField('Ending date',
                            validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     submit = SubmitField('Submit')
+
+class modalSettings(FlaskForm):
+    accounting_email = StringField('Accounting email', validators=[DataRequired(), Email()])
+    dark = BooleanField('Use the dark theme', validators=[])
+    submit = SubmitField('Apply')

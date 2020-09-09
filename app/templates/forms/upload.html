@@ -6,7 +6,7 @@
     <h1>Upload your receipt</h1>
     <form class="form" method="post" role="form" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        {{ form.file() }}<br>
+        {{ form.file(accept="image/*") }}<br>
             {% for error in form.file.errors %}
             <span style="color: red;">{{ error }}</span>
             {% endfor %}
