@@ -86,11 +86,11 @@ def recognise(fname, taggun=False):
             date = datetime.datetime.strptime(response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d").date()
             date = str(date.strftime("%d/%m/%Y"))
         except:
-            date = ""
+            date = None
         try:
             total = response["totalAmount"]["data"]
         except:
-            total = 0
+            total = None
     return {"date_receipt": date, "Total": total}
 
 
@@ -98,7 +98,7 @@ def run(fname, taggun=False):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(recognise, fname, taggun)
         try:
-            return_value = future.result(timeout=30)
+            return_value = future.result(timeout=5)
         except:
-            return_value = {"date_receipt": "", "Total": 0}
+            return_value = {"date_receipt": None, "Total": None}
         return return_value

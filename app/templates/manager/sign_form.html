@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+<script>
+$(function() {
+  var canvas = document.querySelector("canvas");
+  ctx = canvas.getContext("2d");
+  var signaturePad = new SignaturePad(canvas, {
+  backgroundColor: '#ffffff',
+  penColor: 'rgb(0, 0, 0)'
+});
+var mybackground = new Image();
+mybackground.src = "{{background|safe}}";
+
+// Make sure the image is loaded first otherwise nothing will draw.
+mybackground.onload = function(){
+    ctx.drawImage(mybackground,0,0);
+}
+
+var saveButton = document.getElementById('upload');
+var cancelButton = document.getElementById('clear');
+var rejectButton = document.getElementById('reject');
+
+makeblob = function (dataURL) {
+            var BASE64_MARKER = ';base64,';
+            if (dataURL.indexOf(BASE64_MARKER) == -1) {
+                var parts = dataURL.split(',');
+                var contentType = parts[0].split(':')[1];
+                var raw = decodeURIComponent(parts[1]);
+                return new Blob([raw], { type: contentType });
+            }
+            var parts = dataURL.split(BASE64_MARKER);
+            var contentType = parts[0].split(':')[1];
+            var raw = window.atob(parts[1]);
+            var rawLength = raw.length;
+
+            var uInt8Array = new Uint8Array(rawLength);
+
+            for (var i = 0; i < rawLength; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+
+            return new Blob([uInt8Array], { type: contentType });
+        }
+
+saveButton.addEventListener('click', function (event) {
+    if (signaturePad.isEmpty()) {
+            alert("Please provide signature first.");
+    } else {
+         var mydata = signaturePad.toDataURL("image/png");
+         console.log(mydata);
+         console.log(typeof mydata);
+         var request = $.ajax({
+            type: 'POST',
+            url: window.location.href,
+            processData: false,
+            contentType: 'application/octet-stream',
+            data: makeblob(mydata)
+            }).done(function(data) {
+            console.log('Success!');
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+             console.log(jqXHR);
+            console.log(textStatus);
+            console.log(errorThrown);
+            console.log("fail");
+        });}
+});
+
+
+cancelButton.addEventListener('click', function (event) {
+  signaturePad.clear();
+  ctx.drawImage(mybackground,0,0);
+    });
+rejectButton.addEventListener('click', function (event) {
+    var request = $.ajax({
+            type: 'POST',
+            url: window.location.href,
+            data: "reject"
+            }).done(function(data) {
+            console.log('Success!');
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+             console.log(jqXHR);
+            console.log(textStatus);
+            console.log(errorThrown);
+            console.log("fail");
+        });
+    });
+});
+
+</script>
+
+{% endblock %}
+{% block app_content %}
+    <h1>Authorise expenses form for {{for_user}}</h1>
+    <h3>
+      Sign over image
+    </h3>
+    <div class="signature_wrapper">
+        <canvas id="signature-pad" class="signature-pad" width=337 height=296></canvas>
+    </div>
+    <div>
+        <button id="upload" class="save btn btn-success">Authorise</button>
+        <button id="reject" class="btn btn-danger">Reject</button>
+        <button id="clear" class="btn btn-secondary">Clear</button>
+    </div>
+
+{% endblock %}

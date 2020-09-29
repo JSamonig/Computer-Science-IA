@@ -20,9 +20,10 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(64), index=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(120))
-    accounting_email = db.Column(db.String(120), index=True, default="accounts@example.com", nullable=False)
+    accounting_email = db.Column(db.String(120), index=True, default="finance@wellingtoncollege.org.uk", nullable=False)
     use_taggun = db.Column(db.Boolean, nullable=False, default=True)
     dark = db.Column(db.Boolean, default=False)
+    is_verified =  db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -30,16 +31,16 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def get_reset_password_token(self, expires_in=600):
+    def get_token(self, word, expires_in=600):
         return jwt.encode(
-            {'reset_password': self.id, 'exp': time.time() + expires_in},
+            {word: self.id, 'exp': time.time() + expires_in},
             app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
 
     @staticmethod
-    def verify_reset_password_token(token):
+    def verify_token(token, word):
         try:
             id = jwt.decode(token, app.config['SECRET_KEY'],
-                            algorithms=['HS256'])['reset_password']
+                            algorithms=['HS256'])[word] #pw =reset_password, email=verify_email, sign= sign_form
         except:
             return
         return User.query.get(id)
@@ -60,6 +61,7 @@ class reclaim_forms(db.Model):
     made_by = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     date_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     date_sent = db.Column(db.DateTime, index=True, default=None)
+    signature = db.Column(db.String(60), default=None)
 
     def __repr__(self):
         return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {}\n date_created = {} >' \
@@ -81,9 +83,18 @@ class reclaim_forms_details(db.Model):
     destination = db.Column(db.String(120), index=True)
     purpose = db.Column(db.String(120), index=True)
     end_date = db.Column(db.String(10), index=True)
+    return_trip = db.Column(db.Boolean, default=False)
 
 
 class Account_codes(db.Model):
     __tablename__ = 'account_codes'
-    account_id = db.Column(db.String(60), primary_key=True)  #####
+    account_id = db.Column(db.String(60), primary_key=True)
     account_name = db.Column(db.String(60), index=True)
+    cost_centre = db.Column(db.Integer, db.ForeignKey('cost_centres.cost_centre_id'), index=True, nullable=True)
+
+class cost_centres(db.Model):
+    __tablename__ = 'cost_centres'
+    id = db.Column(db.Integer, primary_key=True)
+    cost_centre_id = db.Column(db.String(60))
+    purpose_cost_centre = db.Column(db.String(60))
+    purpose_id = db.Column(db.Integer)

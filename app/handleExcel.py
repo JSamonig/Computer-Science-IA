@@ -72,6 +72,15 @@ def addImages(bookname, row, filename:str):
     ws.add_image(img)
     wb.save(c.Config.RECLAIM_ROUTE + bookname)
 
+def addSignature(signature, bookname,date):
+    wb = getBook(bookname)
+    ws = wb["Expense Claim Form 14-11-19"]
+    img = Image(c.Config.SIGNATURE_ROUTE + signature)
+    img.anchor = 'C29'
+    ws.add_image(img)
+    wcell = ws.cell(29, 6)
+    wcell.value=date
+    wb.save(c.Config.RECLAIM_ROUTE + bookname)
 
 def findAvailableRow(ws):
     row = 7

@@ -10,14 +10,11 @@ import base64
 #  --> Adapted from https://blog.miguelgrinberg.com/ and https://app.sendgrid.com/guide/integrate/langs/python
 
 def send_async_email(app, msg):
-    try:
-        sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
-        response = sg.send(msg)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-    except Exception as e:
-        print(e)
+    sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
+    response = sg.send(msg)
+    print(response.status_code)
+    print(response.body)
+    print(response.headers)
 
 
 def send_email(subject, sender, recipients, html_body, file=None):
@@ -40,7 +37,7 @@ def send_email(subject, sender, recipients, html_body, file=None):
 
 
 def send_password_reset_email(user):
-    token = user.get_reset_password_token()
+    token = user.get_token("reset_password")
     send_email('[Accounting app] Reset Your Password',
                sender=app.config['ADMINS'][0],
                recipients=[user.email],
@@ -48,3 +45,24 @@ def send_password_reset_email(user):
                                          user=user, token=token))
 
 # <--
+def send_verify_email(user):
+    token = user.get_token("verify_email")
+    send_email('[Accounting app] Confirm your email',
+               sender=app.config['ADMINS'][0],
+               recipients=[user.email],
+               html_body=render_template('email/confirm_email.html',
+                                         user=user, token=token))
+
+def send_auth_email(user, mail):
+    send_email('[Accounting app] Authorisation confirmation',
+               sender=app.config['ADMINS'][0],
+               recipients=[user.email],
+               html_body=render_template('email/authed.html',
+                                         user=user,auth_party=mail))
+def send_reject_email(user, mail):
+    send_email('[Accounting app] Authorisation declined',
+               sender=app.config['ADMINS'][0],
+               recipients=[user.email],
+               html_body=render_template('email/not_authed.html',
+                                         user=user, auth_party=mail))
+

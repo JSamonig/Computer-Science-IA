@@ -1,0 +1,13 @@
+<p>To whom it may concern,</p>
+<p>This is an automatically generated email. <br>Attached is a reclaim form for {{ user }}. He/she wishes to gain authorisation of the expenses.</p>
+<p>
+    To authorise the expenses
+    <a href="{{ url_for('sign_form', form_hash=token, _external=True) }}">
+        click here
+    </a>.
+</p>
+<p>Alternatively, you can paste the following link in your browser's address bar:</p>
+<p>{{ url_for('sign_form', form_hash=token, _external=True) }}</p>
+<p>If you do not want to authorise an expenses form simply ignore this message.</p>
+<p>Sincerely,</p>
+<p>The WellyCompSci Team</p>

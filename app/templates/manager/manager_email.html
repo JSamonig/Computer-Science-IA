@@ -6,15 +6,13 @@
         {% if title %}
         <h1>{{ title }}</h1>
         {% else %}
-        <h1>Create a new form</h1>
+        <h1>Send for authorisation</h1>
         {% endif %}
         <div class="col-md-4">
             <form method="post" role="form" autocomplete="off"}>
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
-                {{ wtf.form_field(form.filename) }}
-                {{ wtf.form_field(form.description) }}
-                <h4 class="font-weight-light font-italic">Please only create one form per supervisor</h4>
+                {{ wtf.form_field(form.email_supervisor) }}
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
             </form>
         </div>

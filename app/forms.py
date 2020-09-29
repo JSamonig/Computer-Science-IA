@@ -1,8 +1,8 @@
 from app.models import User
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField
-from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError,InputRequired
+from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField,SelectMultipleField
+from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError,InputRequired, Optional
 import config as c
 class uploadForm(FlaskForm):
     file = FileField(validators=[DataRequired(), FileAllowed(c.Config.ALLOWED_EXTENSIONS_IMAGES,
@@ -15,7 +15,8 @@ class editOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     description = TextAreaField('Description', validators=[DataRequired(),Length(min=1, max=300)])
     miles = FloatField('Miles')
-    accountCode = StringField('Account Code', validators=[InputRequired(),Length(min=1, max=60)])
+    accountCode = StringField('Deparment Code',validators=[DataRequired()])
+    accountCode2 = StringField('Account Code',validators=[DataRequired()])
     total = FloatField('Total')
     submit = SubmitField('Submit')
 
@@ -57,6 +58,10 @@ class ResetPasswordForm(FlaskForm):
 
 # <--
 
+class verfify_email(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    email2 = StringField('Repeat email', validators=[DataRequired(), Email(), EqualTo('email')])
+    submit = SubmitField('Resend email verification')
 
 class settings(FlaskForm):
     first_name = StringField('First name', validators=[DataRequired(), Length(min=1, max=50)])
@@ -88,6 +93,7 @@ class description(FlaskForm):
     description = TextAreaField('Purpose of journey', validators=[DataRequired(), Length(min=1, max=140)])
     start = StringField('Starting location', validators=[DataRequired(), Length(min=1, max=140)])
     destination = StringField('Ending location', validators=[DataRequired(), Length(min=1, max=140)])
+    return_trip = BooleanField('Is a return trip')
     date_start = StringField('Starting date',
                              validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     date_end = StringField('Ending date',
@@ -98,3 +104,7 @@ class modalSettings(FlaskForm):
     accounting_email = StringField('Accounting email', validators=[DataRequired(), Email()])
     dark = BooleanField('Use the dark theme', validators=[])
     submit = SubmitField('Apply')
+
+class supervisor(FlaskForm):
+    email_supervisor = StringField('Email of line supervisor', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send')

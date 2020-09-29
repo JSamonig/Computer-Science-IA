@@ -4,79 +4,152 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function(){
-      var date_input=$('.date'); //our date input has the name "date"
-      var options={
-        format: 'dd/mm/yyyy',
-        todayHighlight: true,
-        autoclose: true,
-      };
-      date_input.datepicker(options);
-    })
-    $('.datepicker').on('click', function(e) {
-   e.preventDefault();
-   $(this).attr("autocomplete", "off");
+$(document).ready(function(){
+  var date_input=$('.date'); //our date input has the name "date"
+  var options={
+    format: 'dd/mm/yyyy',
+    todayHighlight: true,
+    autoclose: true,
+  };
+  date_input.datepicker(options);
+})
+$('.datepicker').on('click', function(e) {
+e.preventDefault();
+$(this).attr("autocomplete", "off");
 });
+
+$( document ).ready(function() {
+
+    var target = $('#accountCode2');
+
+    function getCentres(id, centre=null) {
+        $.ajax({
+            url: window.location.href,
+            type: 'post',
+            data: {data: id},
+            success: function(response){
+                target.empty();
+                var x;
+                for (x in response["Data"]) {
+                    target.append('<option data-subtext="' + response["Data"][x] + '">'+ x +'</option>');
+                }
+                target.selectpicker('refresh');
+                if (centre){
+                target.selectpicker('val', centre[0]);
+                }
+            }
+        });
+    }
+
+     var cost_centre=$('#cost_centre').data()["other"].split("'");
+    var account=$('#account').data()["other"].split("'");
+    account = [account[1], account[3]]
+    cost_centre =[cost_centre[1], cost_centre[3]]
+    if (cost_centre && account){
+        getCentres(account[0], cost_centre);
+    }
+
+    $('#accountCode').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+      var $option = $(this).find('option:selected'),
+      id = $option.val();
+      getCentres(id);
+    });
+});
+
+
 </script>
 {% endblock %}
 
 {% block app_content %}
-<a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('edit_forms', file_id=request.base_url.rpartition('//')[2].split('/')[2]) }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
+<a class="btn btn-default" style="margin-bottom:1vh"
+   href="{{ url_for('edit_forms', file_id=request.base_url.rpartition('//')[2].split('/')[2]) }}"><i
+        class="fas fa-long-arrow-alt-left"></i> Return</a>
 <h1>Edit information</h1>
 
 <div>
-<div class="row">
+    <div class="row">
         <div class="col-md-4">
+            <meta id="cost_centre" data-name="{{cost_centre}}" data-other="{{cost_centre}}">
+            <meta id="account" data-name="{{account}}" data-other="{{account}}">
             <form method="post" role="form" autocomplete="off">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
-                {{ render_field(form.date,icon="fa-calendar",class="form-control rounded-right date", placeholder="dd/mm/yyyy") }}
+                {{ render_field(form.date,icon="fa-calendar",class="form-control rounded-right date",
+                placeholder="dd/mm/yyyy") }}
                 {{ wtf.form_field(form.description) }}
                 {% if include %}
                 {{ render_field(form.miles,icon="fa-gas-pump") }}
                 {% endif %}
-                {{ wtf.form_field(form.accountCode) }}
+                <div class="form-group required">
+                    <label class="control label" for="accountCode">Department code</label>
+                    <select class="form-control rounded-right selectpicker show-tick" id="accountCode"
+                            name="accountCode" liveSearchStyle='contains' data-live-search="true"
+                            data-header="Select an account code" title="Nothing selected" required>
+                        {% if account != None %}
+                        <option data-subtext="{{account[1]}}" selected>{{account[0]}}</option>
+                        {% endif %}
+                        {% for account in accounts %}
+                        <option data-subtext="{{account[1]}}">{{account[0]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group required">
+                    <label class="control label" for="accountCode2">Account code</label>
+                    <select class="form-control rounded-right selectpicker show-tick" id="accountCode2"
+                            name="accountCode2" liveSearchStyle='contains' data-live-search="true"
+                            data-header="Select an account code" title="Nothing selected" required>
+                    </select>
+                </div>
                 {{ render_field(form.total,icon="fa-pound-sign") }}
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
                 {% if filename %}
-                <a class="btn btn-info" href="{{ url_for('upload',file_id=request.base_url.rpartition('//')[2].split('/')[2],row=request.base_url.rpartition('//')[2].split('/')[3],adding='False') }}"><i class="fas fa-edit"></i> Edit image</a>
+                <a class="btn btn-info"
+                   href="{{ url_for('upload',file_id=request.base_url.rpartition('//')[2].split('/')[2],row=request.base_url.rpartition('//')[2].split('/')[3]) }}"><i
+                        class="fas fa-edit"></i> Edit image</a>
                 {% elif start %}
-                <a class="btn btn-info" href="{{ url_for('mileage',file_id=request.base_url.rpartition('//')[2].split('/')[2],row=request.base_url.rpartition('//')[2].split('/')[3],adding='False') }}"><i class="fas fa-edit"></i> Edit map</a>
+                <a class="btn btn-info"
+                   href="{{ url_for('mileage',file_id=request.base_url.rpartition('//')[2].split('/')[2],row=request.base_url.rpartition('//')[2].split('/')[3]) }}"><i
+                        class="fas fa-edit"></i> Edit map</a>
                 {% endif %}
-                <button type="button" class="btn" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-info"></i></button>
+                <button type="button" class="btn" data-toggle="modal" data-target="#flipFlop"><i
+                        class="fas fa-info"></i></button>
                 <!-- The modal -->
-                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+                     aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title" id="modalLabel">COMPLETION INSTRUCTIONS</h4>
-                        </div>
-                        <div class="modal-body">
-                            <ol>
-                                <li>Claims must be submitted within 4 weeks of the expense being incurred</li>
-                                <li>Description and Account code must be entered for each item claimed</li>
-                                <li>For Mileage enter total miles and overtype description with detail  - amount is calculated</li>
-                                <li>Receipts must be attached for all expenses excluding mileage</li>
-                            </ol>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="modalLabel">COMPLETION INSTRUCTIONS</h4>
+                            </div>
+                            <div class="modal-body">
+                                <ol>
+                                    <li>Claims must be submitted within 4 weeks of the expense being incurred</li>
+                                    <li>Description and Account code must be entered for each item claimed</li>
+                                    <li>For Mileage enter total miles and overtype description with detail - amount is
+                                        calculated
+                                    </li>
+                                    <li>Receipts must be attached for all expenses excluding mileage</li>
+                                </ol>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
-{% if filename %}
-<div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
-    <img src="{{ filename }}" style="max-height: 70vh;max-width: 100%;border: 1px solid black;overflow: auto;">
-</div>
-{% elif start %}
-<div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
-<iframe style='position: absolute; background: transparent; width: 100%; height:100%;' src={{url_for('load_map',start=start,end=end)}} frameborder="0"></iframe>
-</div>
-{% endif %}
-</div>
+        {% if filename %}
+        <div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
+            <img src="{{ filename }}" style="max-height: 70vh;max-width: 100%;border: 1px solid black;overflow: auto;">
+        </div>
+        {% elif start %}
+        <div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
+            <iframe style='position: absolute; background: transparent; width: 100%; height:100%;'
+                    src={{url_for('load_map',start=start,end=end)}} frameborder="0"></iframe>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}
