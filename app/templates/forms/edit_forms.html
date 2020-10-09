@@ -3,44 +3,75 @@
 {% block app_content %}
 <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('view_forms') }}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
 {% if forms %}
-  <h3 style="margin-bottom:2vh">{{ name }}</h3>
-    <a class="btn btn-success" onClick="return confirm('Are you sure you wish to send this?');"href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
-    <a class="btn btn-info" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
-    <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
-  <div style="margin-top: 1vh;" class="table-responsive">
+  <h3 class="ellipsis" style="margin-bottom:2vh">{{ name }}</h3>
+
+    <div class="d-sm-none">
+        <div class="btn-group dropleft">
+                <button class="btn btn-primary rounded-right" type="button" id="items" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="items">
+                    <a class="btn btn-success dropdown-item" onClick="return confirm('Are you sure you wish to send this?');" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
+                    <a class="btn btn-info dropdown-item" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                </div>
+        </div>
+    </div>
+    <div class="d-none d-sm-block">
+        <a class="btn btn-success" onClick="return confirm('Are you sure you wish to send this?');"href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
+        <a class="btn btn-info" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
+        <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+    </div>
+
+  <div id="tablediv" style="margin-top: 1vh;" class="table-responsive">
   <table class="table table-hover table-sm" cellspacing="0" width="100%">
     <thead style="position: sticky;top: 0">
     <tr>
       <th>Row</th>
       <th>Date</th>
-      <th style="word-break:break-all">Description</th>
-      <th>Miles</th>
-      <th style="white-space: nowrap;">Account code</th>
+      <th class="d-none d-xl-table-cell" style="word-break:break-all">Description</th>
+      <th class="d-none d-sm-table-cell">Miles</th>
+      <th class="d-none d-sm-table-cell" style="width: 10vw; white-space: nowrap;">Account code</th>
       <th>Amount</th>
-      <th class="fit"></th>
+      <th class="fit">Actions</th>
     </tr>
     </thead>
     <tbody>
       {% for form in forms %}
         <tr id="override">
-          <td><a href="{{ url_for('edit_data',file_id=file_id,row=form.row_id)}}">{{ form.row_id-6 }}</a></td>
-          <td>{{ form.date_receipt }}</td>
-          <td>{{ form.description }}</td>
-          <td>{{ form.miles }}</td>
-          <td>{{ form.account_id }}</td>
-          <td>£&nbsp;{{ "{:.2f}".format(form.Total) }}</td>
-          <td class="fit">
-            <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id) }}"><i class="fas fa-edit"></i> Edit claim</a>
-            <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete claim</a>
-          </td>
+            <td><a href="{{ url_for('edit_data',file_id=file_id,row=form.row_id)}}">{{ form.row_id-6 }}</a></td>
+            <td>{{ form.date_receipt }}</td>
+            <td class="d-none d-xl-table-cell">{{ form.description }}</td>
+            <td class="d-none d-sm-table-cell">{{ form.miles }}</td>
+            <td class="d-none d-sm-table-cell">{{ form.account_id }}</td>
+            <td>£&nbsp;{{ "{:.2f}".format(form.Total) }}</td>
+
+            <td class="fit d-none d-lg-table-cell">
+                <a class="btn btn-default" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id) }}"><i class="fas fa-edit"></i> Edit claim</a>
+                <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete claim</a>
+            </td>
+
+            <td class="d-lg-none">
+                <div class="btn-group dropleft">
+                    <button class="btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="form.id">
+                <a class="dropdown-item" href="{{ url_for('edit_data',file_id=file_id,row=form.row_id) }}"><i class="fas fa-edit"></i> Edit claim</a><div class="dropdown-divider"></div>
+                <a class="dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_row',file_id=file_id,row=form.row_id) }}"><i class="fas fa-trash-alt"></i> Delete claim</a>
+                    </div>
+                </div>
+            </td>
+
         </tr>
       {% endfor %}
       </tbody>
       <tr id="total_row">
       <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
+      <th class="d-none d-xl-table-cell"></th>
+      <th class="d-none d-sm-table-cell"></th>
+      <th class="d-none d-sm-table-cell"></th>
       <th></th>
       <th>Total: £&nbsp;{{ "{:.2f}".format(mysum) }}</th>
       <th></th>

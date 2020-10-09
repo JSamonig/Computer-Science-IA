@@ -24,3 +24,33 @@ big {
 #total_row:hover{
     background-color:#FFFFFF;
 }
+
+.table td, .ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+@media (min-width: 766px) {
+    #tablediv{
+    margin-top: 1vh;
+    height: 239px;
+    overflow: auto;
+}
+}
+
+@media (max-width: 766px) {
+    .special_table{
+      table-layout:fixed !important;
+    }
+    #tablediv{
+    height: 80vh;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1260px) {
+    .special_table{
+      table-layout:fixed;
+    }
+}
+

@@ -20,7 +20,8 @@ mybackground.onload = function(){
 var saveButton = document.getElementById('upload');
 var cancelButton = document.getElementById('clear');
 var rejectButton = document.getElementById('reject');
-
+}
+//https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
 makeblob = function (dataURL) {
             var BASE64_MARKER = ';base64,';
             if (dataURL.indexOf(BASE64_MARKER) == -1) {

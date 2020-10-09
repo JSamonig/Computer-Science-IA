@@ -20,10 +20,10 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(64), index=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(120))
-    accounting_email = db.Column(db.String(120), index=True, default="finance@wellingtoncollege.org.uk", nullable=False)
+    accounting_email = db.Column(db.String(120), index=True)
     use_taggun = db.Column(db.Boolean, nullable=False, default=True)
     dark = db.Column(db.Boolean, default=False)
-    is_verified =  db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -57,7 +57,7 @@ class reclaim_forms(db.Model):
     id = db.Column(db.String(36), index=True, primary_key=True, default=uuid.uuid4)
     filename = db.Column(db.String(60), index=True)  # need to edit once multiple users
     description = db.Column(db.String(120), index=True)
-    sent = db.Column(db.Boolean, index=True, nullable=False, default=False)
+    sent = db.Column(db.String(20), default="Draft", nullable=False)
     made_by = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     date_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     date_sent = db.Column(db.DateTime, index=True, default=None)
@@ -90,7 +90,7 @@ class Account_codes(db.Model):
     __tablename__ = 'account_codes'
     account_id = db.Column(db.String(60), primary_key=True)
     account_name = db.Column(db.String(60), index=True)
-    cost_centre = db.Column(db.Integer, db.ForeignKey('cost_centres.cost_centre_id'), index=True, nullable=True)
+    cost_centre = db.Column(db.Integer, db.ForeignKey('cost_centres.cost_centre_id'),index=True, nullable=True)
 
 class cost_centres(db.Model):
     __tablename__ = 'cost_centres'

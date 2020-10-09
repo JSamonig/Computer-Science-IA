@@ -7,42 +7,85 @@
     $(document).ready(function(){
         $("#flipFlop").modal('show');
     });
+
 </script>
 {% if forms %}
   <a class="btn btn-primary" style="margin-bottom:2vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
-  <div style="margin-top: 1vh; width=100vw" class="table-responsive">
-    <table class="table table-responsive table-hover table-sm" cellspacing="0" width="100%" style="height:20vh">
-    <thead style="position: sticky;top: 0">
-    <tr>
-      <th style="word-break:break-all">Name</th>
-      <th>Description</th>
-      <th style="white-space: nowrap;">Time created</th>
-      <th>Sent</th>
-      <th class="fit">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-      {% for form in forms %}
-        <tr id="override">
-          <td><a href={{url_for('edit_form',file=form.id)}}>{{ form.filename }}<a></td>
-          <td>{{ form.description }}</td>
-          <td>{{ moment(form.date_created).format('LLL') }}</td>
-          <td>{{ form.sent }}</td>
-          <td class="fit">
-            <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
-            <a class="btn btn-success" onClick="return confirm('Are you sure you wish to send this?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
-            <a class="btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
-            <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
-        </tr>
-      {% endfor %}
-    </tbody>
+  <div id="tablediv">
+    <table class="special_table table table-hover">
+        <thead style="position: sticky; top: 0">
+            <tr>
+              <th class="name">Name</th>
+                <th class="d-none d-lg-table-cell">Description</th>
+              <th style="width:210px;" class="d-none d-md-table-cell" style="white-space: nowrap;">Time created</th>
+              <th style="width:152px;">Status</th>
+              <th class="d-none d-xl-table-cell" style="width:456px; ">Actions</th>
+              <th style="width:90px;" class="d-xl-none">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in forms %}
+                <tr id="override">
+                <td>
+                    <a class="name" href={{url_for('edit_form',file=form.id)}} data-html="true" data-toggle="tooltip" data-placement="bottom" title="{% if form.description!='' %} <em>Description: </em>{{ form.description }} {% endif %}"> {{form.filename}}</a>
+                </td>
+                <td class="d-none d-lg-table-cell">
+                    {{ form.description }}
+                </td>
+                <td class="d-none d-md-table-cell">{{ moment(form.date_created).format('LLL') }}</td>
+
+                {% if form.sent=="Draft" %}
+                <td><span class="badge badge-secondary ">{{ form.sent }}</span></td>
+                {% elif form.sent=="Awaiting authorization" %}
+                <td><span class="badge badge-info ">{{ form.sent }}</span></td>
+                {% elif form.sent=="Authorized" %}
+                <td><span class="badge badge-success">{{ form.sent }}</span></td>
+                {% elif form.sent=="Rejected" %}
+                <td><span class="badge badge-danger">{{ form.sent }}</span></td>
+                {% else %}
+                    <td><span class="badge badge-secondary ">{{ form.sent }}</span></td>
+                {% endif %}
+
+                <td class="d-none d-xl-table-cell">
+                    <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
+                    {%if form.sent == "Draft" %}
+                      <a class="btn btn-success" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                    {% else %}
+                      <a class="btn btn-success" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                    {% endif %}
+                    <a class="btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
+                    <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                </td>
+
+                <td class="d-xl-none">
+                    <div class="btn-group dropleft">
+                          <button class="btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
+                              <i class="fas fa-bars"></i>
+                          </button>
+                          <div class="dropdown-menu" aria-labelledby="form.id">
+                            <a class="btn dropdown-item" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
+                            {%if form.sent == "Draft" %}
+                              <a class="btn btn-success dropdown-item" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                            {% else %}
+                              <a class="btn btn-success dropdown-item" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                            {% endif %}
+                            <a class="btn btn-info dropdown-item" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
+                          <div class="dropdown-divider"></div>
+                            <a class="btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                          </div>
+                    </div>
+                </td>
+            </tr>
+          {% endfor %}
+        </tbody>
   </table>
   </div>
 
-<div class="clearfix">
-<h3>Dashboard</h3>
-  <iframe style='position:absolute;background: inherit; width: 60vw; height:60%;' src={{url_for('line')}} frameborder="0"></iframe>
-<iframe style='position:absolute; background: inherit; width: 30vw; height:60%; left: 63vw; overflow:hidden;' src={{url_for('pie')}} frameborder="0"></iframe></div>
+<div class="d-none d-md-block">
+<h3 style="margin-top:1vh;">Dashboard</h3>
+    <iframe style='position:absolute; background: inherit; width: 60vw; height:50%;' scrolling="no" src={{url_for('line')}} frameborder="0"></iframe>
+    <iframe style='position:absolute; background: inherit; width: 30vw; height:50%; left: 63vw;' scrolling="no" src={{url_for('pie')}} frameborder="0"></iframe>
+</div>
 {% else %}
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
@@ -50,6 +93,7 @@
   <a class="btn btn-primary" style="margin-bottom:1vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
   </div>
 {% endif %}
+
 {% if new_user %}
         <!-- The modal -->
         <div class="modal fade" id="flipFlop" tabindex="-1" aria-labelledby="modalLabel">

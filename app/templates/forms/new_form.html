@@ -14,7 +14,9 @@
                 {{ wtf.form_errors(form, hiddens="only") }}
                 {{ wtf.form_field(form.filename) }}
                 {{ wtf.form_field(form.description) }}
+                {% if not edit %}
                 <h4 class="font-weight-light font-italic">Please only create one form per supervisor</h4>
+                {% endif %}
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
             </form>
         </div>

@@ -83,50 +83,74 @@ def edit_data(file_id, row, ):
     accounts_list = []
     for account in accounts:
         accounts_list.append([str(account.account_id), str(account.account_name)])
-    if myform.validate_on_submit():
-        details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).filter_by(row_id=int(row)).first()
-        if myform.miles.data:
-            if float(myform.miles.data) < 0 or float(myform.total.data) < 0:
-                flash("Only input positive values", category="alert alert-danger")
-                return redirect(url_for('edit_data', file_id=file_id, row=row))
-        else:
-            if float(myform.total.data) < 0:
-                flash("Only input positive values", category="alert alert-danger")
-                return redirect(url_for('edit_data', file_id=file_id, row=row))
-        if details:
-            details.date_receipt = myform.date.data
-            details.description = myform.description.data
-            details.miles = myform.miles.data
-            # account_id = 110-43214
-            cost_centre = db.session.query(Account_codes).filter_by(
-                account_id=myform.accountCode.data).first().cost_centre
-            account_code = myform.accountCode2.data
-            details.account_id = "{}-{}".format(cost_centre, str(account_code))
-            details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
-            db.session.commit()
-            today = datetime.datetime.now().date()
-            result = (today - datetime.datetime.strptime(details.date_receipt, '%d/%m/%Y').date()).days > 29
-            if result:
-                flash("Warning: the date of expense for row {} is older than 4 weeks.".format(str(int(row) - 6)),
-                      category="alert alert-warning ")
-        else:
-            flash("This row doesn't exist.", category="alert alert-danger")
-        return redirect(url_for('edit_forms', file_id=file_id))
-    elif request.method == "GET":
+    if request.method == "POST":
+        if myform.validate_on_submit():
+            details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+                form_id=file_id).filter_by(row_id=int(row)).first()
+            if myform.miles.data:
+                if float(myform.miles.data) < 0 or float(myform.total.data) < 0:
+                    flash("Only input positive values", category="alert alert-danger")
+                    return redirect(url_for('edit_data', file_id=file_id, row=row))
+            else:
+                if float(myform.total.data) < 0:
+                    flash("Only input positive values", category="alert alert-danger")
+                    return redirect(url_for('edit_data', file_id=file_id, row=row))
+            if details:
+                details.date_receipt = myform.date.data
+                details.description = myform.description.data
+                details.miles = myform.miles.data
+                # account_id = 110-43214 ## ART(110)-43214
+                cost_centre = db.session.query(Account_codes).filter_by(
+                    account_id=myform.accountCode.data).first()
+                account_code = myform.accountCode2.data
+                if cost_centre.cost_centre:
+                    details.account_id = "{}({})-{}".format(str(cost_centre.account_id), str(cost_centre.cost_centre),
+                                                            str(account_code))
+                else:
+                    details.account_id = "{}-{}".format(str(cost_centre.account_id), str(account_code))
+                details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
+                db.session.commit()
+                today = datetime.datetime.now().date()
+                result = (today - datetime.datetime.strptime(details.date_receipt, '%d/%m/%Y').date()).days > 29
+                if result:
+                    flash("Warning: the date of expense for row {} is older than 4 weeks.".format(str(int(row) - 6)),
+                          category="alert alert-warning ")
+            else:
+                flash("This row doesn't exist.", category="alert alert-danger")
+            return redirect(url_for('edit_forms', file_id=file_id))
+        elif request.form:  # AJAX
+            try:
+                return_cost_centers = db.session.query(cost_centres).filter_by(cost_centre_id=dict(request.form)["data"]).all()
+                dict_cost_centres = {}
+                for centre in return_cost_centers:
+                    dict_cost_centres[str(centre.purpose_id)] = centre.purpose_cost_centre
+                if dict_cost_centres == {}:
+                    return_cost_centers = db.session.query(db.distinct(cost_centres.purpose_cost_centre)).all()
+                    for centre in return_cost_centers:
+                        individual_centre = db.session.query(cost_centres).filter_by(
+                            purpose_cost_centre=list(centre)[0]).first()
+                        dict_cost_centres[str(individual_centre.purpose_id)] = individual_centre.purpose_cost_centre
+                dict_cost_centres["N/A"] = "N/A"
+                return jsonify({"Data": dict_cost_centres})
+            except:
+                flash("Error on one or more fields.", category="alert alert-danger")
+                return redirect(url_for("edit_data",file_id=file_id,row=row))
+    else:
         myform.date.data = details.date_receipt
         myform.description.data = details.description
         try:
             current_account = details.account_id.split("-")
-            account = [db.session.query(Account_codes).filter_by(cost_centre=int(current_account[0])).first().account_id,
-                       db.session.query(Account_codes).filter_by(cost_centre=int(current_account[0])).first().account_name]
+            current_account[0] = current_account[0].split("(")[0]
+            account = [db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first().account_id,
+                       db.session.query(Account_codes).filter_by(
+                           account_id=str(current_account[0])).first().account_name]
             if account in accounts_list:
                 accounts_list.pop(accounts_list.index(account))
             cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
                 purpose_id=current_account[1]).first().purpose_cost_centre]
         except:
-            cost_centre=None
-            account=None
+            cost_centre = None
+            account = None
         try:
             myform.total.data = round(float(details.Total), 2)
         except:
@@ -136,22 +160,10 @@ def edit_data(file_id, row, ):
             destination = urllib.parse.quote_plus(details.start)
             myform.miles.data = details.miles
             return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
-                                   dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
+                                   dark=current_user.dark, accounts=accounts_list, account=account,
+                                   cost_centre=cost_centre)
         return render_template('forms/form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name,
                                dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
-    else:  # AJAX
-        return_cost_centers = db.session.query(cost_centres).filter_by(cost_centre_id=dict(request.form)["data"]).all()
-        dict_cost_centres = {}
-        for centre in return_cost_centers:
-            dict_cost_centres[str(centre.purpose_id)] = centre.purpose_cost_centre
-        if dict_cost_centres == {}:
-            return_cost_centers = db.session.query(db.distinct(cost_centres.purpose_cost_centre)).all()
-            for centre in return_cost_centers:
-                individual_centre = db.session.query(cost_centres).filter_by(
-                    purpose_cost_centre=list(centre)[0]).first()
-                dict_cost_centres[str(individual_centre.purpose_id)] = individual_centre.purpose_cost_centre
-        dict_cost_centres["N/A"] = "N/A"
-        return jsonify({"Data": dict_cost_centres})
 
 
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
@@ -242,7 +254,7 @@ def view_forms(new_user=False):
     allforms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
         reclaim_forms.date_created.desc()).all()
     user = User.query.get(current_user.id)
-    if user.accounting_email == "finance@wellingtoncollege.org.uk":
+    if user.accounting_email == None:
         myform = forms.modalSettings()
         new_user = True
         if myform.validate_on_submit():
@@ -265,7 +277,7 @@ def new_form():
         filename = handlefiles.validate_excel(myform.filename.data)
         id = str(uuid.uuid4())
         myform = reclaim_forms(id=id, filename=filename, description=myform.description.data,
-                               sent=False,
+                               sent="Draft",
                                made_by=current_user.id)
         db.session.add(myform)
         db.session.commit()
@@ -295,7 +307,7 @@ def edit_form(file):
             myform.description.data = myfile.description
         else:
             myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
-    return render_template('forms/new_form.html', form=myform, title="Edit form", dark=current_user.dark)
+    return render_template('forms/new_form.html', form=myform, title="Edit form", dark=current_user.dark, edit=True)
 
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
@@ -338,9 +350,9 @@ def register():
     if myform.validate_on_submit():
         user = User(first_name=myform.first_name.data, last_name=myform.last_name.data, email=myform.email.data)
         user.set_password(myform.password.data)
-        send_verify_email(user)
         db.session.add(user)
         db.session.commit()
+        send_verify_email(user)
         logout_user()
         flash(Markup(
             'Congratulations, you are now a registered user! Please verify your email to login. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
@@ -361,7 +373,14 @@ def settings():
         user.first_name = myform.first_name.data
         user.last_name = myform.last_name.data
         user.email = myform.email.data
-        user.accounting_email = myform.accounting_email.data
+        if myform.accounting_email.data != user.accounting_email:
+            user.accounting_email = myform.accounting_email.data
+            user.is_verified = False
+            send_verify_email(user)
+            logout_user()
+            flash(Markup(
+                'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
+                    myform.accounting_email.data, url_for("verify_email_request"))), category="alert alert-success")
         user.use_taggun = myform.taggun.data
         user.dark = myform.dark.data
         db.session.commit()
@@ -381,7 +400,6 @@ def settings():
 def send(file_id):
     myform = forms.supervisor()
     if myform.validate_on_submit():
-        user = User.query.filter_by(id=current_user.id).first()
         file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
@@ -392,7 +410,7 @@ def send(file_id):
         try:
             send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                        file=file.filename)
-            file_db.sent = 1
+            file_db.sent = "Awaiting authorization"
             file_db.date_sent = datetime.datetime.utcnow()
             db.session.commit()
             flash("Email successfully sent to {}".format(myform.email_supervisor.data), category="alert alert-success")
@@ -595,20 +613,24 @@ def pie():
     colours = []
     files = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).all()
     for file in files:
-        rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file.id).all()
-        for row in rows:
-            if row.account_id in labels and row.account_id != None:
-                values[labels.index(row.account_id)] += row.Total
-            elif row and row.account_id != None:
-                labels.append(row.account_id)
-                values.append(row.Total)
-            else:
-                pass
-
+        if file.sent == "Authorized":
+            rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+                form_id=file.id).all()
+            for row in rows:
+                if row.account_id in labels and row.account_id != None:
+                    values[labels.index(row.account_id)] += row.Total
+                elif row and row.account_id != None:
+                    labels.append(row.account_id)
+                    values.append(row.Total)
+                else:
+                    pass
     colours = handlefiles.createDistinctColours(len(labels) + 1)[:len(labels)]
-
-    return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
+    if values:
+        return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
+    else:
+        values = [1]
+        labels = ["No expenses forms authorized yet"]
+        return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
 
 
 @app.route('/line/<year>')  # define URL
@@ -629,17 +651,19 @@ def line(year):
             reclaim_forms.date_sent < dateend).filter(
             reclaim_forms.made_by == current_user.id).all()  # files sent in that month
         for file in files:  # for every file
-            rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file.id).all()  # rows of given file
-            for row in rows:  # for every row
-                if row.account_id is not None:  # if a row id exists (not None because a row id 0 could exist)
-                    if row.account_id in accounts[i - 1].keys():  # if the account is already added to dictionary
-                        pass  # I add all accounts to a dictionary in a list of months this way I can track Totals
-                    else:
-                        accounts[i - 1][row.account_id] = 0  # Add a account code to dictionary for month with value 0
-                    if row.account_id not in unique_accounts:
-                        unique_accounts.append(row.account_id)  # Add to key at top
-                    accounts[i - 1][row.account_id] += row.Total  # Adding to the total for account code that month
+            if file.sent == "Authorized":
+                rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+                    form_id=file.id).all()  # rows of given file
+                for row in rows:  # for every row
+                    if row.account_id is not None:  # if a row id exists (not None because a row id 0 could exist)
+                        if row.account_id in accounts[i - 1].keys():  # if the account is already added to dictionary
+                            pass  # I add all accounts to a dictionary in a list of months this way I can track Totals
+                        else:
+                            accounts[i - 1][
+                                row.account_id] = 0  # Add a account code to dictionary for month with value 0
+                        if row.account_id not in unique_accounts:
+                            unique_accounts.append(row.account_id)  # Add to key at top
+                        accounts[i - 1][row.account_id] += row.Total  # Adding to the total for account code that month
     data = [[] for i in range(len(unique_accounts))]  # create a 2d array with length of all accounts
     for i in accounts:  # for every month
         for j in i.keys():  # for every account in that month
@@ -680,7 +704,11 @@ def line(year):
     total = list(total)  # Turn total back to a normal array
     data.append(total)  # Append to data
     unique_accounts.append("Total")  # Append to key at top
-    colours = handlefiles.createDistinctColours(len(unique_accounts))  # Create distinct colours
+    if unique_accounts == ['Total']:
+        unique_accounts = ["No expenses forms authorized yet"]
+        colours = ['#E5E5E5']
+    else:
+        colours = handlefiles.createDistinctColours(len(unique_accounts))  # Create distinct colours
     return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours))  # To template
 
 
@@ -693,27 +721,32 @@ def sign_form(form_hash):
         name = for_user.first_name + " " + for_user.last_name
         data = handlefiles.createSignatureBack(user.first_name, user.last_name)
         if request.method == 'POST':
+            form = db.session.query(reclaim_forms).filter_by(made_by=for_user.id).first()
             if request.data:
-                bytes = bytearray(request.data)
-                image = Image.open(io.BytesIO(bytes))
-                signature = str(uuid.uuid4()) + ".png"
-                image.save(c.Config.SIGNATURE_ROUTE + signature)
-                form = db.session.query(reclaim_forms).filter_by(made_by=for_user.id).first()
-                form.signature = signature
-                form.sent = 1
-                send_auth_email(for_user, user.email)
-                form.date_sent = datetime.datetime.utcnow()
-                db.session.commit()
-                flash("Signed expenses form successfully for {}!".format(name), category="alert alert-success")
-                return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})
+                if form.sent == "Awaiting authorization":
+                    bytes = bytearray(request.data)
+                    image = Image.open(io.BytesIO(bytes))
+                    signature = str(uuid.uuid4()) + ".png"
+                    image.save(c.Config.SIGNATURE_ROUTE + signature)
+                    form.signature = signature
+                    form.sent = "Authorized"
+                    send_auth_email(for_user, user.email)
+                    form.date_sent = datetime.datetime.utcnow()
+                    db.session.commit()
+                    flash("Signed expenses form successfully for {}!".format(name), category="alert alert-success")
+                    return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})
+                flash("This authorization link has expired.")
+                return jsonify({"redirect": "/index"})
             else:
                 try:
                     send_reject_email(for_user, user.email)
                     flash("Rejected form for {}. He/She has been notified.".format(name),
                           category="alert alert-success")
                 except:
-                    flash("Rejected form for {}. There was an error in sending an email.".format(name),
+                    flash("Rejected form for {}. There was an error in sending an email to him/her.".format(name),
                           category="alert alert-danger")
+                form.sent = "Rejected"
+                db.session.commit()
                 return jsonify({"redirect": "/index"})
         return render_template('manager/sign_form.html', background=data, for_user=name)
     abort(400)

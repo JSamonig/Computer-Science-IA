@@ -1,9 +1,12 @@
 from app.models import User
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField,SelectMultipleField
-from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError,InputRequired, Optional
+from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField, \
+    SelectMultipleField
+from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError, InputRequired, Optional
 import config as c
+
+
 class uploadForm(FlaskForm):
     file = FileField(validators=[DataRequired(), FileAllowed(c.Config.ALLOWED_EXTENSIONS_IMAGES,
                                                              'Please input an image allowed extensions are ' + " ".join(
@@ -13,12 +16,13 @@ class uploadForm(FlaskForm):
 
 class editOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
-    description = TextAreaField('Description', validators=[DataRequired(),Length(min=1, max=300)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(min=1, max=300)])
     miles = FloatField('Miles')
-    accountCode = StringField('Deparment Code',validators=[DataRequired()])
-    accountCode2 = StringField('Account Code',validators=[DataRequired()])
+    accountCode = StringField('Deparment Code', validators=[DataRequired()])
+    accountCode2 = StringField('Account Code', validators=[DataRequired()])
     total = FloatField('Total')
     submit = SubmitField('Submit')
+
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
 
@@ -100,11 +104,13 @@ class description(FlaskForm):
                            validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     submit = SubmitField('Submit')
 
+
 class modalSettings(FlaskForm):
     accounting_email = StringField('Accounting email', validators=[DataRequired(), Email()])
-    dark = BooleanField('Use the dark theme', validators=[])
+    dark = BooleanField('Use the dark theme')
     submit = SubmitField('Apply')
 
+
 class supervisor(FlaskForm):
-    email_supervisor = StringField('Email of line supervisor', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send')
+    email_supervisor = StringField('Email of line supervisor (HoD)', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send for authorization')

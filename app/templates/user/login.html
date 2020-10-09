@@ -2,9 +2,8 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <div>
-    <h1>Sign in</h1>
-        <div class="col-md-4">
+    <h1 >Sign in</h1>
+        <div class="col-lg-6 col-md-4  col-xs-12">
             <form method="post" role="form">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
@@ -13,8 +12,8 @@
                 {{ wtf.form_field(form.remember_me) }}
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
             <br><br><p>New User? <a href="{{ url_for('register') }}">Click to Register!</a></p>
-                <p>Forgot Your Password? <a href="{{ url_for('reset_password_request') }}">Click to Reset It</a></p>
+                <p>Forgot Your Password? <a href="{{ url_for('reset_password_request') }}">Click to Reset</a></p>
             </form>
         </div>
-    </div>
+
 {% endblock %}

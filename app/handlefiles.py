@@ -50,7 +50,7 @@ def createExcel(file_id, current_user, signature=None):
             handleExcel.addImages(file.filename, row.row_id, row.image_name)
     return file
 
-
+# https://stackoverflow.com/questions/876853/generating-color-ranges-in-python
 def createDistinctColours(n):
     HSV_tuples = [(x * 1.0 / n, 0.5, 0.5) for x in range(n)]
     RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)

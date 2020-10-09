@@ -54,7 +54,7 @@ function initialize() {
         </form>
     </div>
     {% if start %}
-    <div class="col-lg-7 col-sm-12 ml-auto" style="height: 45vw; width: 40vw; margin-right:50px;">
+    <div class="col-lg-7 col-md-6 ml-auto d-none d-md-block" style="height: 45vw; width: 40vw; margin-right:50px;">
         <div class="row">
             <iframe style='position: absolute; background: transparent; width: 100%; height:100%;'
                     src={{url_for('load_map',start=start,end=end)}} frameborder="0"></iframe>
