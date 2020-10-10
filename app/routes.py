@@ -36,7 +36,7 @@ def upload(file_id, row):
     myform = forms.uploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
-            file= db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
+            file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
             if file.sent == "Authorized":
                 file.sent = "Draft"
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
@@ -139,9 +139,10 @@ def edit_data(file_id, row):
     try:
         current_account = details.account_id.split("-")
         current_account[0] = current_account[0].split("(")[0]
-        account = [db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first_or_404().account_id,
-                   db.session.query(Account_codes).filter_by(
-                       account_id=str(current_account[0])).first_or_404().account_name]
+        account = [
+            db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first_or_404().account_id,
+            db.session.query(Account_codes).filter_by(
+                account_id=str(current_account[0])).first_or_404().account_name]
         if account in accounts_list:
             accounts_list.pop(accounts_list.index(account))
         cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
@@ -371,8 +372,8 @@ def settings():
         user.first_name = myform.first_name.data
         user.last_name = myform.last_name.data
         user.email = myform.email.data
-        if myform.accounting_email.data != user.accounting_email:
-            user.accounting_email = myform.accounting_email.data
+        if myform.email.data != user.email:
+            user.email = myform.email.data
             user.is_verified = False
             send_verify_email(user)
             logout_user()
