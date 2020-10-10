@@ -391,7 +391,7 @@ def settings():
         myform.accounting_email.data = user.accounting_email
         myform.taggun.data = user.use_taggun
         myform.dark.data = user.dark
-    return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark)
+    return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark, email=user.email)
 
 
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
