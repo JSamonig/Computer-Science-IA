@@ -371,7 +371,7 @@ def settings():
     if myform.validate_on_submit():
         user.first_name = myform.first_name.data
         user.last_name = myform.last_name.data
-        user.email = myform.email.data
+        user.accounting_email = myform.accounting_email.data
         if myform.email.data != user.email:
             user.email = myform.email.data
             user.is_verified = False
