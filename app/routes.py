@@ -36,8 +36,11 @@ def upload(file_id, row):
     myform = forms.uploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
+            file= db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
+            if file.sent == "Authorized":
+                file.sent = "Draft"
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).filter_by(row_id=int(row)).first()
+                form_id=file_id).filter_by(row_id=int(row)).first_or_404()
             if details:
                 if details.image_name:
                     os.remove(os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))
@@ -47,7 +50,7 @@ def upload(file_id, row):
                 return render_template('forms/upload.html', form=myform, dark=current_user.dark)
             filename = str(uuid.uuid4()) + "." + detected_extension
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)
-            user = User.query.filter_by(id=current_user.id).first()
+            user = User.query.filter_by(id=current_user.id).first_or_404()
             data = OCR.run(filename, user.use_taggun)
             if not details:
                 details = reclaim_forms_details(date_receipt=data["date_receipt"], Total=data["Total"],
@@ -75,7 +78,7 @@ def upload(file_id, row):
 
 @app.route('/edit_data/<file_id>/<row>', methods=['GET', 'POST'])
 @login_required
-def edit_data(file_id, row, ):
+def edit_data(file_id, row):
     myform = forms.editOutput()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()
@@ -85,8 +88,6 @@ def edit_data(file_id, row, ):
         accounts_list.append([str(account.account_id), str(account.account_name)])
     if request.method == "POST":
         if myform.validate_on_submit():
-            details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).filter_by(row_id=int(row)).first()
             if myform.miles.data:
                 if float(myform.miles.data) < 0 or float(myform.total.data) < 0:
                     flash("Only input positive values", category="alert alert-danger")
@@ -101,7 +102,7 @@ def edit_data(file_id, row, ):
                 details.miles = myform.miles.data
                 # account_id = 110-43214 ## ART(110)-43214
                 cost_centre = db.session.query(Account_codes).filter_by(
-                    account_id=myform.accountCode.data).first()
+                    account_id=myform.accountCode.data).first_or_404()
                 account_code = myform.accountCode2.data
                 if cost_centre.cost_centre:
                     details.account_id = "{}({})-{}".format(str(cost_centre.account_id), str(cost_centre.cost_centre),
@@ -118,52 +119,49 @@ def edit_data(file_id, row, ):
             else:
                 flash("This row doesn't exist.", category="alert alert-danger")
             return redirect(url_for('edit_forms', file_id=file_id))
-        elif request.form:  # AJAX
-            try:
-                return_cost_centers = db.session.query(cost_centres).filter_by(cost_centre_id=dict(request.form)["data"]).all()
-                dict_cost_centres = {}
+        elif "data" in dict(request.form):  # AJAX
+            return_cost_centers = db.session.query(cost_centres).filter_by(
+                cost_centre_id=dict(request.form)["data"]).all()
+            dict_cost_centres = {}
+            for centre in return_cost_centers:
+                dict_cost_centres[str(centre.purpose_id)] = centre.purpose_cost_centre
+            if dict_cost_centres == {}:
+                return_cost_centers = db.session.query(db.distinct(cost_centres.purpose_cost_centre)).all()
                 for centre in return_cost_centers:
-                    dict_cost_centres[str(centre.purpose_id)] = centre.purpose_cost_centre
-                if dict_cost_centres == {}:
-                    return_cost_centers = db.session.query(db.distinct(cost_centres.purpose_cost_centre)).all()
-                    for centre in return_cost_centers:
-                        individual_centre = db.session.query(cost_centres).filter_by(
-                            purpose_cost_centre=list(centre)[0]).first()
-                        dict_cost_centres[str(individual_centre.purpose_id)] = individual_centre.purpose_cost_centre
-                dict_cost_centres["N/A"] = "N/A"
-                return jsonify({"Data": dict_cost_centres})
-            except:
-                flash("Error on one or more fields.", category="alert alert-danger")
-                return redirect(url_for("edit_data",file_id=file_id,row=row))
-    else:
-        myform.date.data = details.date_receipt
-        myform.description.data = details.description
-        try:
-            current_account = details.account_id.split("-")
-            current_account[0] = current_account[0].split("(")[0]
-            account = [db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first().account_id,
-                       db.session.query(Account_codes).filter_by(
-                           account_id=str(current_account[0])).first().account_name]
-            if account in accounts_list:
-                accounts_list.pop(accounts_list.index(account))
-            cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
-                purpose_id=current_account[1]).first().purpose_cost_centre]
-        except:
-            cost_centre = None
-            account = None
-        try:
-            myform.total.data = round(float(details.Total), 2)
-        except:
-            myform.total.data = ""
-        if details.start:
-            origin = urllib.parse.quote_plus(details.destination)
-            destination = urllib.parse.quote_plus(details.start)
-            myform.miles.data = details.miles
-            return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
-                                   dark=current_user.dark, accounts=accounts_list, account=account,
-                                   cost_centre=cost_centre)
-        return render_template('forms/form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name,
-                               dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
+                    individual_centre = db.session.query(cost_centres).filter_by(
+                        purpose_cost_centre=list(centre)[0]).first_or_404()
+                    dict_cost_centres[str(individual_centre.purpose_id)] = individual_centre.purpose_cost_centre
+            dict_cost_centres["N/A"] = "N/A"
+            return jsonify({"Data": dict_cost_centres})
+    # GET request
+    myform.date.data = details.date_receipt
+    myform.description.data = details.description
+    try:
+        current_account = details.account_id.split("-")
+        current_account[0] = current_account[0].split("(")[0]
+        account = [db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first_or_404().account_id,
+                   db.session.query(Account_codes).filter_by(
+                       account_id=str(current_account[0])).first_or_404().account_name]
+        if account in accounts_list:
+            accounts_list.pop(accounts_list.index(account))
+        cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
+            purpose_id=current_account[1]).first_or_404().purpose_cost_centre]
+    except:
+        cost_centre = None
+        account = None
+    try:
+        myform.total.data = round(float(details.Total), 2)
+    except:
+        myform.total.data = ""
+    if details.start:
+        origin = urllib.parse.quote_plus(details.destination)
+        destination = urllib.parse.quote_plus(details.start)
+        myform.miles.data = details.miles
+        return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
+                               dark=current_user.dark, accounts=accounts_list, account=account,
+                               cost_centre=cost_centre)
+    return render_template('forms/form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name,
+                           dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
 
 
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
@@ -400,6 +398,7 @@ def settings():
 def send(file_id):
     myform = forms.supervisor()
     if myform.validate_on_submit():
+        user = User.query.get(current_user.id)
         file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
@@ -518,6 +517,9 @@ def mileage(file_id, row):
     myform = forms.description()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
+    file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
+    if file.sent == "Authorized":
+        file.sent = "Draft"
     if myform.validate_on_submit():
         # date validator
         end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()
