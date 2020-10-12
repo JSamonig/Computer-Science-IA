@@ -109,7 +109,7 @@ $( document ).ready(function() {
                 {% elif start %}
                 <a class="btn btn-info"
                    href="{{ url_for('mileage',file_id=request.base_url.rpartition('//')[2].split('/')[2],row=request.base_url.rpartition('//')[2].split('/')[3]) }}"><i
-                        class="fas fa-edit"></i> Edit map</a>
+                        class="fas fa-edit"></i> Edit route</a>
                 {% endif %}
                 <button type="button" class="btn" data-toggle="modal" data-target="#flipFlop"><i
                         class="fas fa-info"></i></button>
