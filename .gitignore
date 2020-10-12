@@ -67,7 +67,7 @@ instance/
 migrations/
 app.db
 app/static/reclaims/
-app/static/uploads/images/receipts
+app/static/uploads/images/receipts/
 app/static/uploads/signatures/
 app/static/uploads/signatures/!wellington_crest.png
 
