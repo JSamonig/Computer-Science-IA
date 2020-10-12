@@ -9,7 +9,7 @@ from flask_moment import Moment
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-from flask_wtf import CsrfProtect
+from flask_wtf import CSRFProtect
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
 app = Flask(__name__)
@@ -22,8 +22,7 @@ login.login_view = 'login'
 login.login_message_category = "alert alert-danger"
 fa = FontAwesome(app)
 moment = Moment(app)
-csrf = CsrfProtect()
-csrf.init_app(app)
+CSRFProtect(app)
 
 
 from app import routes, models, errors
