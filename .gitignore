@@ -69,7 +69,7 @@ app.db
 app/static/reclaims/
 app/static/uploads/images/receipts/
 app/static/uploads/images/signatures/
-app/static/uploads/signatures/!wellington_crest.png
+!app/static/uploads/signatures/wellington_crest.png
 
 # Scrapy stuff:
 .scrapy
