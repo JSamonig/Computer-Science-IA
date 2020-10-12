@@ -67,8 +67,9 @@ instance/
 migrations/
 app.db
 app/static/reclaims/
-app/static/uploads/
-app/static/uploads/singatures/!wellington_crest.png
+app/static/uploads/images/receipts
+app/static/uploads/signatures/
+app/static/uploads/signatures/!wellington_crest.png
 
 # Scrapy stuff:
 .scrapy
