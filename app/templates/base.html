@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% if title %}
     {{ title }}
     {% else %}
@@ -26,26 +27,36 @@
     <script>
     //https://mdbootstrap.com/docs/jquery/forms/validation/
     $(document).ready(function () {
-    $('.has-error').find("input").addClass('is-invalid');
-    $('.help-block').addClass('invalid-feedback');
+        $('.has-error').find("input").addClass('is-invalid');
+        $('.help-block').addClass('invalid-feedback');
 
-    /*
-    $('.form-control').each(function(){
-          if (!$('.form-control').hasClass(".has-error") && $(this).val()) {
-            $(this).addClass("is-valid");
-       }
-    });*/
+        /*
+        $('.form-control').each(function(){
+              if (!$('.form-control').hasClass(".has-error") && $(this).val()) {
+                $(this).addClass("is-valid");
+           }
+        });*/
+        //https://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize/25621277
+        $('textarea').each(function () {
+        this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px; overflow-y:hidden;');
+        }).on('input', function () {
+          this.style.height = 'auto';
+          this.style.height = (this.scrollHeight) + 'px';
+            });
 
-    $('textarea').each(function () {
-    this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px; overflow-y:hidden;');
-    }).on('input', function () {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-        });
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+        //https://stackoverflow.com/questions/31888316/how-to-use-flask-wtforms-csrf-protection-with-ajax
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
 
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
+        $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+        })
     });
     </script>
 
