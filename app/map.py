@@ -5,7 +5,6 @@ import config as c
 def getMap(start, end):
     endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
     api_key = c.Config.GOOGLEMAPS_KEY
-
     origin = urllib.parse.quote_plus(start)
     destination = urllib.parse.quote_plus(end)
     nav_request = 'origin={}&destination={}&key={}'.format(origin, destination, api_key)

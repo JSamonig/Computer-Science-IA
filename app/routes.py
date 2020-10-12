@@ -24,23 +24,29 @@ def index():
 
 @app.route('/upload/<file_id>/<row>', methods=['GET', 'POST'])
 @login_required
-def upload(file_id, row):
-    if row == "0":
+def upload(file_id: str, row: str):
+    """
+    :param file_id: The file id of the excel sheet (this is a value from the database at app.db)
+    :param row: Row inside the excel sheet (this is a value from the database at app.db). Row=0 if a new row is added.
+    :return: HTML template contained in app/templates/forms
+    purpose: Upload an image to an expenses form.
+    """
+    if row == "0":  # row=0 is used when a new row is added
         details = \
             db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).first()[0]
+                form_id=file_id).first()[0]  # if a new row is added, look for the last row added
         if details:
-            row = int(details) + 1
+            row = int(details) + 1  # if a new row is added, the index will be one more than the previous row
         else:
-            row = 7
+            row = 7  # If there are now previous rows, we will start at row 7 in the excel sheet.
     myform = forms.uploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
-            file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
+            file = db.session.query(reclaim_forms).filter_by(id=file_id).first()
             if file.sent == "Authorized":
                 file.sent = "Draft"
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).filter_by(row_id=int(row)).first_or_404()
+                form_id=file_id).filter_by(row_id=int(row)).first()
             if details:
                 if details.image_name:
                     os.remove(os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))
@@ -57,12 +63,11 @@ def upload(file_id, row):
                                                 image_name=filename, made_by=current_user.id, row_id=row,
                                                 form_id=file_id)
                 db.session.add(details)
-                db.session.commit()
             else:
                 details.date_receipt = data["date_receipt"]
                 details.Total = round(float(data["Total"]), 2)
                 details.image_name = filename
-                db.session.commit()
+            db.session.commit()
         except AttributeError:
             flash("Please try again or use a different file.", category="alert alert-danger")
             return render_template('forms/upload.html', form=myform, dark=current_user.dark)
@@ -391,7 +396,8 @@ def settings():
         myform.accounting_email.data = user.accounting_email
         myform.taggun.data = user.use_taggun
         myform.dark.data = user.dark
-    return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark, email=user.email)
+    return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark,
+                           email=user.email)
 
 
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
@@ -417,7 +423,7 @@ def send(file_id):
         except:
             flash("Error sending email. Please try again later.", category="alert alert-danger")
         return redirect(url_for("index"))
-    return render_template("manager/manager_email.html", form=myform, dark=current_user.dark)
+    return render_template("email/manager_email.html", form=myform, dark=current_user.dark)
 
 
 @app.route('/send_accounting/<file_id>/<user_id>', methods=['GET', 'POST'])

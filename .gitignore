@@ -66,8 +66,9 @@ instance/
 .webassets-cache
 migrations/
 app.db
-app/static/reclaims
-app/static/uploads
+app/static/reclaims/
+app/static/uploads/
+app/static/uploads/singatures/!wellington_crest.png
 
 # Scrapy stuff:
 .scrapy
