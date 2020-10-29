@@ -104,78 +104,102 @@ def edit_data(file_id, row):
             if myform.miles.data:  # if there is data for mileage
                 if float(myform.miles.data) < 0 or float(myform.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
-                    return redirect(url_for('edit_data', file_id=file_id, row=row)) # reload
+                    return redirect(url_for('edit_data', file_id=file_id, row=row))  # reload
             else:  # if mileage isnt present, only total will be present, the below lines prevent an error from occuring
                 if float(myform.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
-                    return redirect(url_for('edit_data', file_id=file_id, row=row)) # reload
-            if details: # if there is a reclaim form
+                    return redirect(url_for('edit_data', file_id=file_id, row=row))  # reload
+            if details:  # if there is a reclaim form
                 details.date_receipt = myform.date.data
-                details.description = myform.description.data
+                details.description = myform.description.data  # load data into DB
                 details.miles = myform.miles.data
-                # account_id = 110-43214 ## ART(110)-43214
+                # Format of account_id is for example: ART(110)-43214
                 cost_centre = db.session.query(Account_codes).filter_by(
-                    account_id=myform.accountCode.data).first_or_404()
-                account_code = myform.accountCode2.data
+                    account_id=myform.accountCode.data).first_or_404()  # number associated with 3 letter code (110)
+                account_code = myform.accountCode2.data  # this is the 43214 suffix
                 if cost_centre.cost_centre:
                     details.account_id = "{}({})-{}".format(str(cost_centre.account_id), str(cost_centre.cost_centre),
-                                                            str(account_code))
-                else:
+                                                            str(account_code))  # format account_id
+                else:  # some cost_centre values do not have a 3 digit number, so the letters only are used
                     details.account_id = "{}-{}".format(str(cost_centre.account_id), str(account_code))
                 details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
-                db.session.commit()
-                today = datetime.datetime.now().date()
+                # multiply by mileage rate
+                db.session.commit()  # commit changes to DB
+                today = datetime.datetime.now().date()  # save today's date
                 result = (today - datetime.datetime.strptime(details.date_receipt, '%d/%m/%Y').date()).days > 29
-                if result:
+                if result:  # Give a warning that expense is older than 4 weeks
                     flash("Warning: the date of expense for row {} is older than 4 weeks.".format(str(int(row) - 6)),
                           category="alert alert-warning ")
-            else:
+            else:  # Throw error if details is not found
                 flash("This row doesn't exist.", category="alert alert-danger")
             return redirect(url_for('edit_forms', file_id=file_id))
-        elif "data" in dict(request.form):  # AJAX
-            return_cost_centers = db.session.query(cost_centres).filter_by(
-                cost_centre_id=dict(request.form)["data"]).all()
+        elif "data" in dict(request.form):
+            '''
+            AJAX 
+            To dynamically load options such as "flowers" from 3 letter "ART" in example above.
+            Once an option for the first field ("ART") is selected, the below code will find associated options (such as
+            Flowers, software or stationary, for example).
+            '''
+            return_cost_centers = db.session.query(cost_centres).filter_by(  # cost centres associated with 3 digit code
+                cost_centre_id=dict(request.form)["data"]).all()  # dict(request.form)["data"] is the 3 letter code
             dict_cost_centres = {}
             for centre in return_cost_centers:
                 dict_cost_centres[str(centre.purpose_id)] = centre.purpose_cost_centre
-            if dict_cost_centres == {}:
+                # Associate purpose with code e.g. flowers with 12345
+            if dict_cost_centres == {}:  # repeat the above but add all unique cost centres if the dict is empty
                 return_cost_centers = db.session.query(db.distinct(cost_centres.purpose_cost_centre)).all()
+                # return all unique cost centre purposes
                 for centre in return_cost_centers:
                     individual_centre = db.session.query(cost_centres).filter_by(
                         purpose_cost_centre=list(centre)[0]).first_or_404()
                     dict_cost_centres[str(individual_centre.purpose_id)] = individual_centre.purpose_cost_centre
-            dict_cost_centres["N/A"] = "N/A"
-            return jsonify({"Data": dict_cost_centres})
+            dict_cost_centres["N/A"] = "N/A"  # add a N/A option
+            return jsonify({"Data": dict_cost_centres})  # return dict
     # GET request
     myform.date.data = details.date_receipt
     myform.description.data = details.description
     try:
-        current_account = details.account_id.split("-")
-        current_account[0] = current_account[0].split("(")[0]
+        current_account = details.account_id.split("-")  # E.g. [ART(110), 43214]
+        current_account[0] = current_account[0].split("(")[0]  # get account code 3 letter code [ART, 43214]
         account = [
             db.session.query(Account_codes).filter_by(account_id=str(current_account[0])).first_or_404().account_id,
             db.session.query(Account_codes).filter_by(
-                account_id=str(current_account[0])).first_or_404().account_name]
+                account_id=str(current_account[0])).first_or_404().account_name]  # e.g. [ART, Art department]
         if account in accounts_list:
-            accounts_list.pop(accounts_list.index(account))
+            accounts_list.pop(accounts_list.index(account))  # pop selected account to avoid duplicate accounts
         cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
-            purpose_id=current_account[1]).first_or_404().purpose_cost_centre]
-    except:
+            purpose_id=current_account[1]).first_or_404().purpose_cost_centre] # Selected cost centre [43214, purpose]
+    except:  # If nothing has been selected yet
         cost_centre = None
         account = None
     try:
-        myform.total.data = round(float(details.Total), 2)
+        myform.total.data = round(float(details.Total), 2)  # Round total
     except:
-        myform.total.data = ""
-    if details.start:
-        origin = urllib.parse.quote_plus(details.destination)
+        myform.total.data = ""  # Leave blank if there is not Total (OCR didn't recongnise it)
+    if details.start: # if a route is attached
+        origin = urllib.parse.quote_plus(details.destination) # put start and destination into url format
         destination = urllib.parse.quote_plus(details.start)
-        myform.miles.data = details.miles
+        myform.miles.data = details.miles  # load mileage into edit form
         return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
                                dark=current_user.dark, accounts=accounts_list, account=account,
                                cost_centre=cost_centre)
+    '''
+        form.html parameters
+
+        form = form object located in forms.py
+        filename = path to receipt image
+        dark = user's selected theme
+        accounts = All accounts with associated purpose
+        account = Selected account
+        cost_centre = All cost centres associated with selected account
+        include = render mileage field and map
+        start = url encoded location for map
+        end = url encoded location of destination for map
+
+        '''
     return render_template('forms/form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name,
                            dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
+    # Render same form, but with image of receipt instead of map
 
 
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
