@@ -29,7 +29,7 @@ from app import routes, models, errors
 
 
 if not app.debug:
-    # ...
+    # Adapted from https://blog.miguelgrinberg.com/
     if not os.path.exists('logs'):
         os.mkdir('logs')
     file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240,

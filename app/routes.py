@@ -42,66 +42,74 @@ def upload(file_id: str, row: str):
     myform = forms.uploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
-            file = db.session.query(reclaim_forms).filter_by(id=file_id).first()
-            if file.sent == "Authorized":
+            file = db.session.query(reclaim_forms).filter_by(id=file_id).first()  # find reclaim form
+            if file.sent == "Authorized":  # if a file is already authorized make it into a draft
                 file.sent = "Draft"
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).filter_by(row_id=int(row)).first()
-            if details:
-                if details.image_name:
-                    os.remove(os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))
-            detected_extension = handlefiles.validate_image(myform.file.data.stream)
+                form_id=file_id).filter_by(row_id=int(row)).first()  # find specific entry
+            if details:  # if the entry exists
+                if details.image_name:  # if an image is already uploaded
+                    os.remove(
+                        os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))  # delete the existing image
+            detected_extension = handlefiles.validate_image(myform.file.data.stream)  # detect extension of image
             if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
-                flash('Incorrect file extension', category="alert alert-danger")
+                flash('Incorrect file extension',
+                      category="alert alert-danger")  # error if the extension is not allowed
                 return render_template('forms/upload.html', form=myform, dark=current_user.dark)
-            filename = str(uuid.uuid4()) + "." + detected_extension
-            myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)
-            user = User.query.filter_by(id=current_user.id).first_or_404()
-            data = OCR.run(filename, user.use_taggun)
-            if not details:
+            filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
+            myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)  # save image under filename
+            user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
+            data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
+            if not details:  # create new row if it doesn't exist
                 details = reclaim_forms_details(date_receipt=data["date_receipt"], Total=data["Total"],
                                                 image_name=filename, made_by=current_user.id, row_id=row,
                                                 form_id=file_id)
-                db.session.add(details)
+                db.session.add(details)  # add to session
             else:
                 details.date_receipt = data["date_receipt"]
                 details.Total = round(float(data["Total"]), 2)
-                details.image_name = filename
-            db.session.commit()
-        except AttributeError:
+                details.image_name = filename  # results of OCR
+            db.session.commit()  # commit to DB
+        except AttributeError:  # if any of the database values do not exist, or there is an unexpected AttributeError
             flash("Please try again or use a different file.", category="alert alert-danger")
             return render_template('forms/upload.html', form=myform, dark=current_user.dark)
-        if details.Total is None or details.date_receipt:
+        if details.Total is None or details.date_receipt:  # If OCR could not find a value
             flash("Could not recognise price or total. Optical character recognition is never 100% accurate.",
                   category="alert alert-danger")
-        else:
+        else:  # General warning
             flash("Please check the information is correct. Optical character recognition is never 100% accurate.",
                   category="alert alert-secondary")
-        return redirect("/edit_data/{}/{}".format(file_id, row))
-    return render_template('forms/upload.html', form=myform, dark=current_user.dark)
+        return redirect("/edit_data/{}/{}".format(file_id, row))  # redirect to edit_data
+    return render_template('forms/upload.html', form=myform, dark=current_user.dark)  # GET request
 
 
 @app.route('/edit_data/<file_id>/<row>', methods=['GET', 'POST'])
 @login_required
 def edit_data(file_id, row):
+    """
+    :param file_id: ID of file in the database
+    :param row: ID of the row which is to be access
+    :return: HTML template contained in app/templates/forms
+    Edit any data which came in through Mileage or Upload
+    """
     myform = forms.editOutput()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-        form_id=file_id).filter_by(row_id=int(row)).first_or_404()
-    accounts = db.session.query(Account_codes).all()
+        form_id=file_id).filter_by(row_id=int(row)).first_or_404()  # get row of reclaim form
+    accounts = db.session.query(Account_codes).all()  # find all account codes
     accounts_list = []
     for account in accounts:
-        accounts_list.append([str(account.account_id), str(account.account_name)])
+        accounts_list.append([str(account.account_id), str(account.account_name)])  # append all acounts to a list
     if request.method == "POST":
         if myform.validate_on_submit():
-            if myform.miles.data:
-                if float(myform.miles.data) < 0 or float(myform.total.data) < 0:
+            if myform.miles.data:  # if there is data for mileage
+                if float(myform.miles.data) < 0 or float(myform.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
-                    return redirect(url_for('edit_data', file_id=file_id, row=row))
-            else:
-                if float(myform.total.data) < 0:
+                    return redirect(url_for('edit_data', file_id=file_id, row=row)) # reload
+            else:  # if mileage isnt present, only total will be present, the below lines prevent an error from occuring
+                if float(myform.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
-                    return redirect(url_for('edit_data', file_id=file_id, row=row))
-            if details:
+                    return redirect(url_for('edit_data', file_id=file_id, row=row)) # reload
+            if details: # if there is a reclaim form
                 details.date_receipt = myform.date.data
                 details.description = myform.description.data
                 details.miles = myform.miles.data
