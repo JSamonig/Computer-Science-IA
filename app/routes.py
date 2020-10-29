@@ -19,6 +19,9 @@ from PIL import Image
 @app.route('/')
 @app.route('/index')
 def index():
+    """
+    Index page which is currently redundant as it simply links to view_forms, if a user is logged in.
+    """
     return redirect(url_for("view_forms"))
 
 
