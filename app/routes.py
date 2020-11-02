@@ -254,12 +254,12 @@ def delete_row(file_id, row):
             os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
         except:
             pass
-        row = reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
+        reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).order_by(reclaim_forms_details.row_id).all()
+            form_id=file_id).order_by(reclaim_forms_details.row_id).all()  # get all rows
         for row in rows:
             if row.row_id > int(myrow):
-                row.row_id -= 1
+                row.row_id -= 1  # move below rows up one
         db.session.commit()
         return redirect(url_for('edit_forms', file_id=file_id))
     except:
@@ -269,18 +269,22 @@ def delete_row(file_id, row):
 @app.route('/delete_file/<file_id>', methods=['GET', 'POST'])
 @login_required
 def delete_file(file_id):
+    """
+    :param file_id: ID of reclaim form
+    :return: HTML
+    """
     rows = reclaim_forms_details.query.filter_by(form_id=file_id).all()
     for row in rows:
-        try:
+        try:  # remove images
             os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
         except:
             pass
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id)
-    try:
+    try:  # remove signature
         os.remove(os.path.join(app.Config["SIGNATURE_ROUTE"], file.first().signature))
     except:
         pass
-    file.delete()
+    file.delete()  # delete file
     db.session.commit()
     return redirect(url_for('view_forms'))
 
@@ -288,10 +292,15 @@ def delete_file(file_id):
 @app.route('/download/<file_id>', methods=['GET'])
 @login_required
 def download(file_id):
+    """
+    :param file_id: ID of reclaim form
+    :return: HTML
+    """
     try:
-        file = handlefiles.createExcel(file_id, current_user)
+        file = handlefiles.createExcel(file_id, current_user)  # create excel file dynamically
         db.session.commit()
         return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True, cache_timeout=0)
+        # send file to user but do not cache it
     except:
         flash('Error downloading file. Try renaming your file.', category="alert alert-danger")
         return redirect(url_for("view_forms"))
@@ -301,26 +310,34 @@ def download(file_id):
 @app.route('/view_forms', methods=['GET', 'POST'])
 @login_required
 def view_forms(new_user=False):
-    allforms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
-        reclaim_forms.date_created.desc()).all()
+    """
+    :param new_user: Whether this user is logging on for the first time or not, default is False
+    :type new_user: Boolean
+    :return: HTML
+    """
+    all_forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
+        reclaim_forms.date_created.desc()).all() # all reclaim forms made by a user sorted by date
     user = User.query.get(current_user.id)
-    if user.accounting_email == None:
+    if user.accounting_email is None: # if the user has not set an email
         myform = forms.modalSettings()
         new_user = True
-        if myform.validate_on_submit():
+        if myform.validate_on_submit(): # render a form which asks for email and preffered theme
             user.accounting_email = myform.accounting_email.data
             user.dark = myform.dark.data
             db.session.commit()
-            return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark)
-        return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark, setting=myform,
+            return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark)
+        return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark, setting=myform,
                                new_user=new_user)
     else:
-        return render_template('forms/view_forms.html', forms=allforms, dark=current_user.dark)
+        return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark)
 
 
 @app.route('/new_form', methods=['GET', 'POST'])
 @login_required
 def new_form():
+    """
+    :return: HTML
+    """
     myform = forms.newReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     if myform.validate_on_submit():
