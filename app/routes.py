@@ -171,7 +171,7 @@ def edit_data(file_id, row):
         if account in accounts_list:
             accounts_list.pop(accounts_list.index(account))  # pop selected account to avoid duplicate accounts
         cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
-            purpose_id=current_account[1]).first_or_404().purpose_cost_centre] # Selected cost centre [43214, purpose]
+            purpose_id=current_account[1]).first_or_404().purpose_cost_centre]  # Selected cost centre [43214, purpose]
     except:  # If nothing has been selected yet
         cost_centre = None
         account = None
@@ -179,8 +179,8 @@ def edit_data(file_id, row):
         myform.total.data = round(float(details.Total), 2)  # Round total
     except:
         myform.total.data = ""  # Leave blank if there is not Total (OCR didn't recongnise it)
-    if details.start: # if a route is attached
-        origin = urllib.parse.quote_plus(details.destination) # put start and destination into url format
+    if details.start:  # if a route is attached
+        origin = urllib.parse.quote_plus(details.destination)  # put start and destination into url format
         destination = urllib.parse.quote_plus(details.start)
         myform.miles.data = details.miles  # load mileage into edit form
         return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
@@ -208,42 +208,53 @@ def edit_data(file_id, row):
 @app.route('/edit_forms/<file_id>', methods=['GET', 'POST'])
 @login_required
 def edit_forms(file_id):
+    """
+    :param file_id:  ID of the expenses form
+    :return: HTML
+    """
     try:
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
         name = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404().filename
-        mysum = 0
+        sum_reclaimed = 0  # sum of reclaimed money in a form
         for row in rows:
             if row.Total:
-                mysum += float(row.Total)
+                sum_reclaimed += float(row.Total)
             elif row.miles:
-                row.Total = row.miles * 0.45
-                mysum += float(row.Total)
+                row.Total = row.miles * 0.45  # calculate total if no total present
+                sum_reclaimed += float(row.Total)
             else:
-                row.Total = 0
-            if row.account_id == None:
+                row.Total = 0  # if neither is present give total of zero
+            if row.account_id is None:
+                # delete the row is account_id is not present (i.e. incomplete form submission in edit_data() ).
                 return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
-        return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=mysum,
+        return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=sum_reclaimed,
                                dark=current_user.dark)
     except AttributeError:
-        abort(404)
+        abort(404)  # needed as .all() is used and not .first_or_404()
 
 
 @app.route('/delete_row/<file_id>/<row>', methods=['GET', 'POST'])
 @login_required
 def delete_row(file_id, row):
+    """
+    :param file_id: ID of reclaim form
+    :param row: Row number
+    :return: HTML
+
+    Deleting rows
+    """
     try:
-        myrow = row
+        myrow = row  # avoid duplicate row variable
         row = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).filter_by(row_id=int(row)).first_or_404()
-        try:
+        try:  # Try to remove image associated with a row
             os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
         except:
             pass
-        row = reclaim_forms_details.query.filter_by(id=row.id)
-        row.delete()
+        row = reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file_id).order_by(reclaim_forms_details.row_id).all()
         for row in rows:
