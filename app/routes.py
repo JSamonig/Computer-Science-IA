@@ -316,12 +316,12 @@ def view_forms(new_user=False):
     :return: HTML
     """
     all_forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
-        reclaim_forms.date_created.desc()).all() # all reclaim forms made by a user sorted by date
+        reclaim_forms.date_created.desc()).all()  # all reclaim forms made by a user sorted by date
     user = User.query.get(current_user.id)
-    if user.accounting_email is None: # if the user has not set an email
+    if user.accounting_email is None:  # if the user has not set an email
         myform = forms.modalSettings()
         new_user = True
-        if myform.validate_on_submit(): # render a form which asks for email and preffered theme
+        if myform.validate_on_submit():  # render a form which asks for email and preffered theme
             user.accounting_email = myform.accounting_email.data
             user.dark = myform.dark.data
             db.session.commit()
@@ -337,33 +337,38 @@ def view_forms(new_user=False):
 def new_form():
     """
     :return: HTML
+    Creates a new form
     """
     myform = forms.newReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     if myform.validate_on_submit():
         filename = handlefiles.validate_excel(myform.filename.data)
-        id = str(uuid.uuid4())
+        id = str(uuid.uuid4())  # unique user id filename which is stored as a variable and in the database
         myform = reclaim_forms(id=id, filename=filename, description=myform.description.data,
                                sent="Draft",
-                               made_by=current_user.id)
+                               made_by=current_user.id)  # New file, meaning it must be a draft
         db.session.add(myform)
         db.session.commit()
         flash("Successfully created the form: {}".format(filename), category="alert alert-success")
         return redirect(url_for('edit_forms', file_id=id))
     elif request.method == 'GET':
         myform.filename.data = datetime.datetime.today().strftime(
-            '%m-%Y') + "_Expenses_form_" + user.last_name + ".xlsx"
+            '%m-%Y') + "_Expenses_form_" + user.last_name + ".xlsx"  # Month-Year__Expenses_form_Surname.xlsx
     return render_template('forms/new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
 
 
-@app.route('/edit_form/<file>', methods=['GET', 'POST'])
+@app.route('/edit_form/<file>', methods=['GET', 'POST'])  # edit reclaim form details
 @login_required
 def edit_form(file):
+    """
+    :param file: ID of reclaim id
+    :return: HTML
+    """
     myform = forms.newReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     myfile = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file).first_or_404()
     if myform.validate_on_submit():
-        filename = handlefiles.validate_excel(myform.filename.data)
+        filename = handlefiles.validate_excel(myform.filename.data)  # make filename safe
         myfile.description = myform.description.data
         myfile.filename = filename
         db.session.commit()
@@ -371,7 +376,7 @@ def edit_form(file):
     elif request.method == 'GET':
         if myfile:
             myform.filename.data = myfile.filename
-            myform.description.data = myfile.description
+            myform.description.data = myfile.description  # preload fields
         else:
             myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
     return render_template('forms/new_form.html', form=myform, title="Edit form", dark=current_user.dark, edit=True)
@@ -381,6 +386,10 @@ def edit_form(file):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Handles logic of logins
+    :return: HTML
+    """
     if current_user.is_authenticated:
         return redirect(url_for('view_forms'))
     myform = forms.LoginForm()
@@ -398,19 +407,27 @@ def login():
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
-        return redirect(next_page)
+        return redirect(next_page)  # redirect to next page (if the user was redirected from another page)
     return render_template('user/login.html', form=myform)
 
 
 @app.route('/logout')
 @login_required
 def logout():
+    """
+    Logout function
+    :return: HTML
+    """
     logout_user()
     return redirect(url_for('index'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Register function
+    :return: HTML
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     myform = forms.RegistrationForm()
@@ -434,6 +451,10 @@ def register():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    """
+    Settings page
+    :return: HTML
+    """
     myform = forms.settings(current_user.id)
     user = User.query.get(current_user.id)
     if myform.validate_on_submit():
@@ -441,6 +462,7 @@ def settings():
         user.last_name = myform.last_name.data
         user.accounting_email = myform.accounting_email.data
         if myform.email.data != user.email:
+            # if email is changed, logout user and make them verify the new email
             user.email = myform.email.data
             user.is_verified = False
             send_verify_email(user)
@@ -453,6 +475,7 @@ def settings():
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
+        # prefill fields
         myform.first_name.data = user.first_name
         myform.last_name.data = user.last_name
         myform.email.data = user.email
@@ -466,6 +489,11 @@ def settings():
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
 @login_required
 def send(file_id):
+    """
+    Send the reclaim form to supervisor
+    :param file_id: ID of reclaim form
+    :return: HTML
+    """
     myform = forms.supervisor()
     if myform.validate_on_submit():
         user = User.query.get(current_user.id)
