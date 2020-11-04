@@ -8,7 +8,6 @@ import urllib.parse
 import datetime
 import io
 import os
-import urllib.parse
 import uuid
 import config as c
 import numpy as np

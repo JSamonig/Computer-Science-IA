@@ -2,7 +2,6 @@
 import re
 import cv2
 import pytesseract
-from pytesseract import Output
 import difflib
 from collections import defaultdict
 import config as c
@@ -54,7 +53,7 @@ def recognise(fname, taggun=False):
     if taggun is False:
         try:
             custom_config = r'--oem 3 --psm 6'
-            text = pytesseract.image_to_data(img, output_type=Output.DICT, config=custom_config)
+            text = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
             date = getDate(text)
             symbols = ''.join([i for i in date if not i.isdigit()])
             if len(date.split(symbols[1])[2]) != 4:

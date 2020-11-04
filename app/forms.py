@@ -1,9 +1,8 @@
 from app.models import User
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, FloatField, IntegerField, TextAreaField, PasswordField, BooleanField, \
-    SelectMultipleField
-from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError, InputRequired, Optional
+from wtforms import StringField, SubmitField, FloatField, TextAreaField, PasswordField, BooleanField
+from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, ValidationError
 import config as c
 
 

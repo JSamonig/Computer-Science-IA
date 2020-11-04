@@ -1,7 +1,4 @@
 from openpyxl import load_workbook
-import config as c
-import re
-import os
 from app.models import Account_codes, cost_centres
 from app import db
 

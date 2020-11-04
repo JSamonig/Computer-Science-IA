@@ -41,8 +41,8 @@ $( document ).ready(function() {
         });
     }
 
-     var cost_centre=$('#cost_centre').data()["other"].split("'");
-    var account=$('#account').data()["other"].split("'");
+    var cost_centre = $('#cost_centre').data()["other"].split("'");
+    var account = $('#account').data()["other"].split("'");
     account = [account[1], account[3]]
     cost_centre = [cost_centre[1], cost_centre[3]]
     getCentres(account[0], cost_centre);

@@ -40,7 +40,7 @@ class User(UserMixin, db.Model):
     def verify_token(token, word):
         try:
             id = jwt.decode(token, app.config['SECRET_KEY'],
-                            algorithms=['HS256'])[word] #pw =reset_password, email=verify_email, sign= sign_form
+                            algorithms=['HS256'])[word]  # pw =reset_password, email=verify_email, sign= sign_form
         except:
             return
         return User.query.get(id)
@@ -48,8 +48,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
-
-# <--
+    # <--
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return False
+        return self.id == other.id
 
 
 class reclaim_forms(db.Model):
@@ -65,7 +68,8 @@ class reclaim_forms(db.Model):
 
     def __repr__(self):
         return '<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {}\n date_created = {} >' \
-            .format(self.id, self.filename, self.description, self.sent, self.made_by,self.date_sent,self.date_created)
+            .format(self.id, self.filename, self.description, self.sent, self.made_by, self.date_sent,
+                    self.date_created)
 
 
 class reclaim_forms_details(db.Model):
@@ -90,7 +94,8 @@ class Account_codes(db.Model):
     __tablename__ = 'account_codes'
     account_id = db.Column(db.String(60), primary_key=True)
     account_name = db.Column(db.String(60), index=True)
-    cost_centre = db.Column(db.Integer, db.ForeignKey('cost_centres.cost_centre_id'),index=True, nullable=True)
+    cost_centre = db.Column(db.Integer, db.ForeignKey('cost_centres.cost_centre_id'), index=True, nullable=True)
+
 
 class cost_centres(db.Model):
     __tablename__ = 'cost_centres'

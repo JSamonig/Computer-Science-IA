@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from flask import session
 from dotenv import load_dotenv
 
 load_dotenv('config.env', encoding="utf8")
