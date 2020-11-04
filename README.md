@@ -1,4 +1,4 @@
-#Jakob Samonig Computer Science IA
+# Jakob Samonig Computer Science IA
 ![Screenshot of app](for_readme.png)
 
 This project was made as part of my computer science IA. The purpose of this application is to automise expense
