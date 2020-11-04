@@ -20,12 +20,12 @@ Javascript, and bootstrap.
 ### Running
 1) set environment variable: `set FLASK_APP=run.py`
 2) run the command: `flask run`
-3) open localhost:5000
+3) open `localhost:5000`
 
 ### Debugging
 1) set environment variable `set FLASK_APP=run.py`
 2) set environment variable `set FLASK_ENV=development`
 3) run the command: `flask run`
-4) open localhost:5000
+4) open `localhost:5000`
 
 ###### Note: the command `set` is windows specific, for linux use `export`.
