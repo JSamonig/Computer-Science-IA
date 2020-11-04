@@ -501,10 +501,10 @@ def send(file_id):
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
         recipients = [myform.email_supervisor.data]
-        token = user.get_token("sign_form", expires_in=10 ** 20)
+        token = user.get_token("sign_form", expires_in=10 ** 20)  # Basically infinity (3,170,979,198.38 millenia)
         html_body = render_template('email/request_auth.html', token=token, user=user.first_name + " " + user.last_name)
-        file = handlefiles.createExcel(file_id=file_id, current_user=current_user)
-        try:
+        file = handlefiles.createExcel(file_id=file_id, current_user=current_user)  # create excel sheet
+        try:  # send email, with link for supervisor to sign a reclaim form (and thus authorise it)
             send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                        file=file.filename)
             file_db.sent = "Awaiting authorization"
@@ -520,6 +520,12 @@ def send(file_id):
 @app.route('/send_accounting/<file_id>/<user_id>', methods=['GET', 'POST'])
 @login_required
 def send_accounting(file_id, user_id):
+    """
+    Sends reclaim form to accounting, after is has beeen authorised
+    :param file_id: ID of reclaim form
+    :param user_id: User id of person who is making reclaims
+    :return: HTML (redirect)
+    """
     user = User.query.filter_by(id=user_id).first()
     file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     sender = app.config['ADMINS'][0]
@@ -531,8 +537,9 @@ def send_accounting(file_id, user_id):
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                    file=file.filename)
+        flash('Successfully authorised expenses form.', category="alert alert-success")
     except:
-        pass
+        flash('Unexpected error while authorising expenses form.', category="alert alert-danger")
     return redirect(url_for("view_forms"))
 
 
