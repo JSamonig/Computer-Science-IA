@@ -41,5 +41,6 @@ def first():  # Done
         account = Account_codes(account_id=myarr[0], account_name=myarr[1])
         db.session.add(account)
 
-#first()
+
+first()
 second()

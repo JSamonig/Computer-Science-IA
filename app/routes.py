@@ -399,7 +399,7 @@ def login():
             flash('Invalid username or password', category="alert alert-danger")
             return redirect(url_for('login'))
         if user is None or not user.is_verified:
-            flash(Markup(
+            flash(Markup(  # markup renders html into the flash
                 'Please check your emails to verify your email. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
                     url_for("verify_email_request"))), category="alert alert-danger")
             return redirect(url_for('login'))
@@ -483,7 +483,7 @@ def settings():
         myform.taggun.data = user.use_taggun
         myform.dark.data = user.dark
     return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark,
-                           email=user.email)
+                           email=user.email) # pass email to give an onchange message
 
 
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
@@ -569,11 +569,11 @@ def reset_password(token):
     """
     Enables a user to reset their password
     :param token: Encoded string which will validate a password reset request, see
-    :return:
+    :return: HTML
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_token(token, "reset_password")
+    user = User.verify_token(token, "reset_password")  # decode token to get the user
     if not user:
         return redirect(url_for('index'))
     myform = forms.ResetPasswordForm()
@@ -588,12 +588,16 @@ def reset_password(token):
 # <--
 @app.route('/verify_email/<token>', methods=['GET', 'POST'])
 def verify_email(token):
+    """
+    :param token: Encoded string from which user can be decoded
+    :return: HTML (redirect)
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_token(token, "verify_email")
+    user = User.verify_token(token, "verify_email") # decode to get user
     if not user:
         return redirect(url_for('index'))
-    user.is_verified = True
+    user.is_verified = True # verify user
     db.session.commit()
     flash('Your email has been verified.', category="alert alert-success")
     login_user(user)
@@ -602,6 +606,10 @@ def verify_email(token):
 
 @app.route('/verify_email_request', methods=['GET', 'POST'])
 def verify_email_request():
+    """
+    Show form to enter email which is to be requested, again.
+    :return: HTML
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     myform = forms.verfify_email()
@@ -620,6 +628,12 @@ def verify_email_request():
 @app.route('/mileage/<file_id>/<row>', methods=['GET', 'POST'])
 @login_required
 def mileage(file_id, row):
+    """
+
+    :param file_id:
+    :param row:
+    :return:
+    """
     if row == "0":
         details = \
             db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(made_by=current_user.id).filter_by(
