@@ -10,6 +10,11 @@ $(document).ready(function(){
        alert('If you change your email, you will be logged out and forced to verify it. This means you could lose access to your account. Are you sure you want to continue?');
            }
     });
+    $('#taggun').on('focusout', function () {
+       if (!($(this).is(":checked"))) {
+       alert('Deselecting this option may slow the website when uploading receipts. Do wish to continue?');
+           }
+    });
 });
 </script>
 {% endblock %}

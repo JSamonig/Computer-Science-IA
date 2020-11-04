@@ -547,6 +547,10 @@ def send_accounting(file_id, user_id):
 
 @app.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
+    """
+    Request a password reset
+    :return: HTML
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     myform = forms.ResetPasswordRequestForm()
@@ -562,6 +566,11 @@ def reset_password_request():
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
+    """
+    Enables a user to reset their password
+    :param token: Encoded string which will validate a password reset request, see
+    :return:
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     user = User.verify_token(token, "reset_password")
@@ -855,5 +864,5 @@ def sign_form(form_hash):
                 form.sent = "Rejected"
                 db.session.commit()
                 return jsonify({"redirect": "/index"})
-        return render_template('manager/sign_form.html', background=data, for_user=name)
+        return render_template('manager/sign_form.html', background=data, for_user=name, dark=current_user.dark)
     abort(400)
