@@ -483,7 +483,7 @@ def settings():
         myform.taggun.data = user.use_taggun
         myform.dark.data = user.dark
     return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark,
-                           email=user.email) # pass email to give an onchange message
+                           email=user.email)  # pass email to give an onchange message
 
 
 @app.route('/send/<file_id>', methods=['GET', 'POST'])
@@ -594,10 +594,10 @@ def verify_email(token):
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_token(token, "verify_email") # decode to get user
+    user = User.verify_token(token, "verify_email")  # decode to get user
     if not user:
         return redirect(url_for('index'))
-    user.is_verified = True # verify user
+    user.is_verified = True  # verify user
     db.session.commit()
     flash('Your email has been verified.', category="alert alert-success")
     login_user(user)
@@ -629,19 +629,19 @@ def verify_email_request():
 @login_required
 def mileage(file_id, row):
     """
-
-    :param file_id:
-    :param row:
-    :return:
+    Enter a route as a form of reclaim (mileage expense reclaim)
+    :param file_id: ID of reclaim form
+    :param row: Row number in reclaim form
+    :return: HTML (redirect to edit_data)
     """
-    if row == "0":
+    if row == "0":  # if new row is being added
         details = \
             db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).first()[0]
+                form_id=file_id).first()[0]  # Find last row
         if details:
             row = int(details) + 1
         else:
-            row = 7
+            row = 7  # default
     myform = forms.description()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()

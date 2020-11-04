@@ -13,7 +13,7 @@ Javascript, and bootstrap.
 4) run `flask db init`
 5) run `flask db migrate`
 6) run `flask db upgrade`
-6) Run `IA/app/updating/update_database.py`
+6) run `IA/app/updating/update_database.py`
 7) run `flask run`
 8) open `localhost:5000`
 
