@@ -52,7 +52,7 @@ saveButton.addEventListener('click', function (event) {
          var mydata = signaturePad.toDataURL("image/png");
          console.log(mydata);
          console.log(typeof mydata);
-         var request = $.ajax({
+         $.ajax({
             type: 'POST',
             url: window.location.href,
             processData: false,
@@ -77,7 +77,7 @@ cancelButton.addEventListener('click', function (event) {
   ctx.drawImage(mybackground,0,0);
     });
 rejectButton.addEventListener('click', function (event) {
-    var request = $.ajax({
+    $.ajax({
             type: 'POST',
             url: window.location.href,
             data: "reject"

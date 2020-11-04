@@ -3,8 +3,8 @@
 {% block scripts %}
 <script>
     $(document).ready(function(){
-      var date_input=$('.date'); //our date input has the name "date"
-      var options={
+      var date_input = $('.date'); //our date input has the name "date"
+      var options = {
         format: 'dd/mm/yyyy',
         todayHighlight: true,
         autoclose: true,
@@ -18,10 +18,10 @@
 
 var autocomplete;
 function initialize() {
-  autocomplete = new google.maps.places.Autocomplete(
+  var autocomplete = new google.maps.places.Autocomplete(
       (document.getElementById('autocomplete')),
       { types: ['geocode','establishment'] });
-  autocomplete2 = new google.maps.places.Autocomplete(
+  var autocomplete2 = new google.maps.places.Autocomplete(
       (document.getElementById('autocomplete2')),
       { types: ['geocode','establishment'] });
 
