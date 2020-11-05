@@ -712,33 +712,47 @@ def mileage(file_id, row):
 @app.route('/delete_user', methods=['GET', 'POST'])
 @login_required
 def delete_user():
+    """
+    Function to delete a user
+    :return: HTML
+    """
     files = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).all()
     for file in files:
+        if file.signature is not None:  # remove signature
+            os.remove(os.path.join(app.config['SIGNATURE_ROUTE'], file.signature))
         rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
             form_id=file.id).all()
         for row in rows:
-            try:
+            if row.image_name is not None:  # remove images
                 os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
-            except:
-                pass
-        reclaim_forms_details.query.filter_by(form_id=file.id).delete()
-    db.session.query(reclaim_forms).filter_by(made_by=current_user.id).delete()
-    User.query.filter_by(id=current_user.id).delete()
+        reclaim_forms_details.query.filter_by(form_id=file.id).delete()  # delete row
+    db.session.query(reclaim_forms).filter_by(made_by=current_user.id).delete()  # delete all files
+    User.query.filter_by(id=current_user.id).delete()  # remove user
     db.session.commit()
-    flash("Successfully deleted user account", category="alert alert-success")
+    flash("Successfully deleted account", category="alert alert-success")
     return redirect(url_for("logout"))
 
 
 @app.route('/load_map/<start>/<end>', methods=['GET', 'POST'])
 @login_required
 def load_map(end, start):
-    cords = map.getMap(start, end)[0]
+    """
+    Loads coordinates for map iframe
+    :param end: URL encoded end location
+    :param start: URL encoded start location
+    :return:
+    """
+    cords = map.getMap(start, end)[0]  # render coordinates of a route
     return render_template("iframes/map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY, dark=current_user.dark)
 
 
 @app.route('/pie')
 @login_required
 def pie():
+    """
+    iframe which loads pie chart for dashboard
+    :return: HTML
+    """
     values = []
     labels = []
     colours = []
@@ -748,9 +762,9 @@ def pie():
             rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
                 form_id=file.id).all()
             for row in rows:
-                if row.account_id in labels and row.account_id != None:
+                if row.account_id in labels and row.account_id is not None:
                     values[labels.index(row.account_id)] += row.Total
-                elif row and row.account_id != None:
+                elif row and row.account_id is not None:
                     labels.append(row.account_id)
                     values.append(row.Total)
                 else:
