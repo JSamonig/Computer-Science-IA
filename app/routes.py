@@ -755,7 +755,6 @@ def pie():
     """
     values = []
     labels = []
-    colours = []
     files = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).all()
     for file in files:
         if file.sent == "Authorized":
@@ -763,12 +762,11 @@ def pie():
                 form_id=file.id).all()
             for row in rows:
                 if row.account_id in labels and row.account_id is not None:
-                    values[labels.index(row.account_id)] += row.Total
+                    values[labels.index(row.account_id)] += row.Total  # add total of each row for each account code
                 elif row and row.account_id is not None:
                     labels.append(row.account_id)
-                    values.append(row.Total)
-                else:
-                    pass
+                    values.append(row.Total) # append new label for a new row account id
+
     colours = handlefiles.createDistinctColours(len(labels) + 1)[:len(labels)]
     if values:
         return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
@@ -782,11 +780,15 @@ def pie():
 @app.route('/line', defaults={'year': datetime.datetime.today().year})
 @login_required  # user must be logged in to see content
 def line(year):
+    """
+    iframe of a line graph
+    :param year: Current year (explicit)
+    :return: Line graph
+    """
     labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
               'November', 'December']  # labels at bottom of graph
     month = datetime.datetime.today().month  # current month
     labels = labels[:month + 1]  # display up to current month +1
-    colours = []
     accounts = [{} for i in range(len(labels))]  # 12 dictionaries for each month
     unique_accounts = []  # keep track of unique accounts (for key at top)
     for i in range(1, 13):  # for every month        ----- This part of the function queries the database -----
