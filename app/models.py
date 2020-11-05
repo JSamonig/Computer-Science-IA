@@ -40,7 +40,7 @@ class User(UserMixin, db.Model):
     def verify_token(token, word):
         try:
             id = jwt.decode(token, app.config['SECRET_KEY'],
-                            algorithms=['HS256'])[word]  # pw =reset_password, email=verify_email, sign= sign_form
+                            algorithms=['HS256'])[word]  # pw = reset_password, email=verify_email, sign= sign_form
         except:
             return
         return User.query.get(id)

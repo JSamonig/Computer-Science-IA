@@ -645,10 +645,10 @@ def mileage(file_id, row):
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
     file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
-    if file.sent == "Authorized":
+    if file.sent == "Authorized":  # to ensure added information is not automatically authorised
         file.sent = "Draft"
     if myform.validate_on_submit():
-        # date validator
+        # date validator i.e. don't allow negative trip durations
         end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()
         start = datetime.datetime.strptime(myform.date_start.data, "%d/%m/%Y").date()
         if start > end:
@@ -657,10 +657,10 @@ def mileage(file_id, row):
                                    start=myform.start.data, end=myform.destination.data)
         description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data + " Return trip: " + str(
             myform.return_trip.data)
-        results = map.getMap(myform.start.data, myform.destination.data)
-        if not details:
+        results = map.getMap(myform.start.data, myform.destination.data)  # [cords, miles, total]
+        if not details:  # make a new row
             if myform.return_trip.data:
-                results[2] *= 2
+                results[2] *= 2  # times 2 if return trip
                 results[1] *= 2
             details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
                                             made_by=current_user.id, row_id=row,
@@ -668,7 +668,7 @@ def mileage(file_id, row):
                                             destination=myform.destination.data, miles=results[1],
                                             Total=round(float(results[2]), 2),
                                             end_date=myform.date_end.data, purpose=myform.description.data,
-                                            return_trip=myform.return_trip.data)
+                                            return_trip=myform.return_trip.data)  # new row entry
             db.session.add(details)
             db.session.commit()
         else:
@@ -677,6 +677,7 @@ def mileage(file_id, row):
             details.start = myform.start.data
             details.destination = myform.destination.data
             if myform.return_trip.data is True and details.return_trip is False:
+                # multiply or divide based on changed option
                 details.miles = results[1] * 2
                 details.Total = round(float(results[2]), 2) * 2
             elif myform.return_trip.data is False and details.return_trip is True:
@@ -700,10 +701,11 @@ def mileage(file_id, row):
             myform.return_trip.data = details.return_trip
             if details.start:
                 origin = urllib.parse.quote_plus(details.destination)
+                # pass destinations into url format to use google maps api
                 destination = urllib.parse.quote_plus(details.start)
                 return render_template('forms/miles.html', form=myform, start=origin, end=destination,
                                        dark=current_user.dark)
-        myform.start.data = "Wellington College, Duke's Ride, RG457PU"
+        myform.start.data = "Wellington College, Duke's Ride, RG457PU"  # default value
     return render_template('forms/miles.html', title="Add from mileage", form=myform, dark=current_user.dark)
 
 
