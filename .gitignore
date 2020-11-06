@@ -64,8 +64,11 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
+
+# specifics
 migrations/
 app.db
+logs/
 app/static/css/darkly.css
 app/static/reclaims/
 app/static/uploads/images/receipts/
