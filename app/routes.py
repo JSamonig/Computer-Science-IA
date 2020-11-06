@@ -178,12 +178,12 @@ def edit_data(file_id, row):
             accounts_list.pop(accounts_list.index(account))  # pop selected account to avoid duplicate accounts
         cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
             purpose_id=current_account[1]).first_or_404().purpose_cost_centre]  # Selected cost centre [43214, purpose]
-    except:  # If nothing has been selected yet
+    except AttributeError:  # If nothing has been selected yet
         cost_centre = None
         account = None
     try:
         myform.total.data = round(float(details.Total), 2)  # Round total
-    except:
+    except TypeError:
         myform.total.data = ""  # Leave blank if there is not Total (OCR didn't recongnise it)
     if details.start:  # if a route is attached
         origin = urllib_parse.quote_plus(details.destination)  # put start and destination into url format
