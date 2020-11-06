@@ -6,12 +6,11 @@ load_dotenv('config.env', encoding="utf8")
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     IMAGE_UPLOADS = './app/static/uploads/images/receipts/'
     IMAGE_ROUTE = '/static/uploads/images/receipts/'
-    SIGNATURE_ROUTE='./app/static/uploads/images/signatures/'
+    SIGNATURE_ROUTE = './app/static/uploads/images/signatures/'
     RECLAIM_ROUTE = './app/static/reclaims/'
     DOWNLOAD_ROUTE = "./static/reclaims/"
     STATIC = "./app/static/"

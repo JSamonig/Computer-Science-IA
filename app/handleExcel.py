@@ -5,6 +5,7 @@ import config as c
 import re
 import os
 
+
 # wscell1 = ws.cell(number, letter (number))
 # Cells B7 - B26 = Date
 # Cells C7 - C26 = Description
@@ -62,7 +63,7 @@ def editRow(info: list, bookname, row=None):
         wb.save(c.Config.RECLAIM_ROUTE + bookname)
 
 
-def addImages(bookname, row, filename:str):
+def addImages(bookname, row, filename: str):
     wb = getBook(bookname)
     sheetname = "Receipt for row " + str(row)
     wb.create_sheet(sheetname)
@@ -72,15 +73,17 @@ def addImages(bookname, row, filename:str):
     ws.add_image(img)
     wb.save(c.Config.RECLAIM_ROUTE + bookname)
 
-def addSignature(signature, bookname,date):
+
+def addSignature(signature, bookname, date):
     wb = getBook(bookname)
     ws = wb["Expense Claim Form 14-11-19"]
     img = Image(c.Config.SIGNATURE_ROUTE + signature)
     img.anchor = 'C29'
     ws.add_image(img)
     wcell = ws.cell(29, 6)
-    wcell.value=date
+    wcell.value = date
     wb.save(c.Config.RECLAIM_ROUTE + bookname)
+
 
 def findAvailableRow(ws):
     row = 7
@@ -88,10 +91,12 @@ def findAvailableRow(ws):
         row += 1
     return row
 
+
 def deleteAllSheets():
     files = [f for f in os.listdir(c.Config.RECLAIM_ROUTE)]
     for f in files:
-        os.remove(os.path.join(c.Config.RECLAIM_ROUTE,f))
+        os.remove(os.path.join(c.Config.RECLAIM_ROUTE, f))
+
 
 def createNewsheet(bookname):
     wb = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
@@ -100,7 +105,7 @@ def createNewsheet(bookname):
 
 def getBook(bookname):
     try:
-       load_workbook(c.Config.RECLAIM_ROUTE + bookname)
-    except:
+        load_workbook(c.Config.RECLAIM_ROUTE + bookname)
+    except FileNotFoundError:
         createNewsheet(bookname)
     return load_workbook(c.Config.RECLAIM_ROUTE + bookname)
