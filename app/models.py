@@ -31,20 +31,6 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def get_token(self, word, expires_in=600):
-        return jwt.encode(
-            {word: self.id, 'exp': time.time() + expires_in},
-            app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
-
-    @staticmethod
-    def verify_token(token, word):
-        try:
-            id = jwt.decode(token, app.config['SECRET_KEY'],
-                            algorithms=['HS256'])[word]  # pw = reset_password, email=verify_email, sign= sign_form
-        except:
-            return
-        return User.query.get(id)
-
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
@@ -103,3 +89,19 @@ class cost_centres(db.Model):
     cost_centre_id = db.Column(db.String(60))
     purpose_cost_centre = db.Column(db.String(60))
     purpose_id = db.Column(db.Integer)
+
+
+def get_token(my_object, word, attribute="id", expires_in=600) -> str:
+    if hasattr(my_object, attribute):
+        return jwt.encode(
+            {word: my_object.id, 'exp': time.time() + expires_in},
+            app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+
+
+def verify_token(token, word, table=User):
+    try:
+        returned_id = jwt.decode(token, app.config['SECRET_KEY'],
+                                 algorithms=['HS256'])[word]  # pw = reset_password, email=verify_email, sign= sign_form
+        return table.query.get(returned_id)
+    except (jwt.exceptions.DecodeError, AttributeError, jwt.ExpiredSignature):
+        return

@@ -3,8 +3,8 @@ from flask import request, redirect, flash, render_template, abort, url_for, sen
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, handlefiles, OCR, forms, db, map
 from app.emails import send_password_reset_email, send_email, send_verify_email, send_auth_email, send_reject_email
-from app.models import reclaim_forms, reclaim_forms_details, User, Account_codes, cost_centres
-import urllib.parse
+from app.models import User, reclaim_forms, reclaim_forms_details, Account_codes, cost_centres, get_token, verify_token
+from urllib import parse as urllib_parse
 import datetime
 import io
 import os
@@ -179,8 +179,8 @@ def edit_data(file_id, row):
     except:
         myform.total.data = ""  # Leave blank if there is not Total (OCR didn't recongnise it)
     if details.start:  # if a route is attached
-        origin = urllib.parse.quote_plus(details.destination)  # put start and destination into url format
-        destination = urllib.parse.quote_plus(details.start)
+        origin = urllib_parse.quote_plus(details.destination)  # put start and destination into url format
+        destination = urllib_parse.quote_plus(details.start)
         myform.miles.data = details.miles  # load mileage into edit form
         return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
                                dark=current_user.dark, accounts=accounts_list, account=account,
@@ -500,7 +500,8 @@ def send(file_id):
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
         recipients = [myform.email_supervisor.data]
-        token = user.get_token("sign_form", expires_in=10 ** 20)  # Basically infinity (3,170,979,198.38 millenia)
+        token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20)
+        # Basically infinity (3,170,979,198.38 millenia)
         html_body = render_template('email/request_auth.html', token=token, user=user.first_name + " " + user.last_name)
         file = handlefiles.createExcel(file_id=file_id, current_user=current_user)  # create excel sheet
         try:  # send email, with link for supervisor to sign a reclaim form (and thus authorise it)
@@ -520,7 +521,7 @@ def send(file_id):
 @login_required
 def send_accounting(file_id, user_id):
     """
-    Sends reclaim form to accounting, after is has beeen authorised
+    Sends reclaim form to accounting, after is has been authorised
     :param file_id: ID of reclaim form
     :param user_id: User id of person who is making reclaims
     :return: HTML (redirect)
@@ -572,7 +573,7 @@ def reset_password(token):
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_token(token, "reset_password")  # decode token to get the user
+    user = verify_token(token, "reset_password")  # decode token to get the user
     if not user:
         return redirect(url_for('index'))
     myform = forms.ResetPasswordForm()
@@ -593,7 +594,7 @@ def verify_email(token):
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    user = User.verify_token(token, "verify_email")  # decode to get user
+    user = verify_token(token, "verify_email")  # decode to get user
     if not user:
         return redirect(url_for('index'))
     user.is_verified = True  # verify user
@@ -700,9 +701,9 @@ def mileage(file_id, row):
             myform.date_end.data = details.end_date
             myform.return_trip.data = details.return_trip
             if details.start:
-                origin = urllib.parse.quote_plus(details.destination)
+                origin = urllib_parse.quote_plus(details.destination)
                 # pass destinations into url format to use google maps api
-                destination = urllib.parse.quote_plus(details.start)
+                destination = urllib_parse.quote_plus(details.start)
                 return render_template('forms/miles.html', form=myform, start=origin, end=destination,
                                        dark=current_user.dark)
         myform.start.data = "Wellington College, Duke's Ride, RG457PU"  # default value
@@ -751,6 +752,7 @@ def load_map(end, start):
 def pie():
     """
     iframe which loads pie chart for dashboard
+    Pie chart of amount reclaim by account code
     :return: HTML
     """
     values = []
@@ -765,13 +767,13 @@ def pie():
                     values[labels.index(row.account_id)] += row.Total  # add total of each row for each account code
                 elif row and row.account_id is not None:
                     labels.append(row.account_id)
-                    values.append(row.Total) # append new label for a new row account id
+                    values.append(row.Total)  # append new label for a new row account id
 
     colours = handlefiles.createDistinctColours(len(labels) + 1)[:len(labels)]
     if values:
         return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
     else:
-        values = [1]
+        values = [1]  # full pie chart in grey colour
         labels = ["No expenses forms authorized yet"]
         return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
 
@@ -782,8 +784,9 @@ def pie():
 def line(year):
     """
     iframe of a line graph
+    Cumulative reclaimed amount over time by individual account codes, and the overall total
     :param year: Current year (explicit)
-    :return: Line graph
+    :return: Line graph HTML
     """
     labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
               'November', 'December']  # labels at bottom of graph
@@ -862,17 +865,23 @@ def line(year):
 @app.route('/sign_form/<form_hash>', methods=['GET', 'POST'])
 @login_required
 def sign_form(form_hash):
-    user = User.query.get(current_user.id)
-    for_user = User.verify_token(form_hash, "sign_form")
+    """
+    Authorise a reclaim form, by signing it
+    :param form_hash: string which decodes to give the user who requested the form
+    :return: HTML
+    """
+    user = User.query.get(current_user.id)  # current user
+    form = verify_token(token=form_hash, word="sign_form", table=reclaim_forms)
+    for_user = db.session.query(User).filter_by(id=form.made_by).first()
+    # for_user is the user for which the current user is authorising for
     if for_user:
         name = for_user.first_name + " " + for_user.last_name
-        data = handlefiles.createSignatureBack(user.first_name, user.last_name)
+        data = handlefiles.createSignatureBack(user.first_name, user.last_name)  # create image to sign over
         if request.method == 'POST':
-            form = db.session.query(reclaim_forms).filter_by(made_by=for_user.id).first()
             if request.data:
                 if form.sent == "Awaiting authorization":
-                    bytes = bytearray(request.data)
-                    image = Image.open(io.BytesIO(bytes))
+                    returned_bytes = bytearray(request.data)  # get back signature
+                    image = Image.open(io.BytesIO(returned_bytes))  # convert bytes to image
                     signature = str(uuid.uuid4()) + ".png"
                     image.save(c.Config.SIGNATURE_ROUTE + signature)
                     form.signature = signature
@@ -881,8 +890,8 @@ def sign_form(form_hash):
                     form.date_sent = datetime.datetime.utcnow()
                     db.session.commit()
                     flash("Signed expenses form successfully for {}!".format(name), category="alert alert-success")
-                    return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})
-                flash("This authorization link has expired.")
+                    return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})  # redirect
+                flash("This authorization link has expired.", category="alert alert-danger")
                 return jsonify({"redirect": "/index"})
             else:
                 try:
@@ -894,6 +903,6 @@ def sign_form(form_hash):
                           category="alert alert-danger")
                 form.sent = "Rejected"
                 db.session.commit()
-                return jsonify({"redirect": "/index"})
+                return jsonify({"redirect": "/index"})  # redirect to index
         return render_template('manager/sign_form.html', background=data, for_user=name, dark=current_user.dark)
-    abort(400)
+    abort(404)
