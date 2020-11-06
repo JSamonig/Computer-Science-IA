@@ -9,7 +9,8 @@ import base64
 import sys
 
 
-#  --> Adapted from https://blog.miguelgrinberg.com/ and https://app.sendgrid.com/guide/integrate/langs/python
+#  --> Adapted from https://blog.miguelgrinberg.com/, https://app.sendgrid.com/guide/integrate/langs/python and
+# https://stackoverflow.com/questions/1854216/raise-unhandled-exceptions-in-a-thread-in-the-main-thread
 
 class send_async_email():
     def __init__(self, msg):

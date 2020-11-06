@@ -59,7 +59,14 @@ def upload(file_id: str, row: str):
                       category="alert alert-danger")  # error if the extension is not allowed
                 return render_template('forms/upload.html', form=myform, dark=current_user.dark)
             filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
+            print(type(myform.file.data))
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)  # save image under filename
+            img = Image.open(app.config['IMAGE_UPLOADS'] + filename)
+            basewidth = 300
+            wpercent = (basewidth / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
+            img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+            img.save(app.config['IMAGE_UPLOADS'] + filename)
             user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
             data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
             if not details:  # create new row if it doesn't exist
