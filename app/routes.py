@@ -557,8 +557,7 @@ def reset_password_request():
             send_password_reset_email(user)
         flash('Check your email for the instructions to reset your password', category="alert alert-success")
         return redirect(url_for('login'))
-    return render_template('user/request_password_reset.html', title='Reset Password', form=myform,
-                           dark=current_user.dark)
+    return render_template('user/request_password_reset.html', title='Reset Password', form=myform)
 
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -658,9 +657,11 @@ def mileage(file_id, row):
             myform.return_trip.data)
         results = map.getMap(myform.start.data, myform.destination.data)  # [cords, miles, total, status]
         if not details:  # make a new row
-            if myform.return_trip.data:
-                total = round(float(results[2] * 2), 2) if results[3] == "OK" else None  # times 2 if return trip
-                miles = results[1] * 2 if results[1] * 2 != 0 else None
+            if results[3] != "OK":
+                total, miles = None, None
+            elif myform.return_trip.data:
+                total = round(float(results[2] * 2), 2)  # times 2 if return trip
+                miles = results[1] * 2
             details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
