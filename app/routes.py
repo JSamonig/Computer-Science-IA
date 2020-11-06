@@ -59,16 +59,15 @@ def upload(file_id: str, row: str):
                       category="alert alert-danger")  # error if the extension is not allowed
                 return render_template('forms/upload.html', form=myform, dark=current_user.dark)
             filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
-            print(type(myform.file.data))
             myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)  # save image under filename
-            img = Image.open(app.config['IMAGE_UPLOADS'] + filename)
-            basewidth = 300
+            user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
+            data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
+            img = Image.open(app.config['IMAGE_UPLOADS'] + filename)  # resize image after OCR
+            basewidth = 500
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))
             img = img.resize((basewidth, hsize), Image.ANTIALIAS)
             img.save(app.config['IMAGE_UPLOADS'] + filename)
-            user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
-            data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
             if not details:  # create new row if it doesn't exist
                 details = reclaim_forms_details(date_receipt=data["date_receipt"], Total=data["Total"],
                                                 image_name=filename, made_by=current_user.id, row_id=row,
@@ -167,7 +166,7 @@ def edit_data(file_id, row):
     # GET request
     myform.date.data = details.date_receipt
     myform.description.data = details.description
-    try:
+    if details.account_id is not None:
         current_account = details.account_id.split("-")  # E.g. [ART(110), 43214]
         current_account[0] = current_account[0].split("(")[0]  # get account code 3 letter code [ART, 43214]
         account = [
@@ -178,18 +177,16 @@ def edit_data(file_id, row):
             accounts_list.pop(accounts_list.index(account))  # pop selected account to avoid duplicate accounts
         cost_centre = [current_account[1], db.session.query(cost_centres).filter_by(
             purpose_id=current_account[1]).first_or_404().purpose_cost_centre]  # Selected cost centre [43214, purpose]
-    except AttributeError:  # If nothing has been selected yet
-        cost_centre = None
-        account = None
-    try:
+    else:
+        cost_centre, account = None, None
+    if details.Total is not None:
         myform.total.data = round(float(details.Total), 2)  # Round total
-    except TypeError:
-        myform.total.data = ""  # Leave blank if there is not Total (OCR didn't recongnise it)
-    if details.start:  # if a route is attached
-        origin = urllib_parse.quote_plus(details.destination)  # put start and destination into url format
-        destination = urllib_parse.quote_plus(details.start)
+    if details.start and details.destination:  # if a route is attached
+        destination = urllib_parse.quote_plus(details.destination)  # put start and destination into url format
+        origin = urllib_parse.quote_plus(details.start)
         myform.miles.data = details.miles  # load mileage into edit form
-        return render_template('forms/form.html', form=myform, include=True, start=origin, end=destination,
+        return render_template('forms/form.html', form=myform, include=True, start=origin,
+                               end=destination,
                                dark=current_user.dark, accounts=accounts_list, account=account,
                                cost_centre=cost_centre)
     '''
@@ -218,28 +215,23 @@ def edit_forms(file_id):
     :param file_id:  ID of the expenses form
     :return: HTML
     """
-    try:
-        rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).order_by(reclaim_forms_details.row_id).all()
-        name = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404().filename
-        sum_reclaimed = 0  # sum of reclaimed money in a form
-        for row in rows:
-            if row.Total:
-                sum_reclaimed += float(row.Total)
-            elif row.miles:
-                row.Total = row.miles * 0.45  # calculate total if no total present
-                sum_reclaimed += float(row.Total)
-            else:
-                row.Total = 0  # if neither is present give total of zero
-            if row.account_id is None:
-                # delete the row is account_id is not present (i.e. incomplete form submission in edit_data() ).
-                return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
-        rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).order_by(reclaim_forms_details.row_id).all()
-        return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=sum_reclaimed,
-                               dark=current_user.dark)
-    except AttributeError:
-        abort(404)  # needed as .all() is used and not .first_or_404()
+    rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+        form_id=file_id).order_by(reclaim_forms_details.row_id).all()
+    name = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404().filename
+    sum_reclaimed = 0  # sum of reclaimed money in a form
+    for row in rows:
+        if row.Total:
+            sum_reclaimed += float(row.Total)
+        elif row.miles:
+            row.Total = row.miles * 0.45  # calculate total if no total present
+            sum_reclaimed += float(row.Total)
+        else:
+            row.Total = 0  # if neither is present give total of zero
+        if row.account_id is None:
+            # delete the row is account_id is not present (i.e. incomplete form submission in edit_data() ).
+            return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
+    return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=sum_reclaimed,
+                           dark=current_user.dark)
 
 
 @app.route('/delete_row/<file_id>/<row>', methods=['GET', 'POST'])
@@ -247,29 +239,27 @@ def edit_forms(file_id):
 def delete_row(file_id, row):
     """
     :param file_id: ID of reclaim form
-    :param row: Row number
+    :param row_number: Row number
     :return: HTML
 
     Deleting rows
     """
-    try:
-        myrow = row  # avoid duplicate row variable
-        row = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).filter_by(row_id=int(row)).first_or_404()
-        try:  # Try to remove image associated with a row
+    row_number = row  # avoid duplicate variable names later
+    row = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+        form_id=file_id).filter_by(row_id=int(row_number)).first_or_404()
+    try:  # Try to remove image associated with a row
+        if row.image_name is not None:
             os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
-        except:
-            pass
-        reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
-        rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
-            form_id=file_id).order_by(reclaim_forms_details.row_id).all()  # get all rows
-        for row in rows:
-            if row.row_id > int(myrow):
-                row.row_id -= 1  # move below rows up one
-        db.session.commit()
-        return redirect(url_for('edit_forms', file_id=file_id))
-    except:
-        return redirect(url_for('edit_forms', file_id=file_id))
+    except FileNotFoundError:
+        pass
+    reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
+    rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
+        form_id=file_id).order_by(reclaim_forms_details.row_id).all()  # get all rows
+    for iterated_row in rows:
+        if iterated_row.row_id > int(row_number):
+            iterated_row.row_id -= 1  # move below rows up one
+    db.session.commit()
+    return redirect(url_for('edit_forms', file_id=file_id))
 
 
 @app.route('/delete_file/<file_id>', methods=['GET', 'POST'])
@@ -662,18 +652,19 @@ def mileage(file_id, row):
         if start > end:
             flash("Error: negative trip duration", category="alert alert-danger")
             return render_template('forms/miles.html', title="Add from mileage", form=myform, dark=current_user.dark,
-                                   start=myform.start.data, end=myform.destination.data)
+                                   start=urllib_parse.quote_plus(myform.start.data),
+                                   end=urllib_parse.quote_plus(myform.destination.data))
         description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data + " Return trip: " + str(
             myform.return_trip.data)
-        results = map.getMap(myform.start.data, myform.destination.data)  # [cords, miles, total]
+        results = map.getMap(myform.start.data, myform.destination.data)  # [cords, miles, total, status]
         if not details:  # make a new row
             if myform.return_trip.data:
-                results[2] *= 2  # times 2 if return trip
-                results[1] *= 2
+                total = round(float(results[2] * 2), 2) if results[3] == "OK" else None  # times 2 if return trip
+                miles = results[1] * 2 if results[1] * 2 != 0 else None
             details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
-                                            destination=myform.destination.data, miles=results[1],
+                                            destination=myform.destination.data, miles=miles,
                                             Total=round(float(results[2]), 2),
                                             end_date=myform.date_end.data, purpose=myform.description.data,
                                             return_trip=myform.return_trip.data)  # new row entry
@@ -684,7 +675,13 @@ def mileage(file_id, row):
             details.date_receipt = myform.date_end.data
             details.start = myform.start.data
             details.destination = myform.destination.data
-            if myform.return_trip.data is True and details.return_trip is False:
+            if results[3] != "OK":
+                details.miles = None
+                details.Total = None
+                flash(
+                    "The route could not be identified, and a mileage was not calculated. Please check the spelling of locations.",
+                    category="alert alert-danger")
+            elif myform.return_trip.data is True and details.return_trip is False:
                 # multiply or divide based on changed option
                 details.miles = results[1] * 2
                 details.Total = round(float(results[2]), 2) * 2
@@ -692,7 +689,7 @@ def mileage(file_id, row):
                 details.miles = results[1] * 0.5
                 details.Total = round(float(results[2]), 2) * 0.5
             else:
-                details.miles = results[1]
+                details.miles = results[1] if results[1] != 0 else None
                 details.Total = round(float(results[2]), 2)
             details.end_date = myform.date_end.data
             details.purpose = myform.description.data
@@ -748,9 +745,10 @@ def load_map(end, start):
     Loads coordinates for map iframe
     :param end: URL encoded end location
     :param start: URL encoded start location
-    :return:
+    :return: HTML of map
     """
-    cords = map.getMap(start, end)[0]  # render coordinates of a route
+    results = map.getMap(start, end)  # render coordinates of a route
+    cords = results[0]
     return render_template("iframes/map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY, dark=current_user.dark)
 
 

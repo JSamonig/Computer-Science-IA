@@ -1,9 +1,9 @@
 <html>
-  <head>
+<head>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script
-      src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap&libraries=&v=weekly"
-      defer></script>
+            src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap&libraries=&v=weekly"
+            defer></script>
     <style type="text/css">
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -18,18 +18,20 @@
         margin: 0;
         padding: 0;
       }
+
     </style>
     <script>
       "use strict";
       function initMap() {
         const map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 3,
+          zoom: 18,
           center: {
-            lat: 0,
-            lng: -180
+            lat: 51.364327,
+            lng: -0.806620
           },
           mapTypeId: "terrain"
         });
+        {% if cords %}
         const flightPlanCoordinates = {{ cords|safe }};
         var bounds = new google.maps.LatLngBounds();
           for (var i = 0; i < flightPlanCoordinates.length; i++) {
@@ -44,10 +46,12 @@
         });
         flightPath.setMap(map);
         map.fitBounds(bounds);
+      {%endif%}
       }
+
     </script>
-  </head>
-  <body>
-    <div id="map"></div>
-  </body>
+</head>
+<body>
+<div id="map"></div>
+</body>
 </html>

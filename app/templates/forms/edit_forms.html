@@ -43,7 +43,11 @@
             <td><a href="{{ url_for('edit_data',file_id=file_id,row=form.row_id)}}">{{ form.row_id-6 }}</a></td>
             <td>{{ form.date_receipt }}</td>
             <td class="d-none d-xl-table-cell">{{ form.description }}</td>
-            <td class="d-none d-sm-table-cell">{{ form.miles }}</td>
+            {% if form.miles %}
+                <td class="d-none d-sm-table-cell">{{ form.miles }}</td>
+            {%else %}
+                <td class="d-none d-sm-table-cell">N/A</td>
+            {% endif %}
             <td class="d-none d-sm-table-cell">{{ form.account_id }}</td>
             <td>£&nbsp;{{ "{:.2f}".format(form.Total) }}</td>
 

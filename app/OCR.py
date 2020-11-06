@@ -49,27 +49,23 @@ def locatePrices(text, start):
 def recognise(fname, taggun=False):
     filename = c.Config.IMAGE_UPLOADS + fname
     img = cv2.imread(filename)
-    print(taggun)
     if taggun is False:
+        custom_config = r'--oem 3 --psm 6'
+        text = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
+        date = getDate(text)
         try:
-            custom_config = r'--oem 3 --psm 6'
-            text = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
-            date = getDate(text)
             symbols = ''.join([i for i in date if not i.isdigit()])
             if len(date.split(symbols[1])[2]) != 4:
                 date = date.split(symbols[1])
                 date[2] = "20" + date[2]
                 date = symbols[0].join(date)
-            total = findTotal(text)
-        except:
+        except TypeError:
             date = None
-            total = None
+        total = findTotal(text)
     else:
         # <-- adapted from https://www.taggun.io/
         url = 'https://api.taggun.io/api/receipt/v1/simple/file'
-
         headers = {'apikey': '7c9356e0d8c111eaafc7c5a18819396c'}
-
         files = {'file': (
             fname,  # set a filename for the file
             open(filename, 'rb'),  # the actual file
@@ -84,11 +80,11 @@ def recognise(fname, taggun=False):
         try:
             date = datetime.datetime.strptime(response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d").date()
             date = str(date.strftime("%d/%m/%Y"))
-        except:
+        except KeyError:
             date = None
         try:
             total = response["totalAmount"]["data"]
-        except:
+        except KeyError:
             total = None
     return {"date_receipt": date, "Total": total}
 
@@ -97,7 +93,7 @@ def run(fname, taggun=False):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(recognise, fname, taggun)
         try:
-            return_value = future.result(timeout=5)
-        except:
+            return_value = future.result(timeout=10)
+        except concurrent.futures.TimeoutError:
             return_value = {"date_receipt": None, "Total": None}
         return return_value
