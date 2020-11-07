@@ -3,7 +3,7 @@ from app.models import User
 from flask import render_template
 from app.models import get_token
 import config as c
-from sendgrid import SendGridAPIClient, SendGridException
+from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (Mail, Attachment, FileContent, FileName, FileType, Disposition)
 import base64
 

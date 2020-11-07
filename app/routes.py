@@ -2,7 +2,7 @@
 from app import app, handlefiles, OCR, forms, db, map
 from app.emails import send_password_reset_email, send_email, send_verify_email, send_auth_email, send_reject_email
 from app.models import User, reclaim_forms, reclaim_forms_details, Account_codes, cost_centres, get_token, verify_token
-from flask import request, redirect, flash, render_template, abort, url_for, send_file, Markup, jsonify
+from flask import request, redirect, flash, render_template, url_for, send_file, Markup, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from python_http_client.exceptions import UnauthorizedError
 from urllib.error import HTTPError
@@ -676,11 +676,14 @@ def mileage(file_id, row):
             elif myform.return_trip.data:
                 total = round(float(results[2] * 2), 2)  # times 2 if return trip
                 miles = results[1] * 2
+            else:
+                total = round(float(results[2]), 2)
+                miles = results[1]
             details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
                                             made_by=current_user.id, row_id=row,
                                             form_id=file_id, start=myform.start.data,
                                             destination=myform.destination.data, miles=miles,
-                                            Total=round(float(results[2]), 2),
+                                            Total=total,
                                             end_date=myform.date_end.data, purpose=myform.description.data,
                                             return_trip=myform.return_trip.data)  # new row entry
             db.session.add(details)
