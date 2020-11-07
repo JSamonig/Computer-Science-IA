@@ -28,9 +28,10 @@ def not_found_error():
 def internal_error(error):
     if current_user.is_authenticated:
         dark = current_user.dark
+        send_error_email(error, 500, current_user.id)
     else:
         dark = None
-    send_error_email(error, 500, current_user.id)
+    send_error_email(error, 500, None)
     db.session.rollback()
     return render_template('errors/500.html', error=error, dark=dark), 500
 

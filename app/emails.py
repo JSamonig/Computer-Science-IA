@@ -68,7 +68,8 @@ def send_error_email(error, code, user):
     subject = "Error {} in IA".format(str(code))
     recipients = app.config['ADMINS'][1]
     try:
-        user = User.query.filter_by(id=user).first().email
+        if user:
+            user = User.query.filter_by(id=user).first().email
     except AttributeError:
         pass
     send_email(subject,
