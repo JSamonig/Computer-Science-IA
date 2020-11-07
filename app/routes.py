@@ -50,6 +50,11 @@ def upload(file_id: str, row: str):
             file = db.session.query(reclaim_forms).filter_by(id=file_id).first()  # find reclaim form
             if file.sent == "Authorized":  # if a file is already authorized make it into a draft
                 file.sent = "Draft"
+                if file.signature:
+                    try:  # remove signature
+                        os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
+                    except FileNotFoundError:
+                        pass
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
                 form_id=file_id).filter_by(row_id=int(row)).first()  # find specific entry
             if details:  # if the entry exists
@@ -110,6 +115,11 @@ def edit_data(file_id, row):
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     if file.sent == "Authorized":  # if a file is already authorized make it into a draft
         file.sent = "Draft"
+        if file.signature:
+            try:  # remove signature
+                os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
+            except FileNotFoundError:
+                pass
     accounts_list = []
     for account in accounts:
         accounts_list.append([str(account.account_id), str(account.account_name)])  # append all acounts to a list
@@ -286,7 +296,7 @@ def delete_file(file_id):
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id)
     if file.first().signature:
         try:  # remove signature
-            os.remove(os.path.join(app.Config["SIGNATURE_ROUTE"], file.first().signature))
+            os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.first().signature))
         except FileNotFoundError:
             pass
     file.delete()  # delete file
@@ -658,6 +668,11 @@ def mileage(file_id, row):
     file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
     if file.sent == "Authorized":  # to ensure added information is not automatically authorised
         file.sent = "Draft"
+        if file.signature:
+            try:  # remove signature
+                os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
+            except FileNotFoundError:
+                pass
     if myform.validate_on_submit():
         # date validator i.e. don't allow negative trip durations
         end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()
@@ -900,6 +915,11 @@ def sign_form(form_hash, is_hod):
             id=form.made_by).first()  # Here, for_user is the person who want to be authed
         if is_hod:
             form.sent = "Awaiting authorization"
+            if form.signature:
+                try:  # remove signature
+                    os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], form.signature))
+                except FileNotFoundError:
+                    pass
         if form.sent != "Awaiting authorization":
             flash("This authorization link has expired.", category="alert alert-danger")
             return redirect(url_for("index"))

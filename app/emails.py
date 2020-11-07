@@ -25,7 +25,8 @@ def send_email(subject, sender, recipients, html_body, file=None):
         )
         msg.attachment = attached_file
         sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
-        sg.send(msg)
+        response = sg.send(msg)
+        app.logger.info([response.status_code, response.headers, response.body])
 
 
 def send_password_reset_email(user):
