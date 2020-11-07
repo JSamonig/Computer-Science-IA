@@ -25,10 +25,10 @@ $(document).ready(function(){
             <form method="post" role="form">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
-                {{ wtf.form_field(form.first_name) }}
-                {{ wtf.form_field(form.last_name) }}
-                {{ render_field(form.email, icon="fa-envelope") }}
-                {{ wtf.form_field(form.accounting_email) }}
+                {{ wtf.form_field(form.first_name,placeholder="First name") }}
+                {{ wtf.form_field(form.last_name,placeholder="Surname") }}
+                {{ render_field(form.email, icon="fa-envelope",placeholder="Email") }}
+                {{ wtf.form_field(form.accounting_email,placeholder="Accounting email") }}
                 {{ wtf.form_field(form.taggun) }}
                 {{ wtf.form_field(form.dark) }}
                 {{ wtf.form_field(form.submit, class="btn btn-primary") }}
