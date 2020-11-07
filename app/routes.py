@@ -48,13 +48,7 @@ def upload(file_id: str, row: str):
     if request.method == 'POST' and 'submit' in request.form:
         try:
             file = db.session.query(reclaim_forms).filter_by(id=file_id).first()  # find reclaim form
-            if file.sent == "Authorized":  # if a file is already authorized make it into a draft
-                file.sent = "Draft"
-                if file.signature:
-                    try:  # remove signature
-                        os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
-                    except FileNotFoundError:
-                        pass
+            handlefiles.revert_to_draft(file)
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
                 form_id=file_id).filter_by(row_id=int(row)).first()  # find specific entry
             if details:  # if the entry exists
@@ -113,13 +107,7 @@ def edit_data(file_id, row):
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()  # get row of reclaim form
     accounts = db.session.query(Account_codes).all()  # find all account codes
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
-    if file.sent == "Authorized":  # if a file is already authorized make it into a draft
-        file.sent = "Draft"
-        if file.signature:
-            try:  # remove signature
-                os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
-            except FileNotFoundError:
-                pass
+    handlefiles.revert_to_draft(file)
     accounts_list = []
     for account in accounts:
         accounts_list.append([str(account.account_id), str(account.account_name)])  # append all acounts to a list
@@ -666,13 +654,7 @@ def mileage(file_id, row):
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
     file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
-    if file.sent == "Authorized":  # to ensure added information is not automatically authorised
-        file.sent = "Draft"
-        if file.signature:
-            try:  # remove signature
-                os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
-            except FileNotFoundError:
-                pass
+    handlefiles.revert_to_draft(file)
     if myform.validate_on_submit():
         # date validator i.e. don't allow negative trip durations
         end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()

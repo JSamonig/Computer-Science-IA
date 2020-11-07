@@ -23,6 +23,7 @@ def validate_image(stream):
         return None
     return format
 
+
 # <--
 
 def validate_excel(filename):
@@ -41,7 +42,7 @@ def createExcel(file_id, current_user, signature=None):
     date = datetime.datetime.now().strftime("%d/%m/%Y")
     handleExcel.requirements([str(user.first_name), str(user.last_name)], str(date), str(file.filename))
     if signature:
-        handleExcel.addSignature(signature,file.filename, date)
+        handleExcel.addSignature(signature, file.filename, date)
     for row in rows:
         info = [row.date_receipt, row.description, row.miles, row.account_id,
                 row.Total]
@@ -49,6 +50,7 @@ def createExcel(file_id, current_user, signature=None):
         if row.image_name:
             handleExcel.addImages(file.filename, row.row_id, row.image_name)
     return file
+
 
 # https://stackoverflow.com/questions/876853/generating-color-ranges-in-python
 def createDistinctColours(n):
@@ -72,7 +74,8 @@ def createSignatureBack(first, last):
     for i in range(1, width, int(width / 4)):
         txt = txt.rotate(-45)
         d = ImageDraw.Draw(txt)
-        d.text((i - (width / 3), i), datetime.datetime.now().date().strftime("%d/%m/%Y") + " {} {}".format(first, last), font=fnt,
+        d.text((i - (width / 3), i), datetime.datetime.now().date().strftime("%d/%m/%Y") + " {} {}".format(first, last),
+               font=fnt,
                fill=(128, 128, 128, 64))
         txt = txt.rotate(45)
     out = Image.alpha_composite(base, txt)
@@ -82,6 +85,18 @@ def createSignatureBack(first, last):
         f = image.read()
         image.close()
     encoded = base64.b64encode(f).decode()
-    data='data:image/png;base64,{}'.format(encoded)
+    data = 'data:image/png;base64,{}'.format(encoded)
     os.remove(name)
     return data
+
+
+def revert_to_draft(file):
+    if file.sent == "Authorized":  # if a file is already authorized make it into a draft
+        file.sent = "Draft"
+        if file.signature:
+            try:  # remove signature
+                os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.signature))
+                file.signature = None
+            except FileNotFoundError:
+                pass
+            db.session.commit()
