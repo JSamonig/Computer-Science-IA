@@ -1,41 +1,14 @@
 from app import app
-from flask import render_template, flash
+from app.models import User
+from flask import render_template
 from app.models import get_token
-from threading import Thread
 import config as c
-from sendgrid import SendGridAPIClient
+from sendgrid import SendGridAPIClient, SendGridException
 from sendgrid.helpers.mail import (Mail, Attachment, FileContent, FileName, FileType, Disposition)
 import base64
-import sys
 
 
-#  --> Adapted from https://blog.miguelgrinberg.com/, https://app.sendgrid.com/guide/integrate/langs/python and
-# https://stackoverflow.com/questions/1854216/raise-unhandled-exceptions-in-a-thread-in-the-main-thread
-
-class send_async_email():
-    def __init__(self, msg):
-        self.msg = msg
-        self.result = None
-        self.exc_info = None
-
-    def send_async_email_func(self):
-        sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
-        response = sg.send(self.msg)
-        return response.status_code
-
-    def send(self):
-        try:
-            sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
-            self.result = sg.send(self.msg)
-        except Exception as e:
-            self.exc_info = sys.exc_info()
-
-    def main(self):
-        Thread(target=self.send).start()
-        if self.exc_info:
-            raise self.exc_info[1].with_traceback(self.exc_info[2])
-        return self.result
-
+#  --> Adapted from https://app.sendgrid.com/guide/integrate/langs/python
 
 def send_email(subject, sender, recipients, html_body, file=None):
     msg = Mail(from_email=sender, to_emails=recipients, subject=subject, html_content=html_body)
@@ -44,19 +17,19 @@ def send_email(subject, sender, recipients, html_body, file=None):
             data = f.read()
             f.close()
         encoded_file = base64.b64encode(data).decode()
-        attachedFile = Attachment(
+        attached_file = Attachment(
             FileContent(encoded_file),
             FileName(file),
             FileType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             Disposition("attachment")
         )
-        msg.attachment = attachedFile
-    mail = send_async_email(msg=msg)
-    mail.main()
+        msg.attachment = attached_file
+        sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)
+        sg.send(msg)
 
 
 def send_password_reset_email(user):
-    token = get_token(my_object=user, word="reset_password")
+    token = get_token(my_object=user, word="reset_password", user=user)
     send_email('[Accounting app] Reset Your Password',
                sender=app.config['ADMINS'][0],
                recipients=[user.email],
@@ -66,7 +39,7 @@ def send_password_reset_email(user):
 
 # <--
 def send_verify_email(user):
-    token = get_token(my_object=user, word="verify_email")
+    token = get_token(my_object=user, word="verify_email", user=user)
     send_email('[Accounting app] Confirm your email',
                sender=app.config['ADMINS'][0],
                recipients=[user.email],
@@ -88,3 +61,16 @@ def send_reject_email(user, mail):
                recipients=[user.email],
                html_body=render_template('email/not_authed.html',
                                          user=user, auth_party=mail))
+
+
+def send_error_email(error, code, user):
+    subject = "Error {} in IA".format(str(code))
+    recipients = app.config['ADMINS'][1]
+    try:
+        user = User.query.filter_by(id=user).first().email
+    except AttributeError:
+        pass
+    send_email(subject,
+               sender=app.config['ADMINS'][0],
+               recipients=recipients,
+               html_body=render_template("email/Error.html", error=error, user=user))

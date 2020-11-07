@@ -1,8 +1,7 @@
 from flask import render_template
 from app import app, db
-from app.models import User
 from flask_login import current_user
-from app.emails import send_email
+from app.emails import send_error_email
 
 
 @app.errorhandler(400)
@@ -31,18 +30,9 @@ def internal_error(error):
         dark = current_user.dark
     else:
         dark = None
-    email(error, 500)
+    send_error_email(error, 500, current_user.id)
     db.session.rollback()
     return render_template('errors/500.html', error=error, dark=dark), 500
 
 
 # <--
-
-def email(error, code):
-    subject = "Error {} in IA".format(str(code))
-    recipients = ["samonij@wellingtoncollege.org.uk"]
-    user = User.query.filter_by(id=current_user.id).first().email
-    send_email(subject,
-               sender=app.config['ADMINS'][0],
-               recipients=recipients,
-               html_body="<p>{}<p/><p>User = {}<p/>".format(error, user))

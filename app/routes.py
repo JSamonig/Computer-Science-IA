@@ -1,18 +1,21 @@
 # routes.py importing modules and libraries
-from flask import request, redirect, flash, render_template, abort, url_for, send_file, Markup, jsonify
-from flask_login import current_user, login_user, logout_user, login_required
 from app import app, handlefiles, OCR, forms, db, map
 from app.emails import send_password_reset_email, send_email, send_verify_email, send_auth_email, send_reject_email
 from app.models import User, reclaim_forms, reclaim_forms_details, Account_codes, cost_centres, get_token, verify_token
+from flask import request, redirect, flash, render_template, abort, url_for, send_file, Markup, jsonify
+from flask_login import current_user, login_user, logout_user, login_required
+from python_http_client.exceptions import UnauthorizedError
+from urllib.error import HTTPError
+from http.client import IncompleteRead
 from urllib import parse as urllib_parse
+from werkzeug.urls import url_parse
+from PIL import Image
 import datetime
 import io
 import os
 import uuid
 import config as c
 import numpy as np
-from werkzeug.urls import url_parse
-from PIL import Image
 
 
 @app.route('/')
@@ -104,6 +107,9 @@ def edit_data(file_id, row):
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()  # get row of reclaim form
     accounts = db.session.query(Account_codes).all()  # find all account codes
+    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
+    if file.sent == "Authorized":  # if a file is already authorized make it into a draft
+        file.sent = "Draft"
     accounts_list = []
     for account in accounts:
         accounts_list.append([str(account.account_id), str(account.account_name)])  # append all acounts to a list
@@ -217,7 +223,7 @@ def edit_forms(file_id):
     """
     rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).order_by(reclaim_forms_details.row_id).all()
-    name = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404().filename
+    file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
     sum_reclaimed = 0  # sum of reclaimed money in a form
     for row in rows:
         if row.Total:
@@ -230,8 +236,9 @@ def edit_forms(file_id):
         if row.account_id is None:
             # delete the row is account_id is not present (i.e. incomplete form submission in edit_data() ).
             return redirect(url_for("delete_row", file_id=file_id, row=row.row_id))
-    return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=name, mysum=sum_reclaimed,
-                           dark=current_user.dark)
+    return render_template('forms/edit_forms.html', forms=rows, file_id=file_id, name=file.filename,
+                           mysum=sum_reclaimed,
+                           dark=current_user.dark, authed=(file.sent == "Authorized"))
 
 
 @app.route('/delete_row/<file_id>/<row>', methods=['GET', 'POST'])
@@ -271,15 +278,17 @@ def delete_file(file_id):
     """
     rows = reclaim_forms_details.query.filter_by(form_id=file_id).all()
     for row in rows:
-        try:  # remove images
-            os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
-        except:
-            pass
+        if row.image_name:  # remove images
+            try:
+                os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
+            except FileNotFoundError:
+                pass
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id)
-    try:  # remove signature
-        os.remove(os.path.join(app.Config["SIGNATURE_ROUTE"], file.first().signature))
-    except:
-        pass
+    if file.first().signature:
+        try:  # remove signature
+            os.remove(os.path.join(app.Config["SIGNATURE_ROUTE"], file.first().signature))
+        except FileNotFoundError:
+            pass
     file.delete()  # delete file
     db.session.commit()
     return redirect(url_for('view_forms'))
@@ -297,8 +306,9 @@ def download(file_id):
         db.session.commit()
         return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True, cache_timeout=0)
         # send file to user but do not cache it
-    except:
-        flash('Error downloading file. Try renaming your file.', category="alert alert-danger")
+    except (Exception, BaseException, FileNotFoundError) as e:
+        flash('Error downloading file.', category="alert alert-danger")
+        app.logger("Error in download: {}".format(e))
         return redirect(url_for("view_forms"))
 
 
@@ -491,13 +501,15 @@ def send(file_id):
     :return: HTML
     """
     myform = forms.supervisor()
+    user = User.query.get(current_user.id)
+    file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
+    user_token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20, user=user)
     if myform.validate_on_submit():
-        user = User.query.get(current_user.id)
-        file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
         recipients = [myform.email_supervisor.data]
-        token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20)
+        token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20,
+                          user=myform.email_supervisor.data)
         # Basically infinity (3,170,979,198.38 millenia)
         html_body = render_template('email/request_auth.html', token=token, user=user.first_name + " " + user.last_name)
         file = handlefiles.createExcel(file_id=file_id, current_user=current_user)  # create excel sheet
@@ -508,10 +520,11 @@ def send(file_id):
             file_db.date_sent = datetime.datetime.utcnow()
             db.session.commit()
             flash("Email successfully sent to {}".format(myform.email_supervisor.data), category="alert alert-success")
-        except:
+        except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
+            app.logger.error('Error in function: send, signing form {}'.format(e))
             flash("Error sending email. Please try again later.", category="alert alert-danger")
         return redirect(url_for("index"))
-    return render_template("email/manager_email.html", form=myform, dark=current_user.dark)
+    return render_template("email/manager_email.html", form=myform, dark=current_user.dark, token=user_token)
 
 
 @app.route('/send_accounting/<file_id>/<user_id>', methods=['GET', 'POST'])
@@ -534,8 +547,8 @@ def send_accounting(file_id, user_id):
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                    file=file.filename)
-        flash('Successfully authorised expenses form.', category="alert alert-success")
-    except:
+    except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
+        app.logger.error('Error in send_accounting, signing form {}'.format(e))
         flash('Unexpected error while authorising expenses form.', category="alert alert-danger")
     return redirect(url_for("view_forms"))
 
@@ -615,8 +628,9 @@ def verify_email_request():
             if user:
                 send_verify_email(user)
             flash('Check {} to verify your mail.'.format(myform.email.data), category="alert alert-success")
-        except:
+        except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
             flash("Error sending email. Please try again later.", category="alert alert-danger")
+            app.logger.error('Error in verify_email_request, signing form {}'.format(e))
         return redirect(url_for('login'))
     return render_template('user/verify_email.html', title='Reset Password', form=myform)
 
@@ -868,9 +882,10 @@ def line(year):
     return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours))  # To template
 
 
-@app.route('/sign_form/<form_hash>', methods=['GET', 'POST'])
+@app.route('/sign_form/<form_hash>/<is_hod>', methods=['GET', 'POST'])
+@app.route('/sign_form/<form_hash>', defaults={'is_hod': 0})
 @login_required
-def sign_form(form_hash):
+def sign_form(form_hash, is_hod):
     """
     Authorise a reclaim form, by signing it
     :param form_hash: string which decodes to give the user who requested the form
@@ -878,37 +893,43 @@ def sign_form(form_hash):
     """
     user = User.query.get(current_user.id)  # current user
     form = verify_token(token=form_hash, word="sign_form", table=reclaim_forms)
-    for_user = db.session.query(User).filter_by(id=form.made_by).first()
+    for_user = verify_token(token=form_hash, word="user", table=User, attribute="email")
     # for_user is the user for which the current user is authorising for
-    if for_user:
+    if user == for_user and form:  # Authorization. Here, for_user is the tokens inteded recipient
+        for_user = db.session.query(User).filter_by(
+            id=form.made_by).first()  # Here, for_user is the person who want to be authed
+        if is_hod:
+            form.sent = "Awaiting authorization"
+        if form.sent != "Awaiting authorization":
+            flash("This authorization link has expired.", category="alert alert-danger")
+            return redirect(url_for("index"))
         name = for_user.first_name + " " + for_user.last_name
         data = handlefiles.createSignatureBack(user.first_name, user.last_name)  # create image to sign over
         if request.method == 'POST':
             if request.data:
-                if form.sent == "Awaiting authorization":
-                    returned_bytes = bytearray(request.data)  # get back signature
-                    image = Image.open(io.BytesIO(returned_bytes))  # convert bytes to image
-                    signature = str(uuid.uuid4()) + ".png"
-                    image.save(c.Config.SIGNATURE_ROUTE + signature)
-                    form.signature = signature
-                    form.sent = "Authorized"
-                    send_auth_email(for_user, user.email)
-                    form.date_sent = datetime.datetime.utcnow()
-                    db.session.commit()
-                    flash("Signed expenses form successfully for {}!".format(name), category="alert alert-success")
-                    return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})  # redirect
-                flash("This authorization link has expired.", category="alert alert-danger")
-                return jsonify({"redirect": "/index"})
+                returned_bytes = bytearray(request.data)  # get back signature
+                image = Image.open(io.BytesIO(returned_bytes))  # convert bytes to image
+                signature = str(uuid.uuid4()) + ".png"
+                image.save(c.Config.SIGNATURE_ROUTE + signature)
+                form.signature = signature
+                form.sent = "Authorized"
+                send_auth_email(for_user, user.email)
+                form.date_sent = datetime.datetime.utcnow()
+                db.session.commit()
+                flash("Signed expenses form successfully for {}!".format(name), category="alert alert-success")
+                return jsonify({"redirect": "/send_accounting/{}/{}".format(form.id, for_user.id)})  # redirect
             else:
                 try:
                     send_reject_email(for_user, user.email)
                     flash("Rejected form for {}. He/She has been notified.".format(name),
                           category="alert alert-success")
-                except:
+                except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
                     flash("Rejected form for {}. There was an error in sending an email to him/her.".format(name),
                           category="alert alert-danger")
+                    app.logger.error('Error in sign_form, signing form {}'.format(e))
                 form.sent = "Rejected"
                 db.session.commit()
                 return jsonify({"redirect": "/index"})  # redirect to index
         return render_template('manager/sign_form.html', background=data, for_user=name, dark=current_user.dark)
-    abort(404)
+    flash("Unknown token. Access denied", category="alert alert-danger")
+    return redirect(url_for("index"))

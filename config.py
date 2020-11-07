@@ -21,5 +21,5 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
     SENDGRID_DEFAULT_FROM = os.environ.get('MAIL_DEFAULT_SENDER')
-    ADMINS = [os.environ.get('MAIL_DEFAULT_SENDER')]
+    ADMINS = [os.environ.get('MAIL_DEFAULT_SENDER'), os.environ.get('ADMIN')]
     GOOGLEMAPS_KEY = os.environ.get('GOOGLE_API')
