@@ -2,19 +2,20 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <div>
-        {% if title %}
-        <h1>{{ title }}</h1>
-        {% else %}
-        <h1>Send for authorisation</h1>
-        {% endif %}
-        <div class="col-md-4">
-            <form method="post" role="form" autocomplete="off"}>
-                {{ form.hidden_tag() }}
-                {{ wtf.form_errors(form, hiddens="only") }}
-                {{ wtf.form_field(form.email_supervisor) }}
-                {{ wtf.form_field(form.submit, class="btn btn-success") }}
-            </form>
-        </div>
+<div>
+    {% if title %}
+    <h1>{{ title }}</h1>
+    {% else %}
+    <h1>Send for authorisation</h1>
+    {% endif %}
+    <div class="col-md-6 col-lg-4">
+        <form method="post" style="margin-bottom:5px;" role="form" autocomplete="on">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_errors(form, hiddens="only") }}
+            {{ wtf.form_field(form.email_supervisor) }}
+            {{ wtf.form_field(form.submit, class="btn btn-primary") }}
+        </form>
+        <a href="{{url_for('sign_form', form_hash=token, is_hod=1)}}">Click here if you are the corresponding HoD</a>
     </div>
+</div>
 {% endblock %}

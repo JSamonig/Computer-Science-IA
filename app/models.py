@@ -32,7 +32,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return '<User {}>'.format(self.email)
 
     # <--
     def __eq__(self, other):
@@ -91,17 +91,25 @@ class cost_centres(db.Model):
     purpose_id = db.Column(db.Integer)
 
 
-def get_token(my_object, word, attribute="id", expires_in=600) -> str:
-    if hasattr(my_object, attribute):
+def get_token(my_object, word, user, expires_in=600):
+    to_decode = my_object.id
+    if hasattr(user, "email"):
         return jwt.encode(
-            {word: my_object.id, 'exp': time.time() + expires_in},
+            {word: to_decode, 'exp': time.time() + expires_in, 'user': user.email},
             app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+    return jwt.encode(
+        {word: to_decode, 'exp': time.time() + expires_in, 'user': user},
+        app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
 
 
-def verify_token(token, word, table=User):
+def verify_token(token, word, table=User, attribute="id"):
     try:
-        returned_id = jwt.decode(token, app.config['SECRET_KEY'],
-                                 algorithms=['HS256'])[word]  # pw = reset_password, email=verify_email, sign= sign_form
-        return table.query.get(returned_id)
-    except (jwt.exceptions.DecodeError, AttributeError, jwt.ExpiredSignature):
-        return
+        decoded = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        returned_id = decoded[word]  # pw = reset_password, email=verify_email, sign= sign_form
+        if decoded["exp"] > time.time():
+            if attribute == "id":
+                return db.session.query(table).filter_by(id=returned_id).first()
+            elif attribute == "email" and table == User:
+                return db.session.query(User).filter_by(email=returned_id).first()
+    except (jwt.exceptions.DecodeError, AttributeError, jwt.ExpiredSignature, TypeError):
+        pass

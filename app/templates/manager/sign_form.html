@@ -107,8 +107,8 @@ rejectButton.addEventListener('click', function (event) {
         <canvas id="signature-pad" class="signature-pad" width=337 height=296></canvas>
     </div>
     <div>
-        <button id="upload" class="save btn btn-success">Authorise</button>
-        <button id="reject" class="btn btn-danger">Reject</button>
+        <button id="upload" onClick="return confirm('Are you sure to authorize?');" class="save btn btn-success">Authorise</button>
+        <button id="reject" onClick="return confirm('Are you sure to reject?');" class="btn btn-danger">Reject</button>
         <button id="clear" class="btn btn-secondary">Clear</button>
     </div>
 
