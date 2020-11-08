@@ -5,7 +5,7 @@ import polyline
 import config as c
 
 
-def getMap(start, end):
+def get_map(start, end):
     print("%" not in start)
     if "%" not in start:
         start = urllib.parse.quote_plus(start)

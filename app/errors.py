@@ -26,14 +26,16 @@ def not_found_error():
 
 @app.errorhandler(500)
 def internal_error(error):
+    """
+    :param error: Error message
+    """
     if current_user.is_authenticated:
         dark = current_user.dark
         send_error_email(error, 500, current_user.id)
     else:
         dark = None
-    send_error_email(error, 500, None)
-    db.session.rollback()
+    send_error_email(error, 500, None)  # send an email to Admin notifying of 500 error
+    db.session.rollback()  # rollback any database changes
     return render_template('errors/500.html', error=error, dark=dark), 500
-
 
 # <--

@@ -20,16 +20,16 @@ bootstrap = Bootstrap(app)
 login = LoginManager(app)
 login.login_view = 'login'
 login.login_message_category = "alert alert-danger"
+# initial message of along the lines of you need to log in to access this page will be in red ("alert-danger")
 fa = FontAwesome(app)
 moment = Moment(app)
 CSRFProtect(app)
 
-
 from app import routes, models, errors
-
 
 if not app.debug:
     # Adapted from https://blog.miguelgrinberg.com/
+    # Logging
     if not os.path.exists('logs'):
         os.mkdir('logs')
     file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240,

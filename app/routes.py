@@ -44,7 +44,7 @@ def upload(file_id: str, row: str):
             row = int(details) + 1  # if a new row is added, the index will be one more than the previous row
         else:
             row = 7  # If there are now previous rows, we will start at row 7 in the excel sheet.
-    my_form = forms.uploadForm()
+    my_form = forms.UploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
             file = db.session.query(reclaim_forms).filter_by(id=file_id).first()  # find reclaim form
@@ -65,10 +65,14 @@ def upload(file_id: str, row: str):
             user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
             data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
             img = Image.open(app.config['IMAGE_UPLOADS'] + filename)  # resize image after OCR
-            basewidth = 500
-            wpercent = (basewidth / float(img.size[0]))
-            hsize = int((float(img.size[1]) * float(wpercent)))
-            img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+            '''
+            From:
+            https://stackoverflow.com/questions/273946/how-do-i-resize-an-image-using-pil-and-maintain-its-aspect-ratio
+            '''
+            base_width = 500
+            w_percent = (base_width / float(img.size[0]))
+            h_size = int((float(img.size[1]) * float(w_percent)))
+            img = img.resize((base_width, h_size), Image.ANTIALIAS)
             img.save(app.config['IMAGE_UPLOADS'] + filename)
             if not details:  # create new row if it doesn't exist
                 details = reclaim_forms_details(date_receipt=data["date_receipt"], Total=data["Total"],
@@ -102,7 +106,7 @@ def edit_data(file_id, row):
     :return: HTML template contained in app/templates/forms
     Edit any data which came in through Mileage or Upload
     """
-    my_form = forms.editOutput()
+    my_form = forms.EditOutput()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()  # get row of reclaim form
     accounts = db.session.query(Account_codes).all()  # find all account codes
@@ -300,7 +304,7 @@ def download(file_id):
     :return: HTML
     """
     try:
-        file = handlefiles.createExcel(file_id, current_user)  # create excel file dynamically
+        file = handlefiles.create_excel(file_id, current_user)  # create excel file dynamically
         db.session.commit()
         return send_file(c.Config.DOWNLOAD_ROUTE + file.filename, as_attachment=True, cache_timeout=0)
         # send file to user but do not cache it
@@ -321,7 +325,7 @@ def view_forms():
         reclaim_forms.date_created.desc()).all()  # all reclaim forms made by a user sorted by date
     user = User.query.get(current_user.id)
     if user.accounting_email is None:  # if the user has not set an email
-        my_form = forms.modalSettings()
+        my_form = forms.ModalSettings()
         new_user = True
         if my_form.validate_on_submit():  # render a form which asks for email and preffered theme
             user.accounting_email = my_form.accounting_email.data
@@ -341,15 +345,14 @@ def new_form():
     :return: HTML
     Creates a new form
     """
-    my_form = forms.newReclaim()
+    my_form = forms.NewReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     if my_form.validate_on_submit():
         filename = handlefiles.validate_excel(my_form.filename.data)
         file_id = str(uuid.uuid4())  # unique user id filename which is stored as a variable and in the database
-        file = reclaim_forms(id=id, filename=filename, description=my_form.description.data,
-                                sent="Draft",
-                                made_by=current_user.id)  # New file, meaning it must be a draft
-        db.session.add(my_form)
+        file = reclaim_forms(id=file_id, filename=filename, description=my_form.description.data, sent="Draft",
+                             made_by=current_user.id)  # New file, meaning it must be a draft
+        db.session.add(file)
         db.session.commit()
         flash("Successfully created the form: {}".format(filename), category="alert alert-success")
         return redirect(url_for('edit_forms', file_id=id))
@@ -366,7 +369,7 @@ def edit_form(file):
     :param file: ID of reclaim id
     :return: HTML
     """
-    my_form = forms.newReclaim()
+    my_form = forms.NewReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     myfile = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file).first_or_404()
     if my_form.validate_on_submit():
@@ -389,7 +392,7 @@ def edit_form(file):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """
-    Handles logic of logins
+    Handles logic of login
     :return: HTML
     """
     if current_user.is_authenticated:
@@ -402,8 +405,8 @@ def login():
             return redirect(url_for('login'))
         if user is None or not user.is_verified:
             flash(Markup(  # markup renders html into the flash
-                'Please check your emails to verify your email. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
-                    url_for("verify_email_request"))), category="alert alert-danger")
+                'Please check your emails to verify your email. Click <a href="{}" class="alert-link">here</a> to send '
+                'another email.'.format(url_for("verify_email_request"))), category="alert alert-danger")
             return redirect(url_for('login'))
         login_user(user, remember=my_form.remember_me.data)
         next_page = request.args.get('next')
@@ -458,7 +461,7 @@ def settings():
     Settings page
     :return: HTML
     """
-    my_form = forms.settings(current_user.id)
+    my_form = forms.Settings(current_user.id)
     user = User.query.get(current_user.id)
     if my_form.validate_on_submit():
         user.first_name = my_form.first_name.data
@@ -471,8 +474,9 @@ def settings():
             send_verify_email(user)
             logout_user()
             flash(Markup(
-                'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
-                    my_form.accounting_email.data, url_for("verify_email_request"))), category="alert alert-success")
+                'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> '
+                'to send another email.'.format(my_form.accounting_email.data, url_for("verify_email_request"))),
+                category="alert alert-success")
         user.use_taggun = my_form.taggun.data
         user.dark = my_form.dark.data
         db.session.commit()
@@ -497,10 +501,11 @@ def send(file_id):
     :param file_id: ID of reclaim form
     :return: HTML
     """
-    my_form = forms.supervisor()
+    my_form = forms.Supervisor()
     user = User.query.get(current_user.id)
     file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     user_token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20, user=user)
+    # generate a token for the user (if the user is a HoD, the user will not need to email him/herself
     if my_form.validate_on_submit():
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
@@ -509,7 +514,7 @@ def send(file_id):
                           user=my_form.email_supervisor.data)
         # Basically infinity (3,170,979,198.38 millenia)
         html_body = render_template('email/request_auth.html', token=token, user=user.first_name + " " + user.last_name)
-        file = handlefiles.createExcel(file_id=file_id, current_user=current_user)  # create excel sheet
+        file = handlefiles.create_excel(file_id=file_id, current_user=current_user)  # create excel sheet
         try:  # send email, with link for supervisor to sign a reclaim form (and thus authorise it)
             send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                        file=file.filename)
@@ -540,7 +545,7 @@ def send_accounting(file_id, user_id):
     recipients = [user.accounting_email]
     html_body = render_template('email/sent_form.html', user=str(user.first_name + " " + user.last_name),
                                 dark=current_user.dark)
-    file = handlefiles.createExcel(file_id=file_id, current_user=current_user, signature=file_db.signature)
+    file = handlefiles.create_excel(file_id=file_id, current_user=current_user, signature=file_db.signature)
     try:
         send_email(subject=subject, sender=sender, recipients=recipients, html_body=html_body,
                    file=file.filename)
@@ -618,7 +623,7 @@ def verify_email_request():
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    my_form = forms.verfify_email()
+    my_form = forms.VerfifyEmail()
     if my_form.validate_on_submit():
         user = User.query.filter_by(email=my_form.email.data).first()
         try:
@@ -642,14 +647,13 @@ def mileage(file_id, row):
     :return: HTML (redirect to edit_data)
     """
     if row == "0":  # if new row is being added
-        details = \
-            db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(made_by=current_user.id).filter_by(
-                form_id=file_id).first()[0]  # Find last row
+        details = db.session.query(db.func.max(reclaim_forms_details.row_id)).filter_by(
+            made_by=current_user.id).filter_by(form_id=file_id).first()[0]  # Find last row
         if details:
             row = int(details) + 1
         else:
             row = 7  # default
-    my_form = forms.description()
+    my_form = forms.Description()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
     file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
@@ -663,9 +667,10 @@ def mileage(file_id, row):
             return render_template('forms/miles.html', title="Add from mileage", form=my_form, dark=current_user.dark,
                                    start=urllib_parse.quote_plus(my_form.start.data),
                                    end=urllib_parse.quote_plus(my_form.destination.data))
-        description = "Description: " + my_form.description.data + " Start: " + my_form.start.data + " End: " + my_form.destination.data + " Starting date: " + my_form.date_start.data + " Ending date: " + my_form.date_end.data + " Return trip: " + str(
-            my_form.return_trip.data)
-        results = map.getMap(my_form.start.data, my_form.destination.data)  # [cords, miles, total, status]
+        description = "Description: " + my_form.description.data + " Start: " + my_form.start.data + " End: " + \
+                      my_form.destination.data + " Starting date: " + my_form.date_start.data + " Ending date: " + \
+                      my_form.date_end.data + " Return trip: " + str(my_form.return_trip.data)
+        results = map.get_map(my_form.start.data, my_form.destination.data)  # [cords, miles, total, status]
         if not details:  # make a new row
             if results[3] != "OK":
                 total, miles = None, None
@@ -693,8 +698,8 @@ def mileage(file_id, row):
                 details.miles = None
                 details.Total = None
                 flash(
-                    "The route could not be identified, and a mileage was not calculated. Please check the spelling of locations.",
-                    category="alert alert-danger")
+                    "The route could not be identified, and a mileage was not calculated. Please check the spelling "
+                    "of locations.", category="alert alert-danger")
             elif my_form.return_trip.data is True and details.return_trip is False:
                 # multiply or divide based on changed option
                 details.miles = results[1] * 2
@@ -761,7 +766,7 @@ def load_map(end, start):
     :param start: URL encoded start location
     :return: HTML of map
     """
-    results = map.getMap(start, end)  # render coordinates of a route
+    results = map.get_map(start, end)  # render coordinates of a route
     cords = results[0]
     return render_template("iframes/map.html", cords=cords, key=c.Config.GOOGLEMAPS_KEY, dark=current_user.dark)
 
@@ -788,7 +793,7 @@ def pie():
                     labels.append(row.account_id)
                     values.append(row.Total)  # append new label for a new row account id
 
-    colours = handlefiles.createDistinctColours(len(labels) + 1)[:len(labels)]
+    colours = handlefiles.create_distinct_colours(len(labels) + 1)[:len(labels)]
     if values:
         return render_template('iframes/pie.html', title='Pie chart', values=values, labels=labels, colours=colours)
     else:
@@ -828,8 +833,8 @@ def line(year):
                         if row.account_id in accounts[i - 1].keys():  # if the account is already added to dictionary
                             pass  # I add all accounts to a dictionary in a list of months this way I can track Totals
                         else:
-                            accounts[i - 1][
-                                row.account_id] = 0  # Add a account code to dictionary for month with value 0
+                            accounts[i - 1][row.account_id] = 0
+                            # Add a account code to dictionary for month with value 0
                         if row.account_id not in unique_accounts:
                             unique_accounts.append(row.account_id)  # Add to key at top
                         accounts[i - 1][row.account_id] += row.Total  # Adding to the total for account code that month
@@ -838,6 +843,7 @@ def line(year):
         for j in i.keys():  # for every account in that month
             data[unique_accounts.index(j)].append([i[j], accounts.index(i) + 1])
             # Append to account array the [ total reclaimed, month ]
+
     # ----- This part of the function sorts the data-points and adds data in between (which have not changed) -----
     for account in data:  # for every account in the data array
         for current_month in range(1, month + 1):  # For every month
@@ -848,7 +854,7 @@ def line(year):
             if current_index is not None:  # if the data point is in the correct position
                 pass  # do nothing
             else:  # if the data point is in the wrong position
-                # ----Lines 523 to 526 find the index of the total of the month before (if it remains constant)
+                # ----Find the index of the total of the month before (if it remains constant)
                 index_before = None
                 for i in account:  # for every month in the account code
                     if i[1] == current_month:  # if the month of a data point is equal to the month iterator
@@ -877,7 +883,7 @@ def line(year):
         unique_accounts = ["No expenses forms authorized yet"]
         colours = ['#E5E5E5']
     else:
-        colours = handlefiles.createDistinctColours(len(unique_accounts))  # Create distinct colours
+        colours = handlefiles.create_distinct_colours(len(unique_accounts))  # Create distinct colours
     return render_template('iframes/line.html', labels=labels, set=zip(data, unique_accounts, colours))  # To template
 
 
@@ -909,7 +915,7 @@ def sign_form(form_hash, is_hod):
             flash("This authorization link has expired.", category="alert alert-danger")
             return redirect(url_for("index"))
         name = for_user.first_name + " " + for_user.last_name
-        data = handlefiles.createSignatureBack(user.first_name, user.last_name)  # create image to sign over
+        data = handlefiles.create_signature_back(user.first_name, user.last_name)  # create image to sign over
         if request.method == 'POST':
             if request.data:
                 returned_bytes = bytearray(request.data)  # get back signature

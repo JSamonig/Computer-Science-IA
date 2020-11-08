@@ -14,6 +14,9 @@ def load_user(id):
 
 
 class User(UserMixin, db.Model):
+    """
+    User table
+    """
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(64), index=True)
@@ -31,17 +34,20 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def __repr__(self):
+    def __repr__(self): # function if object is printed
         return '<User {}>'.format(self.email)
 
     # <--
-    def __eq__(self, other):
+    def __eq__(self, other): # __eq__ is the method for comparing objects
         if not isinstance(other, User):
             return False
         return self.id == other.id
 
 
 class reclaim_forms(db.Model):
+    """
+    reclaim form file table
+    """
     __tablename__ = 'reclaim_forms'
     id = db.Column(db.String(36), index=True, primary_key=True, default=uuid.uuid4)
     filename = db.Column(db.String(60), index=True)  # need to edit once multiple users
@@ -59,6 +65,9 @@ class reclaim_forms(db.Model):
 
 
 class reclaim_forms_details(db.Model):
+    """
+    reclaim form row table
+    """
     id = db.Column(db.Integer, primary_key=True)
     date_receipt = db.Column(db.String(10), index=True)
     made_by = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
@@ -77,6 +86,9 @@ class reclaim_forms_details(db.Model):
 
 
 class Account_codes(db.Model):
+    """
+    account code table
+    """
     __tablename__ = 'account_codes'
     account_id = db.Column(db.String(60), primary_key=True)
     account_name = db.Column(db.String(60), index=True)
@@ -84,6 +96,9 @@ class Account_codes(db.Model):
 
 
 class cost_centres(db.Model):
+    """
+    cost centre table (number associated with account code)
+    """
     __tablename__ = 'cost_centres'
     id = db.Column(db.Integer, primary_key=True)
     cost_centre_id = db.Column(db.String(60))
@@ -92,8 +107,16 @@ class cost_centres(db.Model):
 
 
 def get_token(my_object, word, user, expires_in=600):
+    """
+    Generates a token
+    :param my_object: a database entry of type = object
+    :param word: token name (pw = reset_password, email=verify_email, sign= sign_form)
+    :param user: user for which the token is made (email or object)
+    :param expires_in: time for the token to expire in
+    :return: token string
+    """
     to_decode = my_object.id
-    if hasattr(user, "email"):
+    if hasattr(user, "email"): # if user is an object not a string
         return jwt.encode(
             {word: to_decode, 'exp': time.time() + expires_in, 'user': user.email},
             app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
@@ -103,6 +126,14 @@ def get_token(my_object, word, user, expires_in=600):
 
 
 def verify_token(token, word, table=User, attribute="id"):
+    """
+    Verify a token
+    :param token: token string
+    :param word: word to decode (pw = reset_password, email=verify_email, sign= sign_form)
+    :param table: table from which the return value should origniate from
+    :param attribute: attribute of object which is to be returned
+    :return: Database entry
+    """
     try:
         decoded = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         returned_id = decoded[word]  # pw = reset_password, email=verify_email, sign= sign_form

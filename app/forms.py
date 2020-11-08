@@ -6,18 +6,18 @@ from wtforms.validators import DataRequired, Email, Regexp, Length, EqualTo, Val
 import config as c
 
 
-class uploadForm(FlaskForm):
+class UploadForm(FlaskForm):
     file = FileField(validators=[DataRequired(), FileAllowed(c.Config.ALLOWED_EXTENSIONS_IMAGES,
                                                              'Please input an image allowed extensions are ' + " ".join(
                                                                  c.Config.ALLOWED_EXTENSIONS_IMAGES))])
     submit = SubmitField('Submit')
 
 
-class editOutput(FlaskForm):
+class EditOutput(FlaskForm):
     date = StringField('Date', validators=[DataRequired(), Regexp(c.Config.DATE_PATTERN, 0, "Invalid date pattern")])
     description = TextAreaField('Description', validators=[DataRequired(), Length(min=1, max=300)])
     miles = FloatField('Miles')
-    accountCode = StringField('Deparment Code', validators=[DataRequired()])
+    accountCode = StringField('Department Code', validators=[DataRequired()])
     accountCode2 = StringField('Account Code', validators=[DataRequired()])
     total = FloatField('Total')
     submit = SubmitField('Submit')
@@ -61,12 +61,12 @@ class ResetPasswordForm(FlaskForm):
 
 # <--
 
-class verfify_email(FlaskForm):
+class VerfifyEmail(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     email2 = StringField('Repeat email', validators=[DataRequired(), Email(), EqualTo('email')])
     submit = SubmitField('Resend email verification')
 
-class settings(FlaskForm):
+class Settings(FlaskForm):
     first_name = StringField('First name', validators=[DataRequired(), Length(min=1, max=50)])
     last_name = StringField('Surname', validators=[DataRequired(), Length(min=1, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -86,13 +86,13 @@ class settings(FlaskForm):
             raise ValidationError('Please use a different email address.')
 
 
-class newReclaim(FlaskForm):
+class NewReclaim(FlaskForm):
     filename = StringField('File name', validators=[DataRequired(), Length(min=1, max=50)])
     description = TextAreaField('Description', validators=[Length(min=0, max=50)])
     submit = SubmitField('Submit')
 
 
-class description(FlaskForm):
+class Description(FlaskForm):
     description = TextAreaField('Purpose of journey', validators=[DataRequired(), Length(min=1, max=140)])
     start = StringField('Starting location', validators=[DataRequired(), Length(min=1, max=140)])
     destination = StringField('Ending location', validators=[DataRequired(), Length(min=1, max=140)])
@@ -104,12 +104,12 @@ class description(FlaskForm):
     submit = SubmitField('Submit')
 
 
-class modalSettings(FlaskForm):
+class ModalSettings(FlaskForm):
     accounting_email = StringField('Accounting email', validators=[DataRequired(), Email()])
     dark = BooleanField('Use the dark theme')
     submit = SubmitField('Apply')
 
 
-class supervisor(FlaskForm):
+class Supervisor(FlaskForm):
     email_supervisor = StringField('Email of line supervisor (HoD)', validators=[DataRequired(), Email()])
     submit = SubmitField('Send for authorization')

@@ -5,107 +5,147 @@ import config as c
 import re
 import os
 
-
-# wscell1 = ws.cell(number, letter (number))
+''' 
+# cell = worksheet.cell(number, letter (number))
 # Cells B7 - B26 = Date
 # Cells C7 - C26 = Description
 # Cells D7 - D26 = Miles
 # Cells E7 - E26 = Account code
 # Cells F7 - F26 = Amount
 # info = [date, amount of miles and description, amount of miles, account code, total calculated]
+'''
 
-def requirements(name: list, date, bookname):
-    wb = getBook(bookname)
-    ws = wb["Expense Claim Form 14-11-19"]
-    bottomRow = 28
-    if findAvailableRow(ws) >= 27:
-        bottomRow = findAvailableRow(ws) + 1
+
+def requirements(name: list, date, book_name):  # Add dates and names
+    """
+    :param name: user name [first, last]
+    :param date: date
+    :param book_name: book file name
+    :return: file
+    """
+    workbook = get_book(book_name)
+    worksheet = workbook["Expense Claim Form 14-11-19"]
+    bottom_row = 28
+    if find_available_row(worksheet) >= 27:
+        bottom_row = find_available_row(worksheet) + 1  # avoid overflow
     # Name at top
     for i in range(2, 4):
-        namecell = ws.cell(4, i)
-        namecell.value = name[i - 2]
+        name_cell = worksheet.cell(4, i)
+        name_cell.value = name[i - 2]
     # Date at bottom
-    datecell = ws.cell(bottomRow, 6)
-    datecell.value = date
+    date_cell = worksheet.cell(bottom_row, 6)
+    date_cell.value = date
     # Name at bottom
-    namecell = ws.cell(bottomRow, 3)
-    namecell.value = name[0] + " " + name[1]
-    wb.save(c.Config.RECLAIM_ROUTE + bookname)
+    name_cell = worksheet.cell(bottom_row, 3)
+    name_cell.value = name[0] + " " + name[1]
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def editRow(info: list, bookname, row=None):
-    wb = getBook(bookname)
-    ws = wb["Expense Claim Form 14-11-19"]
+def edit_row(info: list, book_name, row=None):  # edit a row
+    """
+    :param info: info = [date, amount of miles and description, amount of miles, account code, total calculated]
+    :param book_name: file name of sheet
+    :param row: row number to edit
+    """
+    workbook = get_book(book_name)
+    worksheet = workbook["Expense Claim Form 14-11-19"]
     if not row:
-        row = findAvailableRow(ws)
-        if ws.cell(row, 5).value:
-            merged_cells_range = ws.merged_cells.ranges
+        row = find_available_row(worksheet)
+        if worksheet.cell(row, 5).value:
+            merged_cells_range = worksheet.merged_cells.ranges
             for merged_cell in merged_cells_range:
                 if ord(re.sub(r'\d+', '', str(merged_cell).split(":")[0]).lower()) - 96 < 7:
                     merged_cell.shift(0, 1)
-            ws.insert_rows(row)
-    wcell = ws.cell(row, 1)
-    wcell.value = row - 6
+            worksheet.insert_roworksheet(row)
+    cell = worksheet.cell(row, 1)
+    cell.value = row - 6
     for j in range(1, 7):  # row 2 - row 5 (last value is calculated)
         if j != 1:
-            wcell = ws.cell(row, j)
-            wcell.value = info[j - 2]
+            cell = worksheet.cell(row, j)
+            cell.value = info[j - 2]
             grey = colors.Color(rgb='D9D9D9')
-            wcell.fill = fills.PatternFill(patternType='solid', fgColor=grey)
+            cell.fill = fills.PatternFill(patternType='solid', fgColor=grey)
         if j == 6:
-            wcell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
-        wcell.font = Font(bold=False)
+            cell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
+        cell.font = Font(bold=False)
         thin_border = Border(left=Side(style='thin'),
                              right=Side(style='thin'),
                              top=Side(style='thin'),
                              bottom=Side(style='thin'))
-        wcell.border = thin_border
-        wb.save(c.Config.RECLAIM_ROUTE + bookname)
+        cell.border = thin_border
+        workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def addImages(bookname, row, filename: str):
-    wb = getBook(bookname)
-    sheetname = "Receipt for row " + str(row)
-    wb.create_sheet(sheetname)
-    ws = wb[sheetname]
+def add_images(book_name, row, filename: str):
+    """
+    :param book_name: file name of form
+    :param row: row number
+    :param filename: image filename
+    :return:
+    """
+    workbook = get_book(book_name)
+    sheet_name = "Receipt for row " + str(row)
+    workbook.create_sheet(sheet_name)
+    worksheet = workbook[sheet_name]
     img = Image(c.Config.IMAGE_UPLOADS + filename)
     img.anchor = 'A1'
-    ws.add_image(img)
-    wb.save(c.Config.RECLAIM_ROUTE + bookname)
+    worksheet.add_image(img)
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def addSignature(signature, bookname, date):
-    wb = getBook(bookname)
-    ws = wb["Expense Claim Form 14-11-19"]
+def add_signature(signature, book_name, date):
+    """
+    Add a signature to excel sheet
+    :param signature: signature file name
+    :param book_name: file name of reclaim form
+    :param date: date signed
+    """
+    workbook = get_book(book_name)
+    worksheet = workbook["Expense Claim Form 14-11-19"]
     img = Image(c.Config.SIGNATURE_ROUTE + signature)
     img.anchor = 'C29'
-    ws.add_image(img)
-    wcell = ws.cell(29, 6)
-    wcell.value = date
-    wb.save(c.Config.RECLAIM_ROUTE + bookname)
+    worksheet.add_image(img)
+    cell = worksheet.cell(29, 6)
+    cell.value = date
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def findAvailableRow(ws):
+def find_available_row(worksheet):
+    """
+    Find next empty row
+    :param worksheet: worksheet object
+    :return: int row
+    """
     row = 7
-    while ws.cell(row, 2).value:
+    while worksheet.cell(row, 2).value:
         row += 1
     return row
 
 
-def deleteAllSheets():
+def delete_all_sheets():
+    """
+    deletes all files in reclaim folder (to clear space)
+    """
     files = [f for f in os.listdir(c.Config.RECLAIM_ROUTE)]
     for f in files:
         os.remove(os.path.join(c.Config.RECLAIM_ROUTE, f))
 
 
-def createNewsheet(bookname):
-    wb = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
-    wb.save(c.Config.RECLAIM_ROUTE + bookname)
+def create_new_sheet(book_name):
+    """
+    create a new excel sheet
+    :param book_name: file name of book
+    """
+    workbook = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def getBook(bookname):
+def get_book(book_name):
+    """
+    :param book_name: filename of expenses form
+    """
     try:
-        load_workbook(c.Config.RECLAIM_ROUTE + bookname)
+        load_workbook(c.Config.RECLAIM_ROUTE + book_name)
     except FileNotFoundError:
-        createNewsheet(bookname)
-    return load_workbook(c.Config.RECLAIM_ROUTE + bookname)
+        create_new_sheet(book_name)
+    return load_workbook(c.Config.RECLAIM_ROUTE + book_name)
