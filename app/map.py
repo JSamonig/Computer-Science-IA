@@ -6,12 +6,15 @@ import config as c
 
 
 def get_map(start, end):
-    print("%" not in start)
-    if "%" not in start:
+    """
+    :param start: start location
+    :param end: end location
+    :return: [cords, miles, total, status]
+    """
+    if "%" not in start:  # if not url encoded
         start = urllib.parse.quote_plus(start)
     if "%" not in end:
         end = urllib.parse.quote_plus(end)
-    print([start, end])
     endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
     api_key = c.Config.GOOGLEMAPS_KEY
     nav_request = 'origin={}&destination={}&key={}'.format(start, end, api_key)
@@ -22,9 +25,9 @@ def get_map(start, end):
     status = directions["status"]
     if status == "OK":
         for point in polyline.decode(directions["routes"][0]["overview_polyline"]["points"]):
-            cords.append({"lat": point[0], "lng": point[1]})
-        miles = int((directions["routes"][0]["legs"][0]["distance"]["value"] / 1000) / 1.6)
-        total = miles * 0.45
+            cords.append({"lat": point[0], "lng": point[1]})  # get polyline (for map route)
+        miles = int((directions["routes"][0]["legs"][0]["distance"]["value"] / 1000) / 1.6)  # get mileage
+        total = miles * c.Config.MILEAGE_RATE  # get cost
     else:
         cords = None
     return [cords, miles, total, status]
