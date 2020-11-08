@@ -21,11 +21,13 @@
 
     </style>
     <script>
+    // from https://developers.google.com/maps/documentation/javascript/adding-a-google-map
       "use strict";
       function initMap() {
         const map = new google.maps.Map(document.getElementById("map"), {
           zoom: 18,
           center: {
+            // Wellington College
             lat: 51.364327,
             lng: -0.806620
           },
@@ -46,6 +48,7 @@
         });
         flightPath.setMap(map);
         map.fitBounds(bounds);
+        // auto fit view to route
       {%endif%}
       }
 

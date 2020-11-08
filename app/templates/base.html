@@ -1,3 +1,4 @@
+<!-- Base template -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,16 +28,12 @@
     <script>
     //https://mdbootstrap.com/docs/jquery/forms/validation/
     $(document).ready(function () {
+        // add bootstrap class to error field (looks better)
         $('.has-error').find("input").addClass('is-invalid');
         $('.help-block').addClass('invalid-feedback');
 
-        /*
-        $('.form-control').each(function(){
-              if (!$('.form-control').hasClass(".has-error") && $(this).val()) {
-                $(this).addClass("is-valid");
-           }
-        });*/
         //https://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize/25621277
+        //auto scale text area
         $('textarea').each(function () {
         this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px; overflow-y:hidden;');
         }).on('input', function () {
@@ -45,9 +42,12 @@
             });
 
         $(function () {
+        // for popper js info
             $('[data-toggle="tooltip"]').tooltip()
         })
+
         //https://stackoverflow.com/questions/31888316/how-to-use-flask-wtforms-csrf-protection-with-ajax
+        //setting up csrf token and ajax
         var csrftoken = $('meta[name=csrf-token]').attr('content')
 
         $.ajaxSetup({

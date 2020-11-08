@@ -2,7 +2,7 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script>
-$(function() {
+$(function() { // set up signature canvas
   var canvas = document.querySelector("canvas");
   ctx = canvas.getContext("2d");
   var signaturePad = new SignaturePad(canvas, {
@@ -11,7 +11,7 @@ $(function() {
 });
 
 var mybackground = new Image();
-mybackground.src = "{{background|safe}}";
+mybackground.src = "{{background|safe}}"; //url encoded watermark image
 
 // Make sure the image is loaded first otherwise nothing will draw.
 mybackground.onload = function(){
@@ -23,6 +23,7 @@ var cancelButton = document.getElementById('clear');
 var rejectButton = document.getElementById('reject');
 
 //https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
+//make canvas into blob array for conversion in backend
 makeblob = function (dataURL) {
             var BASE64_MARKER = ';base64,';
             if (dataURL.indexOf(BASE64_MARKER) == -1) {
@@ -50,8 +51,7 @@ saveButton.addEventListener('click', function (event) {
             alert("Please provide signature first.");
     } else {
          var mydata = signaturePad.toDataURL("image/png");
-         console.log(mydata);
-         console.log(typeof mydata);
+         // ajax data back to backend
          $.ajax({
             type: 'POST',
             url: window.location.href,
@@ -77,6 +77,7 @@ cancelButton.addEventListener('click', function (event) {
   ctx.drawImage(mybackground,0,0);
     });
 rejectButton.addEventListener('click', function (event) {
+    //rejection back to backend
     $.ajax({
             type: 'POST',
             url: window.location.href,
@@ -95,21 +96,23 @@ rejectButton.addEventListener('click', function (event) {
     });
 });
 
+
 </script>
 
 {% endblock %}
 {% block app_content %}
-    <h1>Authorise expenses form for {{for_user}}</h1>
-    <h3>
-      Sign over image
-    </h3>
-    <div class="signature_wrapper">
-        <canvas id="signature-pad" class="signature-pad" width=337 height=296></canvas>
-    </div>
-    <div>
-        <button id="upload" onClick="return confirm('Are you sure to authorize?');" class="save btn btn-success">Authorise</button>
-        <button id="reject" onClick="return confirm('Are you sure to reject?');" class="btn btn-danger">Reject</button>
-        <button id="clear" class="btn btn-secondary">Clear</button>
-    </div>
+<h1>Authorise expenses form for {{for_user}}</h1>
+<h3>
+    Sign over image
+</h3>
+<div class="signature_wrapper">
+    <canvas id="signature-pad" class="signature-pad" width=337 height=296></canvas>
+</div>
+<div>
+    <button id="upload" onClick="return confirm('Are you sure to authorize?');" class="save btn btn-success">Authorise
+    </button>
+    <button id="reject" onClick="return confirm('Are you sure to reject?');" class="btn btn-danger">Reject</button>
+    <button id="clear" class="btn btn-secondary">Clear</button>
+</div>
 
 {% endblock %}

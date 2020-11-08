@@ -4,6 +4,7 @@
 
 {% block scripts %}
 <script>
+// date picker from https://bootstrap-datepicker.readthedocs.io/en/latest/options.html
 $(document).ready(function(){
   var date_input=$('.date'); //our date input has the name "date"
   var options={
@@ -19,7 +20,7 @@ $(this).attr("autocomplete", "off");
 });
 
 $( document ).ready(function() {
-
+    // ajax selected account codes
     var target = $('#accountCode2');
     var target_parent = $("#accountCode2_parent")
 
@@ -32,6 +33,7 @@ $( document ).ready(function() {
                 target.empty();
                 if (response["Data"]){
                     target_parent.removeClass("d-none");
+                    // show second field
                     var x;
                     for (x in response["Data"]) {
                         target.append('<option data-subtext="' + response["Data"][x] + '">'+ x +'</option>');
@@ -56,6 +58,7 @@ $( document ).ready(function() {
       id = $option.val();
       getCentres(id);
       target_parent.removeClass("d-none");
+      // show second field
     });
 });
 

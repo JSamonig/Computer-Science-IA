@@ -5,6 +5,7 @@
 {% block scripts %}
 <script>
 $(document).ready(function(){
+    // give notifications
     $('#email').on('focusout', function () {
        if ($(this).val() != "{{email|safe}}") {
        alert('If you change your email, you will be logged out and forced to verify it. This means you could lose access to your account. Are you sure you want to continue?');
