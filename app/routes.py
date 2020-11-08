@@ -44,7 +44,7 @@ def upload(file_id: str, row: str):
             row = int(details) + 1  # if a new row is added, the index will be one more than the previous row
         else:
             row = 7  # If there are now previous rows, we will start at row 7 in the excel sheet.
-    myform = forms.uploadForm()
+    my_form = forms.uploadForm()
     if request.method == 'POST' and 'submit' in request.form:
         try:
             file = db.session.query(reclaim_forms).filter_by(id=file_id).first()  # find reclaim form
@@ -55,13 +55,13 @@ def upload(file_id: str, row: str):
                 if details.image_name:  # if an image is already uploaded
                     os.remove(
                         os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))  # delete the existing image
-            detected_extension = handlefiles.validate_image(myform.file.data.stream)  # detect extension of image
+            detected_extension = handlefiles.validate_image(my_form.file.data.stream)  # detect extension of image
             if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
                 flash('Incorrect file extension',
                       category="alert alert-danger")  # error if the extension is not allowed
-                return render_template('forms/upload.html', form=myform, dark=current_user.dark)
+                return render_template('forms/upload.html', form=my_form, dark=current_user.dark)
             filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
-            myform.file.data.save(app.config['IMAGE_UPLOADS'] + filename)  # save image under filename
+            my_form.file.data.save(app.config['IMAGE_UPLOADS'] + filename)  # save image under filename
             user = User.query.filter_by(id=current_user.id).first_or_404()  # get the user
             data = OCR.run(filename, user.use_taggun)  # run OCR, with users taggun option
             img = Image.open(app.config['IMAGE_UPLOADS'] + filename)  # resize image after OCR
@@ -82,7 +82,7 @@ def upload(file_id: str, row: str):
             db.session.commit()  # commit to DB
         except AttributeError:  # if any of the database values do not exist, or there is an unexpected AttributeError
             flash("Please try again or use a different file.", category="alert alert-danger")
-            return render_template('forms/upload.html', form=myform, dark=current_user.dark)
+            return render_template('forms/upload.html', form=my_form, dark=current_user.dark)
         if details.Total is None or details.date_receipt:  # If OCR could not find a value
             flash("Could not recognise price or total. Optical character recognition is never 100% accurate.",
                   category="alert alert-danger")
@@ -90,7 +90,7 @@ def upload(file_id: str, row: str):
             flash("Please check the information is correct. Optical character recognition is never 100% accurate.",
                   category="alert alert-secondary")
         return redirect("/edit_data/{}/{}".format(file_id, row))  # redirect to edit_data
-    return render_template('forms/upload.html', form=myform, dark=current_user.dark)  # GET request
+    return render_template('forms/upload.html', form=my_form, dark=current_user.dark)  # GET request
 
 
 @app.route('/edit_data/<file_id>/<row>', methods=['GET', 'POST'])
@@ -102,7 +102,7 @@ def edit_data(file_id, row):
     :return: HTML template contained in app/templates/forms
     Edit any data which came in through Mileage or Upload
     """
-    myform = forms.editOutput()
+    my_form = forms.editOutput()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first_or_404()  # get row of reclaim form
     accounts = db.session.query(Account_codes).all()  # find all account codes
@@ -112,29 +112,29 @@ def edit_data(file_id, row):
     for account in accounts:
         accounts_list.append([str(account.account_id), str(account.account_name)])  # append all acounts to a list
     if request.method == "POST":
-        if myform.validate_on_submit():
-            if myform.miles.data:  # if there is data for mileage
-                if float(myform.miles.data) < 0 or float(myform.total.data) < 0:  # check if there are negatives
+        if my_form.validate_on_submit():
+            if my_form.miles.data:  # if there is data for mileage
+                if float(my_form.miles.data) < 0 or float(my_form.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
                     return redirect(url_for('edit_data', file_id=file_id, row=row))  # reload
             else:  # if mileage isnt present, only total will be present, the below lines prevent an error from occuring
-                if float(myform.total.data) < 0:  # check if there are negatives
+                if float(my_form.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
                     return redirect(url_for('edit_data', file_id=file_id, row=row))  # reload
             if details:  # if there is a reclaim form
-                details.date_receipt = myform.date.data
-                details.description = myform.description.data  # load data into DB
-                details.miles = myform.miles.data
+                details.date_receipt = my_form.date.data
+                details.description = my_form.description.data  # load data into DB
+                details.miles = my_form.miles.data
                 # Format of account_id is for example: ART(110)-43214
                 cost_centre = db.session.query(Account_codes).filter_by(
-                    account_id=myform.accountCode.data).first_or_404()  # number associated with 3 letter code (110)
-                account_code = myform.accountCode2.data  # this is the 43214 suffix
+                    account_id=my_form.accountCode.data).first_or_404()  # number associated with 3 letter code (110)
+                account_code = my_form.accountCode2.data  # this is the 43214 suffix
                 if cost_centre.cost_centre:
                     details.account_id = "{}({})-{}".format(str(cost_centre.account_id), str(cost_centre.cost_centre),
                                                             str(account_code))  # format account_id
                 else:  # some cost_centre values do not have a 3 digit number, so the letters only are used
                     details.account_id = "{}-{}".format(str(cost_centre.account_id), str(account_code))
-                details.Total = myform.total.data if str(myform.total.data) != "None" else myform.miles.data * 0.45
+                details.Total = my_form.total.data if str(my_form.total.data) != "None" else my_form.miles.data * 0.45
                 # multiply by mileage rate
                 db.session.commit()  # commit changes to DB
                 today = datetime.datetime.now().date()  # save today's date
@@ -168,8 +168,8 @@ def edit_data(file_id, row):
             dict_cost_centres["N/A"] = "N/A"  # add a N/A option
             return jsonify({"Data": dict_cost_centres})  # return dict
     # GET request
-    myform.date.data = details.date_receipt
-    myform.description.data = details.description
+    my_form.date.data = details.date_receipt
+    my_form.description.data = details.description
     if details.account_id is not None:
         current_account = details.account_id.split("-")  # E.g. [ART(110), 43214]
         current_account[0] = current_account[0].split("(")[0]  # get account code 3 letter code [ART, 43214]
@@ -184,12 +184,12 @@ def edit_data(file_id, row):
     else:
         cost_centre, account = None, None
     if details.Total is not None:
-        myform.total.data = round(float(details.Total), 2)  # Round total
+        my_form.total.data = round(float(details.Total), 2)  # Round total
     if details.start and details.destination:  # if a route is attached
         destination = urllib_parse.quote_plus(details.destination)  # put start and destination into url format
         origin = urllib_parse.quote_plus(details.start)
-        myform.miles.data = details.miles  # load mileage into edit form
-        return render_template('forms/form.html', form=myform, include=True, start=origin,
+        my_form.miles.data = details.miles  # load mileage into edit form
+        return render_template('forms/form.html', form=my_form, include=True, start=origin,
                                end=destination,
                                dark=current_user.dark, accounts=accounts_list, account=account,
                                cost_centre=cost_centre)
@@ -207,7 +207,7 @@ def edit_data(file_id, row):
         end = url encoded location of destination for map
 
         '''
-    return render_template('forms/form.html', form=myform, filename=c.Config.IMAGE_ROUTE + details.image_name,
+    return render_template('forms/form.html', form=my_form, filename=c.Config.IMAGE_ROUTE + details.image_name,
                            dark=current_user.dark, accounts=accounts_list, account=account, cost_centre=cost_centre)
     # Render same form, but with image of receipt instead of map
 
@@ -244,7 +244,7 @@ def edit_forms(file_id):
 def delete_row(file_id, row):
     """
     :param file_id: ID of reclaim form
-    :param row_number: Row number
+    :param row: Row number
     :return: HTML
 
     Deleting rows
@@ -313,24 +313,22 @@ def download(file_id):
 @app.route('/view_forms', methods=['GET', 'POST'])
 @app.route('/view_forms', methods=['GET', 'POST'])
 @login_required
-def view_forms(new_user=False):
+def view_forms():
     """
-    :param new_user: Whether this user is logging on for the first time or not, default is False
-    :type new_user: Boolean
     :return: HTML
     """
     all_forms = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).order_by(
         reclaim_forms.date_created.desc()).all()  # all reclaim forms made by a user sorted by date
     user = User.query.get(current_user.id)
     if user.accounting_email is None:  # if the user has not set an email
-        myform = forms.modalSettings()
+        my_form = forms.modalSettings()
         new_user = True
-        if myform.validate_on_submit():  # render a form which asks for email and preffered theme
-            user.accounting_email = myform.accounting_email.data
-            user.dark = myform.dark.data
+        if my_form.validate_on_submit():  # render a form which asks for email and preffered theme
+            user.accounting_email = my_form.accounting_email.data
+            user.dark = my_form.dark.data
             db.session.commit()
             return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark)
-        return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark, setting=myform,
+        return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark, setting=my_form,
                                new_user=new_user)
     else:
         return render_template('forms/view_forms.html', forms=all_forms, dark=current_user.dark)
@@ -343,22 +341,22 @@ def new_form():
     :return: HTML
     Creates a new form
     """
-    myform = forms.newReclaim()
+    my_form = forms.newReclaim()
     user = User.query.filter_by(id=current_user.id).first()
-    if myform.validate_on_submit():
-        filename = handlefiles.validate_excel(myform.filename.data)
-        id = str(uuid.uuid4())  # unique user id filename which is stored as a variable and in the database
-        myform = reclaim_forms(id=id, filename=filename, description=myform.description.data,
-                               sent="Draft",
-                               made_by=current_user.id)  # New file, meaning it must be a draft
-        db.session.add(myform)
+    if my_form.validate_on_submit():
+        filename = handlefiles.validate_excel(my_form.filename.data)
+        file_id = str(uuid.uuid4())  # unique user id filename which is stored as a variable and in the database
+        file = reclaim_forms(id=id, filename=filename, description=my_form.description.data,
+                                sent="Draft",
+                                made_by=current_user.id)  # New file, meaning it must be a draft
+        db.session.add(my_form)
         db.session.commit()
         flash("Successfully created the form: {}".format(filename), category="alert alert-success")
         return redirect(url_for('edit_forms', file_id=id))
     elif request.method == 'GET':
-        myform.filename.data = datetime.datetime.today().strftime(
+        my_form.filename.data = datetime.datetime.today().strftime(
             '%m-%Y') + "_Expenses_form_" + user.last_name + ".xlsx"  # Month-Year__Expenses_form_Surname.xlsx
-    return render_template('forms/new_form.html', form=myform, title="Create a new form", dark=current_user.dark)
+    return render_template('forms/new_form.html', form=my_form, title="Create a new form", dark=current_user.dark)
 
 
 @app.route('/edit_form/<file>', methods=['GET', 'POST'])  # edit reclaim form details
@@ -368,22 +366,22 @@ def edit_form(file):
     :param file: ID of reclaim id
     :return: HTML
     """
-    myform = forms.newReclaim()
+    my_form = forms.newReclaim()
     user = User.query.filter_by(id=current_user.id).first()
     myfile = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file).first_or_404()
-    if myform.validate_on_submit():
-        filename = handlefiles.validate_excel(myform.filename.data)  # make filename safe
-        myfile.description = myform.description.data
+    if my_form.validate_on_submit():
+        filename = handlefiles.validate_excel(my_form.filename.data)  # make filename safe
+        myfile.description = my_form.description.data
         myfile.filename = filename
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
         if myfile:
-            myform.filename.data = myfile.filename
-            myform.description.data = myfile.description  # preload fields
+            my_form.filename.data = myfile.filename
+            my_form.description.data = myfile.description  # preload fields
         else:
-            myform.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
-    return render_template('forms/new_form.html', form=myform, title="Edit form", dark=current_user.dark, edit=True)
+            my_form.filename.data = "Expenses_form_" + user.last_name + ".xlsx"
+    return render_template('forms/new_form.html', form=my_form, title="Edit form", dark=current_user.dark, edit=True)
 
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
@@ -396,10 +394,10 @@ def login():
     """
     if current_user.is_authenticated:
         return redirect(url_for('view_forms'))
-    myform = forms.LoginForm()
-    if myform.validate_on_submit():
-        user = User.query.filter_by(email=myform.email.data).first()
-        if user is None or not user.check_password(myform.password.data):
+    my_form = forms.LoginForm()
+    if my_form.validate_on_submit():
+        user = User.query.filter_by(email=my_form.email.data).first()
+        if user is None or not user.check_password(my_form.password.data):
             flash('Invalid username or password', category="alert alert-danger")
             return redirect(url_for('login'))
         if user is None or not user.is_verified:
@@ -407,12 +405,12 @@ def login():
                 'Please check your emails to verify your email. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
                     url_for("verify_email_request"))), category="alert alert-danger")
             return redirect(url_for('login'))
-        login_user(user, remember=myform.remember_me.data)
+        login_user(user, remember=my_form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
         return redirect(next_page)  # redirect to next page (if the user was redirected from another page)
-    return render_template('user/login.html', form=myform)
+    return render_template('user/login.html', form=my_form)
 
 
 @app.route('/logout')
@@ -434,20 +432,21 @@ def register():
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    myform = forms.RegistrationForm()
-    if myform.validate_on_submit():
-        user = User(first_name=myform.first_name.data, last_name=myform.last_name.data, email=myform.email.data)
-        user.set_password(myform.password.data)
+    my_form = forms.RegistrationForm()
+    if my_form.validate_on_submit():
+        user = User(first_name=my_form.first_name.data, last_name=my_form.last_name.data, email=my_form.email.data)
+        user.set_password(my_form.password.data)
         db.session.add(user)
         db.session.commit()
         send_verify_email(user)
         logout_user()
         flash(Markup(
-            'Congratulations, you are now a registered user! Please verify your email to login. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
+            'Congratulations, you are now a registered user! Please verify your email to login. Click <a href="{}" '
+            'class="alert-link">here</a> to send another email.'.format(
                 url_for("verify_email_request"))), category="alert alert-success")
         return redirect(url_for('login'))
     return render_template('user/register.html', title='Register', form_title='Register',
-                           form=myform)
+                           form=my_form)
 
 
 # <--
@@ -459,34 +458,34 @@ def settings():
     Settings page
     :return: HTML
     """
-    myform = forms.settings(current_user.id)
+    my_form = forms.settings(current_user.id)
     user = User.query.get(current_user.id)
-    if myform.validate_on_submit():
-        user.first_name = myform.first_name.data
-        user.last_name = myform.last_name.data
-        user.accounting_email = myform.accounting_email.data
-        if myform.email.data != user.email:
+    if my_form.validate_on_submit():
+        user.first_name = my_form.first_name.data
+        user.last_name = my_form.last_name.data
+        user.accounting_email = my_form.accounting_email.data
+        if my_form.email.data != user.email:
             # if email is changed, logout user and make them verify the new email
-            user.email = myform.email.data
+            user.email = my_form.email.data
             user.is_verified = False
             send_verify_email(user)
             logout_user()
             flash(Markup(
                 'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> to send another email.'.format(
-                    myform.accounting_email.data, url_for("verify_email_request"))), category="alert alert-success")
-        user.use_taggun = myform.taggun.data
-        user.dark = myform.dark.data
+                    my_form.accounting_email.data, url_for("verify_email_request"))), category="alert alert-success")
+        user.use_taggun = my_form.taggun.data
+        user.dark = my_form.dark.data
         db.session.commit()
         return redirect(url_for('view_forms'))
     elif request.method == 'GET':
         # prefill fields
-        myform.first_name.data = user.first_name
-        myform.last_name.data = user.last_name
-        myform.email.data = user.email
-        myform.accounting_email.data = user.accounting_email
-        myform.taggun.data = user.use_taggun
-        myform.dark.data = user.dark
-    return render_template('user/settings.html', form=myform, title="Settings", dark=current_user.dark,
+        my_form.first_name.data = user.first_name
+        my_form.last_name.data = user.last_name
+        my_form.email.data = user.email
+        my_form.accounting_email.data = user.accounting_email
+        my_form.taggun.data = user.use_taggun
+        my_form.dark.data = user.dark
+    return render_template('user/settings.html', form=my_form, title="Settings", dark=current_user.dark,
                            email=user.email)  # pass email to give an onchange message
 
 
@@ -498,16 +497,16 @@ def send(file_id):
     :param file_id: ID of reclaim form
     :return: HTML
     """
-    myform = forms.supervisor()
+    my_form = forms.supervisor()
     user = User.query.get(current_user.id)
     file_db = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first()
     user_token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20, user=user)
-    if myform.validate_on_submit():
+    if my_form.validate_on_submit():
         sender = app.config['ADMINS'][0]
         subject = "Reclaim form from " + user.first_name + " " + user.last_name
-        recipients = [myform.email_supervisor.data]
+        recipients = [my_form.email_supervisor.data]
         token = get_token(my_object=file_db, word="sign_form", expires_in=10 ** 20,
-                          user=myform.email_supervisor.data)
+                          user=my_form.email_supervisor.data)
         # Basically infinity (3,170,979,198.38 millenia)
         html_body = render_template('email/request_auth.html', token=token, user=user.first_name + " " + user.last_name)
         file = handlefiles.createExcel(file_id=file_id, current_user=current_user)  # create excel sheet
@@ -517,12 +516,12 @@ def send(file_id):
             file_db.sent = "Awaiting authorization"
             file_db.date_sent = datetime.datetime.utcnow()
             db.session.commit()
-            flash("Email successfully sent to {}".format(myform.email_supervisor.data), category="alert alert-success")
+            flash("Email successfully sent to {}".format(my_form.email_supervisor.data), category="alert alert-success")
         except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
             app.logger.error('Error in function: send, signing form {}'.format(e))
             flash("Error sending email. Please try again later.", category="alert alert-danger")
         return redirect(url_for("index"))
-    return render_template("email/manager_email.html", form=myform, dark=current_user.dark, token=user_token)
+    return render_template("email/manager_email.html", form=my_form, dark=current_user.dark, token=user_token)
 
 
 @app.route('/send_accounting/<file_id>/<user_id>', methods=['GET', 'POST'])
@@ -561,14 +560,14 @@ def reset_password_request():
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    myform = forms.ResetPasswordRequestForm()
-    if myform.validate_on_submit():
-        user = User.query.filter_by(email=myform.email.data).first()
+    my_form = forms.ResetPasswordRequestForm()
+    if my_form.validate_on_submit():
+        user = User.query.filter_by(email=my_form.email.data).first()
         if user:
             send_password_reset_email(user)
         flash('Check your email for the instructions to reset your password', category="alert alert-success")
         return redirect(url_for('login'))
-    return render_template('user/request_password_reset.html', title='Reset Password', form=myform)
+    return render_template('user/request_password_reset.html', title='Reset Password', form=my_form)
 
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -583,13 +582,13 @@ def reset_password(token):
     user = verify_token(token, "reset_password")  # decode token to get the user
     if not user:
         return redirect(url_for('index'))
-    myform = forms.ResetPasswordForm()
-    if myform.validate_on_submit():
-        user.set_password(myform.password.data)
+    my_form = forms.ResetPasswordForm()
+    if my_form.validate_on_submit():
+        user.set_password(my_form.password.data)
         db.session.commit()
         flash('Your password has been reset.', category="alert alert-success")
         return redirect(url_for('login'))
-    return render_template('user/reset_password.html', form=myform)
+    return render_template('user/reset_password.html', form=my_form)
 
 
 # <--
@@ -619,18 +618,18 @@ def verify_email_request():
     """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    myform = forms.verfify_email()
-    if myform.validate_on_submit():
-        user = User.query.filter_by(email=myform.email.data).first()
+    my_form = forms.verfify_email()
+    if my_form.validate_on_submit():
+        user = User.query.filter_by(email=my_form.email.data).first()
         try:
             if user:
                 send_verify_email(user)
-            flash('Check {} to verify your mail.'.format(myform.email.data), category="alert alert-success")
+            flash('Check {} to verify your mail.'.format(my_form.email.data), category="alert alert-success")
         except (Exception, HTTPError, IncompleteRead, UnauthorizedError, BaseException) as e:
             flash("Error sending email. Please try again later.", category="alert alert-danger")
             app.logger.error('Error in verify_email_request, signing form {}'.format(e))
         return redirect(url_for('login'))
-    return render_template('user/verify_email.html', title='Reset Password', form=myform)
+    return render_template('user/verify_email.html', title='Reset Password', form=my_form)
 
 
 @app.route('/mileage/<file_id>/<row>', methods=['GET', 'POST'])
@@ -650,83 +649,83 @@ def mileage(file_id, row):
             row = int(details) + 1
         else:
             row = 7  # default
-    myform = forms.description()
+    my_form = forms.description()
     details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).filter_by(row_id=int(row)).first()
     file = db.session.query(reclaim_forms).filter_by(id=file_id).first_or_404()
     handlefiles.revert_to_draft(file)
-    if myform.validate_on_submit():
+    if my_form.validate_on_submit():
         # date validator i.e. don't allow negative trip durations
-        end = datetime.datetime.strptime(myform.date_end.data, "%d/%m/%Y").date()
-        start = datetime.datetime.strptime(myform.date_start.data, "%d/%m/%Y").date()
+        end = datetime.datetime.strptime(my_form.date_end.data, "%d/%m/%Y").date()
+        start = datetime.datetime.strptime(my_form.date_start.data, "%d/%m/%Y").date()
         if start > end:
             flash("Error: negative trip duration", category="alert alert-danger")
-            return render_template('forms/miles.html', title="Add from mileage", form=myform, dark=current_user.dark,
-                                   start=urllib_parse.quote_plus(myform.start.data),
-                                   end=urllib_parse.quote_plus(myform.destination.data))
-        description = "Description: " + myform.description.data + " Start: " + myform.start.data + " End: " + myform.destination.data + " Starting date: " + myform.date_start.data + " Ending date: " + myform.date_end.data + " Return trip: " + str(
-            myform.return_trip.data)
-        results = map.getMap(myform.start.data, myform.destination.data)  # [cords, miles, total, status]
+            return render_template('forms/miles.html', title="Add from mileage", form=my_form, dark=current_user.dark,
+                                   start=urllib_parse.quote_plus(my_form.start.data),
+                                   end=urllib_parse.quote_plus(my_form.destination.data))
+        description = "Description: " + my_form.description.data + " Start: " + my_form.start.data + " End: " + my_form.destination.data + " Starting date: " + my_form.date_start.data + " Ending date: " + my_form.date_end.data + " Return trip: " + str(
+            my_form.return_trip.data)
+        results = map.getMap(my_form.start.data, my_form.destination.data)  # [cords, miles, total, status]
         if not details:  # make a new row
             if results[3] != "OK":
                 total, miles = None, None
-            elif myform.return_trip.data:
+            elif my_form.return_trip.data:
                 total = round(float(results[2] * 2), 2)  # times 2 if return trip
                 miles = results[1] * 2
             else:
                 total = round(float(results[2]), 2)
                 miles = results[1]
-            details = reclaim_forms_details(description=description, date_receipt=myform.date_start.data,
+            details = reclaim_forms_details(description=description, date_receipt=my_form.date_start.data,
                                             made_by=current_user.id, row_id=row,
-                                            form_id=file_id, start=myform.start.data,
-                                            destination=myform.destination.data, miles=miles,
+                                            form_id=file_id, start=my_form.start.data,
+                                            destination=my_form.destination.data, miles=miles,
                                             Total=total,
-                                            end_date=myform.date_end.data, purpose=myform.description.data,
-                                            return_trip=myform.return_trip.data)  # new row entry
+                                            end_date=my_form.date_end.data, purpose=my_form.description.data,
+                                            return_trip=my_form.return_trip.data)  # new row entry
             db.session.add(details)
             db.session.commit()
         else:
             details.description = description
-            details.date_receipt = myform.date_end.data
-            details.start = myform.start.data
-            details.destination = myform.destination.data
+            details.date_receipt = my_form.date_end.data
+            details.start = my_form.start.data
+            details.destination = my_form.destination.data
             if results[3] != "OK":
                 details.miles = None
                 details.Total = None
                 flash(
                     "The route could not be identified, and a mileage was not calculated. Please check the spelling of locations.",
                     category="alert alert-danger")
-            elif myform.return_trip.data is True and details.return_trip is False:
+            elif my_form.return_trip.data is True and details.return_trip is False:
                 # multiply or divide based on changed option
                 details.miles = results[1] * 2
                 details.Total = round(float(results[2]), 2) * 2
-            elif myform.return_trip.data is False and details.return_trip is True:
+            elif my_form.return_trip.data is False and details.return_trip is True:
                 details.miles = results[1] * 0.5
                 details.Total = round(float(results[2]), 2) * 0.5
             else:
                 details.miles = results[1] if results[1] != 0 else None
                 details.Total = round(float(results[2]), 2)
-            details.end_date = myform.date_end.data
-            details.purpose = myform.description.data
-            details.return_trip = myform.return_trip.data
+            details.end_date = my_form.date_end.data
+            details.purpose = my_form.description.data
+            details.return_trip = my_form.return_trip.data
             db.session.commit()
         return redirect("/edit_data/{}/{}".format(file_id, row))
     elif request.method == 'GET':
         if details:
-            myform.date_start.data = details.date_receipt
-            myform.start.data = details.start
-            myform.destination.data = details.destination
-            myform.description.data = details.purpose
-            myform.date_end.data = details.end_date
-            myform.return_trip.data = details.return_trip
+            my_form.date_start.data = details.date_receipt
+            my_form.start.data = details.start
+            my_form.destination.data = details.destination
+            my_form.description.data = details.purpose
+            my_form.date_end.data = details.end_date
+            my_form.return_trip.data = details.return_trip
             if details.start:
                 origin = urllib_parse.quote_plus(details.destination)
                 # pass destinations into url format to use google maps api
                 destination = urllib_parse.quote_plus(details.start)
-                return render_template('forms/miles.html', form=myform, start=origin, end=destination,
+                return render_template('forms/miles.html', form=my_form, start=origin, end=destination,
                                        dark=current_user.dark)
-        myform.start.data = "Wellington College, Duke's Ride, RG457PU"  # default value
-    return render_template('forms/miles.html', title="Add from mileage", form=myform, dark=current_user.dark)
+        my_form.start.data = "Wellington College, Duke's Ride, RG457PU"  # default value
+    return render_template('forms/miles.html', title="Add from mileage", form=my_form, dark=current_user.dark)
 
 
 @app.route('/delete_user', methods=['GET', 'POST'])
@@ -812,13 +811,13 @@ def line(year):
               'November', 'December']  # labels at bottom of graph
     month = datetime.datetime.today().month  # current month
     labels = labels[:month + 1]  # display up to current month +1
-    accounts = [{} for i in range(len(labels))]  # 12 dictionaries for each month
+    accounts = [{} for _ in range(len(labels))]  # 12 dictionaries for each month
     unique_accounts = []  # keep track of unique accounts (for key at top)
     for i in range(1, 13):  # for every month        ----- This part of the function queries the database -----
-        datestart = datetime.datetime(int(year), i, 1)  # starting date is first of month
-        dateend = datestart + datetime.timedelta(days=31)  # ending date is 31 days later
-        files = reclaim_forms.query.filter(reclaim_forms.date_sent >= datestart).filter(
-            reclaim_forms.date_sent < dateend).filter(
+        date_start = datetime.datetime(int(year), i, 1)  # starting date is first of month
+        date_end = date_start + datetime.timedelta(days=31)  # ending date is 31 days later
+        files = reclaim_forms.query.filter(reclaim_forms.date_sent >= date_start).filter(
+            reclaim_forms.date_sent < date_end).filter(
             reclaim_forms.made_by == current_user.id).all()  # files sent in that month
         for file in files:  # for every file
             if file.sent == "Authorized":
@@ -846,19 +845,19 @@ def line(year):
             for i in account:  # For every data point in for the specific account
                 if i[1] == current_month:  # if the data point is equal to the month iterator
                     current_index = account.index(i)  # Record position of data point
-            if current_index != None:  # if the data point is in the correct position
+            if current_index is not None:  # if the data point is in the correct position
                 pass  # do nothing
             else:  # if the data point is in the wrong position
                 # ----Lines 523 to 526 find the index of the total of the month before (if it remains constant)
-                indexBefore = None
+                index_before = None
                 for i in account:  # for every month in the account code
                     if i[1] == current_month:  # if the month of a data point is equal to the month iterator
-                        indexBefore = account.index(i)  # The indexBefore varaible is this datapoint index
-                if indexBefore is not None:  # if the dataPoint for an account code does not exist
-                    data[data.index(account)].append([account[indexBefore][0], current_month])
+                        index_before = account.index(i)  # The indexBefore variable is this data-point index
+                if index_before is not None:  # if the dataPoint for an account code does not exist
+                    data[data.index(account)].append([account[index_before][0], current_month])
                     # append [the previous months value, month]
                 else:
-                    # If there is no datapoint before, just append [0, month]
+                    # If there is no data-point before, just append [0, month]
                     data[data.index(account)].append([0, current_month])
         data[data.index(account)] = sorted(account, key=lambda l: l[1])  # Sort the array
     for account in data:
@@ -867,7 +866,7 @@ def line(year):
     for account in data:
         for j in account:
             data[data.index(account)][account.index(j)] = j[0]  # Get rid of the month in [total, month]
-    total = np.array([0 for i in range(month)])  # Now create a np array for the totals (allows for array adding)
+    total = np.array([0 for _ in range(month)])  # Now create a np array for the totals (allows for array adding)
     for account in data:  # for every account
         account = np.array(account)  # Make account and np array
         total = np.add(total, account)  # Add account totals to the overall Total
@@ -888,6 +887,7 @@ def line(year):
 def sign_form(form_hash, is_hod):
     """
     Authorise a reclaim form, by signing it
+    :param is_hod: Whether the user is authorizing their own form or not (in the case they are the corresponding HoD)
     :param form_hash: string which decodes to give the user who requested the form
     :return: HTML
     """
