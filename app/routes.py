@@ -138,7 +138,8 @@ def edit_data(file_id, row):
                                                             str(account_code))  # format account_id
                 else:  # some cost_centre values do not have a 3 digit number, so the letters only are used
                     details.account_id = "{}-{}".format(str(cost_centre.account_id), str(account_code))
-                details.Total = my_form.total.data if str(my_form.total.data) != "None" else my_form.miles.data * 0.45
+                details.Total = my_form.total.data if str(my_form.total.data) != "None" else \
+                    my_form.miles.data * c.Config.MILEAGE_RATE
                 # multiply by mileage rate
                 db.session.commit()  # commit changes to DB
                 today = datetime.datetime.now().date()  # save today's date
@@ -231,7 +232,7 @@ def edit_forms(file_id):
         if row.Total:
             sum_reclaimed += float(row.Total)
         elif row.miles:
-            row.Total = row.miles * 0.45  # calculate total if no total present
+            row.Total = row.miles * c.Config.MILEAGE_RATE  # calculate total if no total present
             sum_reclaimed += float(row.Total)
         else:
             row.Total = 0  # if neither is present give total of zero
@@ -708,7 +709,7 @@ def mileage(file_id, row):
                 details.miles = results[1] * 0.5
                 details.Total = round(float(results[2]), 2) * 0.5
             else:
-                details.miles = results[1] if results[1] != 0 else None
+                details.miles = results[1]
                 details.Total = round(float(results[2]), 2)
             details.end_date = my_form.date_end.data
             details.purpose = my_form.description.data
