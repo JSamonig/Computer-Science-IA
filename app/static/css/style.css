@@ -14,7 +14,7 @@
 	position: relative;
 
 	text-align: center;
-vertical-align: middle;
+    vertical-align: middle;
 	margin:0 auto;}
 
 big {
@@ -54,3 +54,36 @@ big {
     }
 }
 
+/* from https://stackoverflow.com/questions/6805482/css3-transition-animation-on-load */
+@keyframes slideInFromTop {
+  from {top: -100px;}
+  5%{top:-4vh; visibility:visible;}
+  95%{top:-4vh;}
+  to {top: -100px; visibility: hidden;}
+}
+
+/* from https://codepen.io/RajRajeshDn/pen/xxZKewN */
+.alert_wrapper .alert{
+    z-index: 3;
+	visibility: hidden;
+    display: inline-block;
+	width: auto;
+	text-align: center;
+    vertical-align: middle;
+	animation: 8s linear 0s 1 slideInFromTop;
+	/*https://getcssscan.com/css-box-shadow-examples*/
+	box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.alert_wrapper{
+	position: absolute;
+	text-align: center;
+	width: 100%;
+	z-index: 999;
+}
+
+.icon{
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 20px;
+}

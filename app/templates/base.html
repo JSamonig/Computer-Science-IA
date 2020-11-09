@@ -6,24 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% if title %}
-    {{ title }}
-    {% else %}
-    Accounting application
+        {{ title }}
+        {% else %}
+        Accounting application
         {% endif %}</title>
     {% if dark %}
     <link rel="stylesheet" href="{{url_for('.static', filename='css/style_dark.css')}}">
     <link rel="stylesheet" href="{{url_for('.static', filename='css/darkly.css')}}">
     {% else %}
     <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     {% endif %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     {{ moment.include_moment() }}
     {{ fontawesome_html() }}
     <script type="text/javascript" src="https://unpkg.com/@popperjs/core@2"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
 
     <script>
     //https://mdbootstrap.com/docs/jquery/forms/validation/
@@ -40,6 +44,10 @@
           this.style.height = 'auto';
           this.style.height = (this.scrollHeight) + 'px';
             });
+
+        $('.close').click(function(){
+            $('.alert').remove();
+        });
 
         $(function () {
         // for popper js info
@@ -58,6 +66,7 @@
         }
         })
     });
+
     </script>
 
     {% block scripts %}
@@ -65,51 +74,76 @@
 </head>
 <body style="padding-top:0px;">
 {% if not dark %}
-<nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-bottom:10px;padding-top:2px;padding-bottom:2px;">
-{% else %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-bottom:10px;padding-top:2px;padding-bottom:2px;">
-{% endif %}
-    <a class="navbar-brand" href="{{ url_for('index') }}">Jakob's IA</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-         <ul class="navbar-nav mr-auto ">
-            <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
-            <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-            {% if current_user.is_anonymous %}
-            <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
-                <a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
-            </li>
-            {% else %}
-            <li class="nav-item {% if request.path=='/settings' %} active {% endif %}">
-                <a class="nav-link" href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a></li>
-            <li class="nav-item {% if request.path=='/logout' %} active {% endif %}">
-                <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            {% endif %}
-        </ul>
-    </div>
-</nav>
-{% block content %}
-<div class="container-fluid">
+<nav class="navbar navbar-expand-lg navbar-light bg-light"
+     style="margin-bottom:10px;padding-top:2px;padding-bottom:2px;">
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark"
+         style="margin-bottom:10px;padding-top:2px;padding-bottom:2px;">
+        {% endif %}
+        <a class="navbar-brand" href="{{ url_for('index') }}">Jakob's IA</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
+                    <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                {% if current_user.is_anonymous %}
+                <li class="nav-item {% if request.path=='/view_forms' %} active {% endif %}">
+                    <a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                </li>
+                {% else %}
+                <li class="nav-item {% if request.path=='/settings' %} active {% endif %}">
+                    <a class="nav-link" href="{{ url_for('settings') }}"><i class="fas fa-user-cog"></i> Settings</a>
+                </li>
+                <li class="nav-item {% if request.path=='/logout' %} active {% endif %}">
+                    <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    {% block content %}
     {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
+        {% if messages %}
         {% for message in messages %}
-        <div class="{{ message[0] }}" role="alert">{{ message[1] }}</div>
+        <div class="alert_wrapper">
+            <div class="{{ message[0] }}" role="alert">
+                {% if message[0] == "alert alert-info" %}
+                <i class="fas fa-info-circle icon"></i>
+                {% elif message[0] == "alert alert-success" %}
+                <i class="fas fa-check-circle icon"></i>
+                {% elif message[0] == "alert alert-info"%}
+                <i class="fas fa-exclamation-circle icon"></i>
+                {% else %}
+                <i class="fas fa-exclamation-triangle icon"></i>
+                {% endif %}
+                {{ message[1] }}
+                <span class="close icon ml-auto">
+            <i class="fas fa-times"></i>
+        </span>
+            </div>
+        </div>
         {% endfor %}
-    {% endif %}
-    {% endwith %}
-    {% block app_content %}{% endblock %}
-</div>
-{% endblock content %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+        {% endif %}
+        {% endwith %}
+    <div class="container-fluid">
+        {% block app_content %}{% endblock %}
+    </div>
+    {% endblock content %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
 </body>
 </html>
-
