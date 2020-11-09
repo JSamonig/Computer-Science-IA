@@ -31,9 +31,9 @@ def send_email(subject, sender, recipients, html_body, file=None):
             Disposition("attachment")
         )
         msg.attachment = attached_file
-        sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)  # send message
-        response = sg.send(msg)  # log response
-        app.logger.info([response.status_code, response.headers, response.body])
+    sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)  # send message
+    response = sg.send(msg)  # log response
+    app.logger.info([response.status_code, response.headers, response.body])
 
 
 def send_password_reset_email(user):  # password reset email
@@ -93,12 +93,14 @@ def send_error_email(error, code, user):  # send an error email
     :param user: user object of person who caused the error
     """
     subject = "Error {} in IA".format(str(code))
-    recipients = app.config['ADMINS'][1]
+    recipients = [app.config['ADMINS'][1]]
     try:
         if user:
             user = User.query.filter_by(id=user).first().email
+        else:
+            user = None
     except AttributeError:  # if the user was not logged in
-        pass
+        user = None
     send_email(subject,
                sender=app.config['ADMINS'][0],
                recipients=recipients,
