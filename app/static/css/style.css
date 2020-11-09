@@ -68,6 +68,7 @@ big {
 	visibility: hidden;
     display: inline-block;
 	width: auto;
+	height: auto;
 	text-align: center;
     vertical-align: middle;
 	animation: 8s linear 0s 1 slideInFromTop;
@@ -87,9 +88,18 @@ big {
     font-size: 20px;
 }
 
-.shadow{
+.custom_shadow{
+    z-index: 999;
     /*https://getcssscan.com/css-box-shadow-examples*/
 	box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
     -moz-box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
     -webkit-box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.btn-white{
+    background-color:#FFFFFF;
+}
+
+.btn-white:hover{
+    background-color:#ECECEC;
 }

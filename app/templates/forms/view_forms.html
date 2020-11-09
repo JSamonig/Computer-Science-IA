@@ -11,7 +11,7 @@
 
 </script>
 {% if forms %}
-  <a class="btn btn-primary" style="margin-bottom:2vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
+  <a class="custom_shadow btn btn-primary" style="margin-bottom:2vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
   <div id="tablediv">
     <table class="special_table table table-hover">
         <thead style="position: sticky; top: 0">
@@ -36,43 +36,43 @@
                 <td class="d-none d-md-table-cell">{{ moment(form.date_created).format('LLL') }}</td>
 
                 {% if form.sent=="Draft" %}
-                <td><span class="badge badge-secondary ">{{ form.sent }}</span></td>
+                <td><span class="custom_shadow badge badge-secondary ">{{ form.sent }}</span></td>
                 {% elif form.sent=="Awaiting authorization" %}
-                <td><span class="badge badge-info ">{{ form.sent }}</span></td>
+                <td><span class="custom_shadow badge badge-info ">{{ form.sent }}</span></td>
                 {% elif form.sent=="Authorized" %}
-                <td><span class="badge badge-success">{{ form.sent }}</span></td>
+                <td><span class="custom_shadow badge badge-success">{{ form.sent }}</span></td>
                 {% elif form.sent=="Rejected" %}
-                <td><span class="badge badge-danger">{{ form.sent }}</span></td>
+                <td><span class="custom_shadow badge badge-danger">{{ form.sent }}</span></td>
                 {% else %}
-                    <td><span class="badge badge-secondary ">{{ form.sent }}</span></td>
+                    <td><span class="custom_shadow badge badge-secondary ">{{ form.sent }}</span></td>
                 {% endif %}
 
                 <td class="d-none d-xl-table-cell">
-                    <a class="btn" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
+                    <a class="custom_shadow btn btn-white" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
                     {%if form.sent == "Draft" %}
-                      <a class="btn btn-success" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                      <a class="custom_shadow btn btn-success" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
                     {% else %}
-                      <a class="btn btn-success" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                      <a class="custom_shadow btn btn-success" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
                     {% endif %}
-                    <a class="btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
-                    <a class="btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                    <a class="custom_shadow btn btn-info" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
+                    <a class="custom_shadow btn btn-danger" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
                 </td>
 
                 <td class="d-xl-none">
                     <div class="btn-group dropleft">
-                          <button class="btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
+                          <button class="custom_shadow btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
                               <i class="fas fa-bars"></i>
                           </button>
                           <div class="dropdown-menu" aria-labelledby="form.id">
-                            <a class="btn dropdown-item" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
+                            <a class="custom_shadow btn dropdown-item" href="{{ url_for('edit_forms', file_id=form.id) }}"><i class="fas fa-edit"></i> Edit form</a>
                             {%if form.sent == "Draft" %}
-                              <a class="btn btn-success dropdown-item" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                              <a class="custom_shadow btn btn-success dropdown-item" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
                             {% else %}
-                              <a class="btn btn-success dropdown-item" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
+                              <a class="custom_shadow btn btn-success dropdown-item" onClick="return confirm('The status on your reclaim form is: {{form.sent}}. Are you sure you wish to send this again?');" href="{{ url_for('send',file_id=form.id) }}"><i class="fas fa-envelope"></i> Send</a>
                             {% endif %}
-                            <a class="btn btn-info dropdown-item" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
+                            <a class="custom_shadow btn btn-info dropdown-item" href="{{ url_for('download',file_id=form.id) }}"><i class="fas fa-download"></i> Download</a>
                           <div class="dropdown-divider"></div>
-                            <a class="btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                            <a class="custom_shadow btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=form.id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
                           </div>
                     </div>
                 </td>
@@ -91,7 +91,7 @@
 <div class="centerdiv">
   <i class="fas fa-10x fa-comments-dollar"></i>
   <h1>No reclaim forms found</h1>
-  <a class="btn btn-primary" style="margin-bottom:1vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
+  <a class="custom_shadow btn btn-primary" style="margin-bottom:1vh"href="{{ url_for('new_form') }}"><i class="fas fa-folder-plus"></i> New reclaim form</a>
   </div>
 {% endif %}
 
@@ -110,11 +110,11 @@
                         {{ wtf.form_errors(setting, hiddens="only") }}
                         {{ render_field(setting.accounting_email, icon="fa-envelope",value="finance@wellingtoncollege.org.uk",placeholder="finance@wellingtoncollege.org.uk") }}
                         {{ wtf.form_field(setting.dark) }}
-                        {{ wtf.form_field(setting.submit, class="btn btn-primary") }}
+                        {{ wtf.form_field(setting.submit, class="custom_shadow btn btn-primary") }}
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Later</button>
+                    <button type="button" class="custom_shadow btn btn-secondary" data-dismiss="modal">Later</button>
                 </div>
                 </div>
             </div>

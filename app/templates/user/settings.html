@@ -32,9 +32,9 @@ $(document).ready(function(){
                 {{ wtf.form_field(form.accounting_email,placeholder="Accounting email") }}
                 {{ wtf.form_field(form.taggun) }}
                 {{ wtf.form_field(form.dark) }}
-                {{ wtf.form_field(form.submit, class="btn btn-primary") }}
+                {{ wtf.form_field(form.submit, class="custom_shadow btn btn-primary") }}
             </form>
-            <a class="btn btn-danger" style="margin-top:10px;" onClick="return confirm('Are you sure you wish to delete your account?');" href="{{ url_for('delete_user') }}"><i class="fas fa-trash-alt"></i> Delete account</a>
+            <a class="custom_shadow btn btn-danger" style="margin-top:10px;" onClick="return confirm('Are you sure you wish to delete your account?');" href="{{ url_for('delete_user') }}"><i class="fas fa-trash-alt"></i> Delete account</a>
         </div>
     </div>
 {% endblock %}

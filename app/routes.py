@@ -531,7 +531,7 @@ def send(file_id):
             app.logger.error('Error in function: send, signing form {}'.format(e))
             flash("Error sending email. Please try again later.", category="alert alert-danger")
         return redirect(url_for("index"))
-    return render_template("email/manager_email.html", form=my_form, dark=current_user.dark, token=user_token)
+    return render_template("manager/manager_email.html", form=my_form, dark=current_user.dark, token=user_token)
 
 
 @app.route('/send_accounting/<file_id>/<user_id>', methods=['GET', 'POST'])

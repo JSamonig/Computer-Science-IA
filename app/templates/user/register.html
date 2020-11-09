@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
+{% from "field.html" import render_field %}
 
 {% block app_content %}
     <div>
@@ -8,12 +9,12 @@
             <form method="post" role="form">
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
-                {{ wtf.form_field(form.first_name) }}
-                {{ wtf.form_field(form.last_name) }}
-                {{ wtf.form_field(form.email) }}
-                {{ wtf.form_field(form.password) }}
-                {{ wtf.form_field(form.password2) }}
-                {{ wtf.form_field(form.submit, class="btn btn-primary") }}
+                {{ wtf.form_field(form.first_name, placeholder="First name") }}
+                {{ wtf.form_field(form.last_name, placeholder="Surname") }}
+                {{ render_field(form.email, icon="fa-envelope",placeholder="Your email") }}
+                {{ render_field(form.password, icon="fa-key",placeholder="Password") }}
+                {{ render_field(form.password2, icon="fa-redo",placeholder="Repeat password") }}
+                {{ wtf.form_field(form.submit, class="custom_shadow btn btn-primary") }}
             </form>
         </div>
     </div>

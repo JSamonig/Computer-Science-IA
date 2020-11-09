@@ -4,6 +4,7 @@
 
 {% block app_content %}
 <div>
+    <a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('index')}}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
     {% if title %}
     <h1>{{ title }}</h1>
     {% else %}
@@ -14,7 +15,7 @@
             {{ form.hidden_tag() }}
             {{ wtf.form_errors(form, hiddens="only") }}
             {{ render_field(form.email_supervisor, icon="fa-envelope", placeholder="Enter email") }}
-            {{ wtf.form_field(form.submit, class="btn btn-primary") }}
+            {{ wtf.form_field(form.submit, class="custom_shadow btn btn-primary") }}
         </form>
         <a href="{{url_for('sign_form', form_hash=token, is_hod=1)}}">Click here if you are the corresponding HoD</a>
     </div>
