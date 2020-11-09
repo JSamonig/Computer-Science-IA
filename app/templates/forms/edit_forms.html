@@ -11,10 +11,10 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="dropdown-menu" aria-labelledby="items">
-                    <a class="custom_shadow btn btn-success dropdown-item" onClick="return confirm('Are you sure you wish to send this?');" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
-                    <a class="custom_shadow btn btn-info dropdown-item" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
+                    <a class="btn btn-success dropdown-item" onClick="return confirm('Are you sure you wish to send this?');" href="{{ url_for('send',file_id=file_id) }}"><i class="fas fa-envelope"></i> Send</a>
+                    <a class="btn btn-info dropdown-item" href="{{ url_for('download',file_id=file_id) }}"><i class="fas fa-download"></i> Download</a>
                     <div class="dropdown-divider"></div>
-                    <a class="custom_shadow btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
+                    <a class="btn btn-danger dropdown-item" onClick="return confirm('Are you sure you wish to delete?');" href="{{ url_for('delete_file',file_id=file_id,) }}"><i class="fas fa-trash-alt"></i> Delete</a>
                 </div>
         </div>
     </div>
@@ -58,7 +58,7 @@
 
             <td class="d-lg-none">
                 <div class="btn-group dropleft">
-                    <button class="custom_shadow btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
+                    <button style="padding-left:10px;"class="custom_shadow btn btn-secondary rounded-right" type="button" id="form.id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="window">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="dropdown-menu" aria-labelledby="form.id">
@@ -82,43 +82,27 @@
       </tr>
   </table>
   </div>
-
-  <button type="button" class="custom_shadow btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new expense claim</button>
-                <!-- The modal -->
-                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
-                        </div>
-                        <div class="modal-footer">
-                            <a class="custom_shadow btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
-                            <a class="custom_shadow btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Add other item</a>
-                             <button type="button" class="custom_shadow btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
-                        </div>
-                    </div>
-                </div>
 {% else %}
+
 <div class="centerdiv">
-  <i class="fas fa-10x fa-comments-dollar"></i>
-  <h1>No data inside reclaim form found</h1>
-  <button type="button" class="custom_shadow btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> New expense</button>
-                <!-- The modal -->
-                <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title" id="modalLabel">Add a claim</h4>
-                        </div>
-                        <div class="modal-footer">
-                            <a class="custom_shadow btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Mileage claim</a>
-                            <a class="custom_shadow btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Other expenses</a>
-                            <button type="button" class="custom_shadow btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
-                        </div>
+<i class="fas fa-10x fa-comments-dollar"></i>
+<h1>No data inside reclaim form found</h1>
+
+{% endif %}
+<button type="button" class="custom_shadow btn btn-primary" data-toggle="modal" data-target="#flipFlop"><i class="fas fa-plus"></i> Add new expense claim</button>
+            <!-- The modal -->
+            <div class="modal fade" id="flipFlop" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalLabel">Reclaim miles or other item</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <a class="custom_shadow btn btn-primary pull-middle"href="{{ url_for('mileage', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Add mileage reclaim</a>
+                        <a class="custom_shadow btn btn-primary" href="{{ url_for('upload', file_id=file_id,row=0) }}"><i class="fas fa-plus"></i> Add other item</a>
+                         <button type="button" class="custom_shadow btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
                     </div>
                 </div>
-  </div>
-{% endif %}
+            </div>
 {% endblock %}
