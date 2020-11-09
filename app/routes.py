@@ -52,9 +52,13 @@ def upload(file_id: str, row: str):
             details = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
                 form_id=file_id).filter_by(row_id=int(row)).first()  # find specific entry
             if details:  # if the entry exists
-                if details.image_name:  # if an image is already uploaded
-                    os.remove(
-                        os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))  # delete the existing image
+                try:
+                    if details.image_name:  # if an image is already uploaded
+                        os.remove(
+                            os.path.join(app.config['IMAGE_UPLOADS'], details.image_name))  # delete the existing image
+                except FileNotFoundError:
+                    details.image_name = None
+                    db.session.commit()
             detected_extension = handlefiles.validate_image(my_form.file.data.stream)  # detect extension of image
             if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
                 flash('Incorrect file extension',
@@ -81,7 +85,7 @@ def upload(file_id: str, row: str):
                 db.session.add(details)  # add to session
             else:
                 details.date_receipt = data["date_receipt"]
-                details.Total = round(float(data["Total"]), 2)
+                details.Total = data["Total"]
                 details.image_name = filename  # results of OCR
             db.session.commit()  # commit to DB
         except AttributeError:  # if any of the database values do not exist, or there is an unexpected AttributeError
@@ -261,7 +265,7 @@ def delete_row(file_id, row):
         if row.image_name is not None:
             os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
     except FileNotFoundError:
-        pass
+        row.image_name = None
     reclaim_forms_details.query.filter_by(id=row.id).delete()  # delete row
     rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(
         form_id=file_id).order_by(reclaim_forms_details.row_id).all()  # get all rows
@@ -285,13 +289,13 @@ def delete_file(file_id):
             try:
                 os.remove(os.path.join(app.config['IMAGE_UPLOADS'], row.image_name))
             except FileNotFoundError:
-                pass
+                row.image_name = None
     file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id)
     if file.first().signature:
         try:  # remove signature
             os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], file.first().signature))
         except FileNotFoundError:
-            pass
+            file.first().signature = None
     file.delete()  # delete file
     db.session.commit()
     return redirect(url_for('view_forms'))
@@ -911,7 +915,8 @@ def sign_form(form_hash, is_hod):
                 try:  # remove signature
                     os.remove(os.path.join(app.config["SIGNATURE_ROUTE"], form.signature))
                 except FileNotFoundError:
-                    pass
+                    form.signature = None
+                    db.session.commit()
         if form.sent != "Awaiting authorization":
             flash("This authorization link has expired.", category="alert alert-danger")
             return redirect(url_for("index"))

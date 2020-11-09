@@ -87,7 +87,7 @@ def recognise(filename, taggun=False):
         except KeyError:
             date = None
         try:
-            total = response["totalAmount"]["data"]
+            total = round(float(response["totalAmount"]["data"]), 2)
         except KeyError:
             total = None
     return {"date_receipt": date, "Total": total}

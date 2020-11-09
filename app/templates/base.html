@@ -5,19 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% if title %}
+    <title>
+        {% if title %}
         {{ title }}
         {% else %}
         Accounting application
-        {% endif %}</title>
-    {% if dark %}
-    <link rel="stylesheet" href="{{url_for('.static', filename='css/style_dark.css')}}">
-    <link rel="stylesheet" href="{{url_for('.static', filename='css/darkly.css')}}">
-    {% else %}
-    <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
+        {% endif %}
+    </title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    {% if dark %}
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/darkly.css')}}">
     {% endif %}
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
+    {%if dark %}
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/style_dark.css')}}">
+    {% endif %}
+
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.js"
             integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
@@ -66,11 +70,10 @@
         }
         })
     });
-
     </script>
-
     {% block scripts %}
     {% endblock %}
+
 </head>
 <body style="padding-top:0px;">
 {% if not dark %}
@@ -107,33 +110,36 @@
         </div>
     </nav>
     {% block content %}
+
     {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert_wrapper">
-            <div class="{{ message[0] }}" role="alert">
-                {% if message[0] == "alert alert-info" %}
-                <i class="fas fa-info-circle icon"></i>
-                {% elif message[0] == "alert alert-success" %}
-                <i class="fas fa-check-circle icon"></i>
-                {% elif message[0] == "alert alert-info"%}
-                <i class="fas fa-exclamation-circle icon"></i>
-                {% else %}
-                <i class="fas fa-exclamation-triangle icon"></i>
-                {% endif %}
-                {{ message[1] }}
-                <span class="close icon ml-auto">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert_wrapper">
+        <div class="{{ message[0] }} shadow" role="alert">
+            {% if message[0] == "alert alert-info" %}
+            <i class="fas fa-info-circle icon"></i>
+            {% elif message[0] == "alert alert-success" %}
+            <i class="fas fa-check-circle icon"></i>
+            {% elif message[0] == "alert alert-info" or message[0] == "alert alert-secondary"%}
+            <i class="fas fa-exclamation-circle icon"></i>
+            {% else %}
+            <i class="fas fa-exclamation-triangle icon"></i>
+            {% endif %}
+            {{ message[1] }}
+            <span class="close icon ml-auto">
             <i class="fas fa-times"></i>
         </span>
-            </div>
         </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
     <div class="container-fluid">
         {% block app_content %}{% endblock %}
     </div>
     {% endblock content %}
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
             integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
             crossorigin="anonymous"></script>
