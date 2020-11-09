@@ -5,7 +5,11 @@ from app.emails import send_error_email
 
 
 @app.errorhandler(400)
-def bad_request():
+def bad_request(error):
+    """
+    :param error: Error message
+    """
+    # parameter error is needed to avoid TypeError: not_found_error() takes 0 positional arguments but 1 was given
     if current_user.is_authenticated:
         dark = current_user.dark
     else:
@@ -16,7 +20,11 @@ def bad_request():
 #  --> Adapted from https://blog.miguelgrinberg.com/
 
 @app.errorhandler(404)
-def not_found_error():
+def not_found_error(error):
+    """
+    :param error: Error message
+    """
+    # parameter error is needed to avoid TypeError: not_found_error() takes 0 positional arguments but 1 was given
     if current_user.is_authenticated:
         dark = current_user.dark
     else:
@@ -29,6 +37,7 @@ def internal_error(error):
     """
     :param error: Error message
     """
+    # parameter error is needed to avoid TypeError: not_found_error() takes 0 positional arguments but 1 was given
     if current_user.is_authenticated:
         dark = current_user.dark
         send_error_email(error, 500, current_user.id)
