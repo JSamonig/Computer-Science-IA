@@ -10,6 +10,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from flask_wtf import CSRFProtect
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
 app = Flask(__name__)
@@ -24,6 +26,12 @@ login.login_message_category = "alert alert-danger"
 fa = FontAwesome(app)
 moment = Moment(app)
 CSRFProtect(app)
+sentry_sdk.init(
+    dsn="https://0386a46bc44b4d91b52e0253aec73695@o474175.ingest.sentry.io/5510069",
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=1.0
+)
+# sentry logging
 
 from app import routes, models, errors
 

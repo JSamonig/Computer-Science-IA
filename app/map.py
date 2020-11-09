@@ -27,7 +27,7 @@ def get_map(start, end):
         for point in polyline.decode(directions["routes"][0]["overview_polyline"]["points"]):
             cords.append({"lat": point[0], "lng": point[1]})  # get polyline (for map route)
         miles = int((directions["routes"][0]["legs"][0]["distance"]["value"] / 1000) / 1.6)  # get mileage
-        total = miles * c.Config.MILEAGE_RATE  # get cost
+        total = round(miles * c.Config.MILEAGE_RATE, 2)  # get cost
     else:
         cords = None
     return [cords, miles, total, status]
