@@ -950,3 +950,9 @@ def sign_form(form_hash, is_hod):
         return render_template('manager/sign_form.html', background=data, for_user=name, dark=current_user.dark)
     flash("Unknown token. Access denied", category="alert alert-danger")
     return redirect(url_for("index"))
+
+
+@app.route('/debug-sentry')
+@login_required
+def trigger_error():
+    division_by_zero = 1 / 0
