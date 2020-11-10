@@ -4,3 +4,11 @@
 #total_row:hover{
     background-color:#222222;
 }
+
+.btn-white{
+    background-color:#444444
+}
+
+.btn-white:hover{
+    background-color:#313131
+}
