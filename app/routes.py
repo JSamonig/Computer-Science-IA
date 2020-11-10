@@ -355,12 +355,11 @@ def new_form():
     if my_form.validate_on_submit():
         filename = handlefiles.validate_excel(my_form.filename.data)
         file_id = str(uuid.uuid4())  # unique user id filename which is stored as a variable and in the database
-        file = reclaim_forms(id=file_id, filename=filename, description=my_form.description.data, sent="Draft",
-                             made_by=current_user.id)  # New file, meaning it must be a draft
+        file = reclaim_forms(id=file_id, filename=filename, description=my_form.description.data, sent="Draft", made_by=current_user.id)  # New file, meaning it must be a draft
         db.session.add(file)
         db.session.commit()
         flash("Successfully created the form: {}".format(filename), category="alert alert-success")
-        return redirect(url_for('edit_forms', file_id=id))
+        return redirect(url_for('edit_forms', file_id=file_id))
     elif request.method == 'GET':
         my_form.filename.data = datetime.datetime.today().strftime(
             '%m-%Y') + "_Expenses_form_" + user.last_name + ".xlsx"  # Month-Year__Expenses_form_Surname.xlsx
@@ -955,4 +954,4 @@ def sign_form(form_hash, is_hod):
 @app.route('/debug-sentry')
 @login_required
 def trigger_error():
-    division_by_zero = 1 / 0
+    print(1/0)
