@@ -1,6 +1,7 @@
 # Jakob Samonig Computer Science IA
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/JSamonig/IA.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JSamonig/IA/context:javascript)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/JSamonig/IA.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JSamonig/IA/context:python)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![Screenshot of app](for_readme.png)
 
 This project was made as part of my computer science IA. The purpose of this application is to automise expense
