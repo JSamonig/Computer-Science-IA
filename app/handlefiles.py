@@ -27,6 +27,7 @@ def validate_image(stream):
 
 # <--
 
+
 def validate_excel(filename):
     """
     secure file name
@@ -34,7 +35,7 @@ def validate_excel(filename):
     :return: secured filename string
     """
     filename = secure_filename(filename)
-    file = filename.rsplit('.', 1)[0].lower() + ".xlsx"
+    file = filename.rsplit(".", 1)[0].lower() + ".xlsx"
     if file == ".xlsx":
         file = "reclaim_form.xlsx"
     return file
@@ -82,23 +83,26 @@ def create_distinct_colours(n):
 
 
 # https://stackoverflow.com/questions/52250812/how-to-set-watermark-text-on-images-in-python
-def create_signature_back(first, last):
+def create_signature_back(initials):
     """
     Create a signature watermark
-    :param first: first name of user
-    :param last: surname of user
+    :param initials: Initials of user who is signing
     :return: data url encoded watermark image
     """
-    base = Image.open(c.Config.SIGNATURE_ROUTE + 'wellington_crest.png').convert('RGBA')
+    base = Image.open(c.Config.SIGNATURE_ROUTE + "wellington_crest.png").convert("RGBA")
     width, height = base.size
-    fnt = ImageFont.truetype('arial.ttf', 20)
-    txt = Image.new('RGBA', base.size, (256, 256, 256, 0))
+    fnt = ImageFont.truetype("arial.ttf", 20)
+    txt = Image.new("RGBA", base.size, (256, 256, 256, 0))
+    initials = initials.upper()
     for i in range(1, width, int(width / 4)):  # watermark image with date and name
         txt = txt.rotate(-45)
         d = ImageDraw.Draw(txt)
-        d.text((i - (width / 3), i), datetime.datetime.now().date().strftime("%d/%m/%Y") + " {} {}".format(first, last),
-               font=fnt,
-               fill=(128, 128, 128, 64))
+        d.text(
+            (i - (width / 3), i),
+            "{} {} {}".format(initials, str(datetime.datetime.now().date().strftime("%d/%m/%Y")), initials),
+            font=fnt,
+            fill=(128, 128, 128, 64),
+        )
         txt = txt.rotate(45)
     out = Image.alpha_composite(base, txt)
     name = c.Config.SIGNATURE_ROUTE + str(uuid.uuid4()) + ".png"  # save image temporarily
@@ -107,7 +111,7 @@ def create_signature_back(first, last):
         f = image.read()
         image.close()
     encoded = base64.b64encode(f).decode()
-    data = 'data:image/png;base64,{}'.format(encoded)
+    data = "data:image/png;base64,{}".format(encoded)
     os.remove(name)  # delete image
     return data  # return as url encoded data
 

@@ -5,7 +5,7 @@ import config as c
 import re
 import os
 
-''' 
+""" 
 # cell = worksheet.cell(number, letter (number))
 # Cells B7 - B26 = Date
 # Cells C7 - C26 = Description
@@ -13,7 +13,7 @@ import os
 # Cells E7 - E26 = Account code
 # Cells F7 - F26 = Amount
 # info = [date, amount of miles and description, amount of miles, account code, total calculated]
-'''
+"""
 
 
 def requirements(name: list, date, book_name):  # Add dates and names
@@ -54,7 +54,7 @@ def edit_row(info: list, book_name, row=None):  # edit a row
         if worksheet.cell(row, 5).value:
             merged_cells_range = worksheet.merged_cells.ranges
             for merged_cell in merged_cells_range:
-                if ord(re.sub(r'\d+', '', str(merged_cell).split(":")[0]).lower()) - 96 < 7:
+                if ord(re.sub(r"\d+", "", str(merged_cell).split(":")[0]).lower()) - 96 < 7:
                     merged_cell.shift(0, 1)
             worksheet.insert_roworksheet(row)
     cell = worksheet.cell(row, 1)
@@ -63,15 +63,14 @@ def edit_row(info: list, book_name, row=None):  # edit a row
         if j != 1:
             cell = worksheet.cell(row, j)
             cell.value = info[j - 2]
-            grey = colors.Color(rgb='D9D9D9')
-            cell.fill = fills.PatternFill(patternType='solid', fgColor=grey)
+            grey = colors.Color(rgb="D9D9D9")
+            cell.fill = fills.PatternFill(patternType="solid", fgColor=grey)
         if j == 6:
             cell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
         cell.font = Font(bold=False)
-        thin_border = Border(left=Side(style='thin'),
-                             right=Side(style='thin'),
-                             top=Side(style='thin'),
-                             bottom=Side(style='thin'))
+        thin_border = Border(
+            left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin")
+        )
         cell.border = thin_border
         workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
@@ -88,7 +87,7 @@ def add_images(book_name, row, filename: str):
     workbook.create_sheet(sheet_name)
     worksheet = workbook[sheet_name]
     img = Image(c.Config.IMAGE_UPLOADS + filename)
-    img.anchor = 'A1'
+    img.anchor = "A1"
     worksheet.add_image(img)
     workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
@@ -103,7 +102,7 @@ def add_signature(signature, book_name, date):
     workbook = get_book(book_name)
     worksheet = workbook["Expense Claim Form 14-11-19"]
     img = Image(c.Config.SIGNATURE_ROUTE + signature)
-    img.anchor = 'C29'
+    img.anchor = "C29"
     worksheet.add_image(img)
     cell = worksheet.cell(29, 6)
     cell.value = date

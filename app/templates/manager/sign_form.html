@@ -101,8 +101,7 @@ rejectButton.addEventListener('click', function (event) {
 
 {% endblock %}
 {% block app_content %}
-<a class="btn btn-default" style="margin-bottom:1vh" href="{{ url_for('index')}}"><i class="fas fa-long-arrow-alt-left"></i> Return</a>
-<h1>Authorise expenses form for {{for_user}}</h1>
+<h1>Expense approval for {{for_user}}</h1>
 <h3>
     Sign over image
 </h3>
@@ -115,5 +114,4 @@ rejectButton.addEventListener('click', function (event) {
     <button id="reject" onClick="return confirm('Are you sure to reject?');" class="custom_shadow btn btn-danger">Reject</button>
     <button id="clear" class="btn btn-secondary custom_shadow">Clear</button>
 </div>
-
 {% endblock %}

@@ -4,11 +4,12 @@ from flask import render_template
 from app.models import get_token
 import config as c
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import (Mail, Attachment, FileContent, FileName, FileType, Disposition)
+from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
 import base64
 
 
 #  --> Adapted from https://app.sendgrid.com/guide/integrate/langs/python
+
 
 def send_email(subject, sender, recipients, html_body, file=None):
     """
@@ -28,7 +29,7 @@ def send_email(subject, sender, recipients, html_body, file=None):
             FileContent(encoded_file),
             FileName(file),
             FileType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            Disposition("attachment")
+            Disposition("attachment"),
         )
         msg.attachment = attached_file
     sg = SendGridAPIClient(c.Config.SENDGRID_API_KEY)  # send message
@@ -41,11 +42,12 @@ def send_password_reset_email(user):  # password reset email
     :param user: user object of sender
     """
     token = get_token(my_object=user, word="reset_password", user=user)
-    send_email('[Accounting app] Reset Your Password',
-               sender=app.config['ADMINS'][0],
-               recipients=[user.email],
-               html_body=render_template('email/reset_password.html',
-                                         user=user, token=token))
+    send_email(
+        "[Accounting app] Reset Your Password",
+        sender=app.config["ADMINS"][0],
+        recipients=[user.email],
+        html_body=render_template("email/reset_password.html", user=user, token=token),
+    )
 
 
 # <--
@@ -54,11 +56,12 @@ def send_verify_email(user):  # email verification email
     :param user: user object of sender
     """
     token = get_token(my_object=user, word="verify_email", user=user)
-    send_email('[Accounting app] Confirm your email',
-               sender=app.config['ADMINS'][0],
-               recipients=[user.email],
-               html_body=render_template('email/confirm_email.html',
-                                         user=user, token=token))
+    send_email(
+        "[Accounting app] Confirm your email",
+        sender=app.config["ADMINS"][0],
+        recipients=[user.email],
+        html_body=render_template("email/confirm_email.html", user=user, token=token),
+    )
 
 
 def send_auth_email(user, mail):  # signing a form email
@@ -67,11 +70,12 @@ def send_auth_email(user, mail):  # signing a form email
     :param mail: email of person authorising an expenses form
     :return:
     """
-    send_email('[Accounting app] Authorisation confirmation',
-               sender=app.config['ADMINS'][0],
-               recipients=[user.email],
-               html_body=render_template('email/authed.html',
-                                         user=user, auth_party=mail))
+    send_email(
+        "[Accounting app] Authorisation confirmation",
+        sender=app.config["ADMINS"][0],
+        recipients=[user.email],
+        html_body=render_template("email/authed.html", user=user, auth_party=mail),
+    )
 
 
 def send_reject_email(user, mail):  # send rejection notification (when an expenses form was rejected)
@@ -79,11 +83,12 @@ def send_reject_email(user, mail):  # send rejection notification (when an expen
     :param user: user object of sender
     :param mail: email of person authorising an expenses form
     """
-    send_email('[Accounting app] Authorisation declined',
-               sender=app.config['ADMINS'][0],
-               recipients=[user.email],
-               html_body=render_template('email/not_authed.html',
-                                         user=user, auth_party=mail))
+    send_email(
+        "[Accounting app] Authorisation declined",
+        sender=app.config["ADMINS"][0],
+        recipients=[user.email],
+        html_body=render_template("email/not_authed.html", user=user, auth_party=mail),
+    )
 
 
 def send_error_email(error, code, user):  # send an error email
@@ -93,7 +98,7 @@ def send_error_email(error, code, user):  # send an error email
     :param user: user object of person who caused the error
     """
     subject = "Error {} in IA".format(str(code))
-    recipients = [app.config['ADMINS'][1]]
+    recipients = [app.config["ADMINS"][1]]
     try:
         if user:
             user = User.query.filter_by(id=user).first().email
@@ -101,7 +106,9 @@ def send_error_email(error, code, user):  # send an error email
             user = None
     except AttributeError:  # if the user was not logged in
         user = None
-    send_email(subject,
-               sender=app.config['ADMINS'][0],
-               recipients=recipients,
-               html_body=render_template("email/Error.html", error=error, user=user))
+    send_email(
+        subject,
+        sender=app.config["ADMINS"][0],
+        recipients=recipients,
+        html_body=render_template("email/Error.html", error=error, user=user),
+    )

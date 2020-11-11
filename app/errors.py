@@ -14,10 +14,11 @@ def bad_request(error):
         dark = current_user.dark
     else:
         dark = None
-    return render_template('errors/400.html', dark=dark), 400
+    return render_template("errors/400.html", dark=dark), 400
 
 
 #  --> Adapted from https://blog.miguelgrinberg.com/
+
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -29,7 +30,7 @@ def not_found_error(error):
         dark = current_user.dark
     else:
         dark = None
-    return render_template('errors/404.html', dark=dark), 404
+    return render_template("errors/404.html", dark=dark), 404
 
 
 @app.errorhandler(500)
@@ -45,6 +46,7 @@ def internal_error(error):
         dark = None
         send_error_email(error, 500, None)  # send an email to Admin notifying of 500 error
     db.session.rollback()  # rollback any database changes
-    return render_template('errors/500.html', error=error, dark=dark), 500
+    return render_template("errors/500.html", error=error, dark=dark), 500
+
 
 # <--

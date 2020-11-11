@@ -3,7 +3,7 @@ from app.models import Account_codes, cost_centres
 from app import db
 
 
-def first(): # Adds account codes from excel list
+def first():  # Adds account codes from excel list
     wb = load_workbook("departments.xlsx")
     ws = wb["Sheet1"]
     for i in range(2, 250):
@@ -19,7 +19,7 @@ def first(): # Adds account codes from excel list
         db.session.add(account)
 
 
-def second(): # adds cost centres from excel list
+def second():  # adds cost centres from excel list
     wb = load_workbook("names.xlsx")
     ws = wb["Sheet1"]
     for i in range(2, 2200):

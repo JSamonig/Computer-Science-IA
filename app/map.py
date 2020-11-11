@@ -15,13 +15,16 @@ def get_map(start, end):
         start = urllib.parse.quote_plus(start)
     if "%" not in end:
         end = urllib.parse.quote_plus(end)
-    endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
+    endpoint = "https://maps.googleapis.com/maps/api/directions/json?"
     api_key = c.Config.GOOGLEMAPS_KEY
-    nav_request = 'origin={}&destination={}&key={}'.format(start, end, api_key)
+    nav_request = "origin={}&destination={}&key={}".format(start, end, api_key)
     response = urllib.request.urlopen(endpoint + nav_request).read()
     directions = json.loads(response)
     cords = []
-    miles, total = 0, 0,
+    miles, total = (
+        0,
+        0,
+    )
     status = directions["status"]
     if status == "OK":
         for point in polyline.decode(directions["routes"][0]["overview_polyline"]["points"]):

@@ -12,10 +12,9 @@
             <form method="post" role="form" autocomplete="off"}>
                 {{ form.hidden_tag() }}
                 {{ wtf.form_errors(form, hiddens="only") }}
-                {{ wtf.form_field(form.filename) }}
-                {{ wtf.form_field(form.description) }}
+                {{ wtf.form_field(form.filename, placeholder="Filename") }}
+                {{ wtf.form_field(form.description, placeholder="Description (optional)") }}
                 {% if not edit %}
-                <h4 class="font-weight-light font-italic">Please only create one form per supervisor</h4>
                 {% endif %}
                 {{ wtf.form_field(form.submit, class="custom_shadow btn btn-primary") }}
             </form>

@@ -13,18 +13,18 @@ pytesseract.pytesseract.tesseract_cmd = c.Config.TESSERACT_LOCATION
 
 
 def get_date(text):
-    n_text = len(text['text'])
+    n_text = len(text["text"])
     for i in range(n_text):
-        if int(text['conf'][i]) > 0:  # if confidence level is positive
-            if re.match(c.Config.DATE_PATTERN, text['text'][i]):  # iterate until a date is found
-                return text['text'][i]
+        if int(text["conf"][i]) > 0:  # if confidence level is positive
+            if re.match(c.Config.DATE_PATTERN, text["text"][i]):  # iterate until a date is found
+                return text["text"][i]
     return None  # return None if no date is found
 
 
 def find_total(text):
     totals = defaultdict(list)  # prevents KeyError
     total_list = ["total", "subtotal", "amount", "due", "sum", "payable", "mastercard"]
-    n_boxes = len(text['text'])
+    n_boxes = len(text["text"])
     for i in range(n_boxes):
         if int(text["conf"][i]) > 0:
             parsed_text = difflib.get_close_matches(text["text"][i].lower(), total_list, 1)
@@ -40,12 +40,12 @@ def find_total(text):
 
 
 def locate_prices(text, start):
-    n_text = len(text['text'])
+    n_text = len(text["text"])
     for i in range(start, n_text):
         if int(text["conf"][i]) > 0:
-            if re.match(c.Config.PRICE_PATTERN, text['text'][i]):
+            if re.match(c.Config.PRICE_PATTERN, text["text"][i]):
                 # match prices
-                return float(re.sub(r'\D+', '', text['text'][i]))
+                return float(re.sub(r"\D+", "", text["text"][i]))
                 # remove characters and return a float
     return None
 
@@ -54,11 +54,11 @@ def recognise(filename, taggun=False):
     file_path = c.Config.IMAGE_UPLOADS + filename
     img = cv2.imread(file_path)
     if taggun is False:
-        custom_config = r'--oem 3 --psm 6'
+        custom_config = r"--oem 3 --psm 6"
         text = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
         date = get_date(text)
         try:  # put date into correct format dd/mm/yyyy, regardless of date e.g. 1/10/19 -> 01/10/2019
-            symbols = ''.join([i for i in date if not i.isdigit()])
+            symbols = "".join([i for i in date if not i.isdigit()])
             if len(date.split(symbols[1])[2]) != 4:
                 date = date.split(symbols[1])
                 date[2] = "20" + date[2]
@@ -68,16 +68,16 @@ def recognise(filename, taggun=False):
         total = find_total(text)
     else:
         # <-- adapted from https://www.taggun.io/
-        url = 'https://api.taggun.io/api/receipt/v1/simple/file'
-        headers = {'apikey': c.Config.TAGGUN_KEY}
-        files = {'file': (
-            filename,  # set a filename for the file
-            open(file_path, 'rb'),  # the actual file
-            'image/' + str(filename.split(".")[1])),  # content-type for the file
+        url = "https://api.taggun.io/api/receipt/v1/simple/file"
+        headers = {"apikey": c.Config.TAGGUN_KEY}
+        files = {
+            "file": (
+                filename,  # set a filename for the file
+                open(file_path, "rb"),  # the actual file
+                "image/" + str(filename.split(".")[1]),
+            ),  # content-type for the file
             # other optional parameters for Taggun API (eg: incognito, refresh, ipAddress, language)
-            'incognito': (
-                None,  # set filename to none for optional parameters
-                'false')  # value for the parameters
+            "incognito": (None, "false"),  # set filename to none for optional parameters  # value for the parameters
         }
         response = requests.post(url, files=files, headers=headers).json()
         # -->

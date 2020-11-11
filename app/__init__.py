@@ -20,7 +20,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 bootstrap = Bootstrap(app)
 login = LoginManager(app)
-login.login_view = 'login'
+login.login_view = "login"
 login.login_message_category = "alert alert-danger"
 # initial message of along the lines of you need to log in to access this page will be in red ("alert-danger")
 fa = FontAwesome(app)
@@ -29,7 +29,7 @@ CSRFProtect(app)
 sentry_sdk.init(
     dsn="https://0386a46bc44b4d91b52e0253aec73695@o474175.ingest.sentry.io/5510069",
     integrations=[FlaskIntegration()],
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
 )
 # sentry logging
 
@@ -38,14 +38,12 @@ from app import routes, models, errors
 if not app.debug:
     # Adapted from https://blog.miguelgrinberg.com/
     # Logging
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240,
-                                       backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
+    file_handler = RotatingFileHandler("logs/app.log", maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"))
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
-    app.logger.info('App startup')
+    app.logger.info("App startup")
 # <--
