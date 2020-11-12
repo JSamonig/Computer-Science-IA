@@ -120,5 +120,5 @@ class ModalSettings(FlaskForm):
 
 
 class Supervisor(FlaskForm):
-    email_supervisor = StringField("Email of line supervisor (HoD)", validators=[DataRequired(), Email()])
-    submit = SubmitField("Send for authorization")
+    email_supervisor = StringField("Email of line manager", validators=[DataRequired(), Email()])
+    submit = SubmitField("Request approval")
