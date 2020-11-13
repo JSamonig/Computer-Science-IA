@@ -67,7 +67,7 @@ class ResetPasswordForm(FlaskForm):
 # <--
 
 
-class VerfifyEmail(FlaskForm):
+class VerifyEmail(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     email2 = StringField("Repeat email", validators=[DataRequired(), Email(), EqualTo("email")])
     submit = SubmitField("Resend email verification")

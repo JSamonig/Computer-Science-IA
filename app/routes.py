@@ -721,7 +721,7 @@ def verify_email_request():
     """
     if current_user.is_authenticated:
         return redirect(url_for("index"))
-    my_form = forms.VerfifyEmail()
+    my_form = forms.VerifyEmail()
     if my_form.validate_on_submit():
         user = User.query.filter_by(email=my_form.email.data).first()
         try:
