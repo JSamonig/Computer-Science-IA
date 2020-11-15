@@ -4,7 +4,14 @@ from flask import render_template
 from app.models import get_token
 import config as c
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
+from sendgrid.helpers.mail import (
+    Mail,
+    Attachment,
+    FileContent,
+    FileName,
+    FileType,
+    Disposition,
+)
 import base64
 
 
@@ -19,7 +26,9 @@ def send_email(subject, sender, recipients, html_body, file=None):
     :param html_body: Html of email
     :param file: file name
     """
-    msg = Mail(from_email=sender, to_emails=recipients, subject=subject, html_content=html_body)
+    msg = Mail(
+        from_email=sender, to_emails=recipients, subject=subject, html_content=html_body
+    )
     if file:
         with open(c.Config.RECLAIM_ROUTE + file, "rb") as f:
             data = f.read()
@@ -28,7 +37,9 @@ def send_email(subject, sender, recipients, html_body, file=None):
         attached_file = Attachment(
             FileContent(encoded_file),
             FileName(file),
-            FileType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            FileType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
             Disposition("attachment"),
         )
         msg.attachment = attached_file
@@ -78,7 +89,9 @@ def send_auth_email(user, mail):  # signing a form email
     )
 
 
-def send_reject_email(user, mail):  # send rejection notification (when an expenses form was rejected)
+def send_reject_email(
+    user, mail
+):  # send rejection notification (when an expenses form was rejected)
     """
     :param user: user object of sender
     :param mail: email of person authorising an expenses form

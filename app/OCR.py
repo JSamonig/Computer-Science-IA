@@ -16,7 +16,9 @@ def get_date(text):
     n_text = len(text["text"])
     for i in range(n_text):
         if int(text["conf"][i]) > 0:  # if confidence level is positive
-            if re.match(c.Config.DATE_PATTERN, text["text"][i]):  # iterate until a date is found
+            if re.match(
+                c.Config.DATE_PATTERN, text["text"][i]
+            ):  # iterate until a date is found
                 return text["text"][i]
     return None  # return None if no date is found
 
@@ -27,7 +29,9 @@ def find_total(text):
     n_boxes = len(text["text"])
     for i in range(n_boxes):
         if int(text["conf"][i]) > 0:
-            parsed_text = difflib.get_close_matches(text["text"][i].lower(), total_list, 1)
+            parsed_text = difflib.get_close_matches(
+                text["text"][i].lower(), total_list, 1
+            )
             # fuzzy match total in text
             if parsed_text and locate_prices(text, i) is not None:
                 totals[parsed_text[0]].append(locate_prices(text, i))
@@ -55,7 +59,9 @@ def recognise(filename, taggun=False):
     img = cv2.imread(file_path)
     if taggun is False:
         custom_config = r"--oem 3 --psm 6"
-        text = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
+        text = pytesseract.image_to_data(
+            img, output_type=pytesseract.Output.DICT, config=custom_config
+        )
         date = get_date(text)
         try:  # put date into correct format dd/mm/yyyy, regardless of date e.g. 1/10/19 -> 01/10/2019
             symbols = "".join([i for i in date if not i.isdigit()])
@@ -77,12 +83,17 @@ def recognise(filename, taggun=False):
                 "image/" + str(filename.split(".")[1]),
             ),  # content-type for the file
             # other optional parameters for Taggun API (eg: incognito, refresh, ipAddress, language)
-            "incognito": (None, "false"),  # set filename to none for optional parameters  # value for the parameters
+            "incognito": (
+                None,
+                "false",
+            ),  # set filename to none for optional parameters  # value for the parameters
         }
         response = requests.post(url, files=files, headers=headers).json()
         # -->
         try:
-            date = datetime.datetime.strptime(response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d").date()
+            date = datetime.datetime.strptime(
+                response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d"
+            ).date()
             date = str(date.strftime("%d/%m/%Y"))
         except KeyError:
             date = None

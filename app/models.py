@@ -62,7 +62,13 @@ class reclaim_forms(db.Model):
 
     def __repr__(self):
         return "<id ={} \nFilename = {} \n description = {} \n sent = {} \n made_by = {} \n date_sent = {}\n date_created = {} >".format(
-            self.id, self.filename, self.description, self.sent, self.made_by, self.date_sent, self.date_created
+            self.id,
+            self.filename,
+            self.description,
+            self.sent,
+            self.made_by,
+            self.date_sent,
+            self.date_created,
         )
 
 
@@ -78,7 +84,9 @@ class reclaim_forms_details(db.Model):
     miles = db.Column(db.Float)
     Total = db.Column(db.Float)
     row_id = db.Column(db.Integer, nullable=False, default=0)
-    account_id = db.Column(db.String(60), db.ForeignKey("account_codes.account_id"), index=True)
+    account_id = db.Column(
+        db.String(60), db.ForeignKey("account_codes.account_id"), index=True
+    )
     image_name = db.Column(db.String(60), index=True)
     form_id = db.Column(db.Integer, db.ForeignKey("reclaim_forms.id"), index=True)
     start = db.Column(db.String(120), index=True)
@@ -96,7 +104,12 @@ class Account_codes(db.Model):
     __tablename__ = "account_codes"
     account_id = db.Column(db.String(60), primary_key=True)
     account_name = db.Column(db.String(60), index=True)
-    cost_centre = db.Column(db.Integer, db.ForeignKey("cost_centres.cost_centre_id"), index=True, nullable=True)
+    cost_centre = db.Column(
+        db.Integer,
+        db.ForeignKey("cost_centres.cost_centre_id"),
+        index=True,
+        nullable=True,
+    )
 
 
 class cost_centres(db.Model):
@@ -128,7 +141,9 @@ def get_token(my_object, word, user, expires_in=600):
             algorithm="HS256",
         ).decode("utf-8")
     return jwt.encode(
-        {word: to_decode, "exp": time.time() + expires_in, "user": user}, app.config["SECRET_KEY"], algorithm="HS256"
+        {word: to_decode, "exp": time.time() + expires_in, "user": user},
+        app.config["SECRET_KEY"],
+        algorithm="HS256",
     ).decode("utf-8")
 
 
@@ -143,11 +158,18 @@ def verify_token(token, word, table=User, attribute="id"):
     """
     try:
         decoded = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-        returned_id = decoded[word]  # pw = reset_password, email=verify_email, sign= sign_form
+        returned_id = decoded[
+            word
+        ]  # pw = reset_password, email=verify_email, sign= sign_form
         if decoded["exp"] > time.time():
             if attribute == "id":
                 return db.session.query(table).filter_by(id=returned_id).first()
             elif attribute == "email" and table == User:
                 return returned_id
-    except (jwt.exceptions.DecodeError, AttributeError, jwt.ExpiredSignature, TypeError):
+    except (
+        jwt.exceptions.DecodeError,
+        AttributeError,
+        jwt.ExpiredSignature,
+        TypeError,
+    ):
         pass

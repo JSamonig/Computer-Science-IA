@@ -21,7 +21,9 @@ class Config(object):
     MILEAGE_RATE = 0.45
     PRICE_PATTERN = "^(([$€£]?)( *)(\d{1,})((,|\.)(\d{0,}))?)( *)([$€£]?)$"
     DATE_PATTERN = "(^(0?[1-9]|[1-2]\d|3[01])(\/|\.|-|\\| )(0?[1-9]|1[012])(\/|\.|-|\\| )(\d\d)?(\d\d)$)"
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or "sqlite:///" + os.path.join(basedir, "app.db")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL"
+    ) or "sqlite:///" + os.path.join(basedir, "app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
     SENDGRID_DEFAULT_FROM = os.environ.get("MAIL_DEFAULT_SENDER")

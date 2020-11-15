@@ -22,7 +22,9 @@
     <link rel="stylesheet" href="{{url_for('.static', filename='css/style_dark.css')}}">
     {% endif %}
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdAYtgS0Fvxcx-pavFn2pZx4G6x2rGDo4&v=3.exp&libraries=places"></script>
+    {% if google_key %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_key }}&v=3.exp&libraries=places"></script>
+    {% endif %}
     <script src="https://code.jquery.com/jquery-3.5.1.js"
             integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     {{ moment.include_moment() }}

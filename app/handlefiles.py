@@ -49,11 +49,23 @@ def create_excel(file_id, current_user, signature=None):
     :param signature: signature file name
     """
     handleExcel.delete_all_sheets()
-    file = db.session.query(reclaim_forms).filter_by(made_by=current_user.id).filter_by(id=file_id).first_or_404()
-    rows = db.session.query(reclaim_forms_details).filter_by(made_by=current_user.id).filter_by(form_id=file_id).all()
+    file = (
+        db.session.query(reclaim_forms)
+        .filter_by(made_by=current_user.id)
+        .filter_by(id=file_id)
+        .first_or_404()
+    )
+    rows = (
+        db.session.query(reclaim_forms_details)
+        .filter_by(made_by=current_user.id)
+        .filter_by(form_id=file_id)
+        .all()
+    )
     user = User.query.get(current_user.id)
     date = datetime.datetime.now().strftime("%d/%m/%Y")
-    handleExcel.requirements([str(user.first_name), str(user.last_name)], str(date), str(file.filename))
+    handleExcel.requirements(
+        [str(user.first_name), str(user.last_name)], str(date), str(file.filename)
+    )
     if signature:
         handleExcel.add_signature(signature, file.filename, date)
     for row in rows:
@@ -99,13 +111,19 @@ def create_signature_back(initials):
         d = ImageDraw.Draw(txt)
         d.text(
             (i - (width / 3), i),
-            "{} {} {}".format(initials, str(datetime.datetime.now().date().strftime("%d/%m/%Y")), initials),
+            "{} {} {}".format(
+                initials,
+                str(datetime.datetime.now().date().strftime("%d/%m/%Y")),
+                initials,
+            ),
             font=fnt,
             fill=(128, 128, 128, 64),
         )
         txt = txt.rotate(45)
     out = Image.alpha_composite(base, txt)
-    name = c.Config.SIGNATURE_ROUTE + str(uuid.uuid4()) + ".png"  # save image temporarily
+    name = (
+        c.Config.SIGNATURE_ROUTE + str(uuid.uuid4()) + ".png"
+    )  # save image temporarily
     out.save(name)
     with open(name, "rb") as image:
         f = image.read()
@@ -117,7 +135,9 @@ def create_signature_back(initials):
 
 
 def revert_to_draft(file):
-    if file.sent == "Authorized":  # if a file is already authorized make it into a draft
+    if (
+        file.sent == "Authorized"
+    ):  # if a file is already authorized make it into a draft
         file.sent = "Draft"
         if file.signature:
             try:  # remove signature

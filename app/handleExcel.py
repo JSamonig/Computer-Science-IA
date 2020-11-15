@@ -54,7 +54,10 @@ def edit_row(info: list, book_name, row=None):  # edit a row
         if worksheet.cell(row, 5).value:
             merged_cells_range = worksheet.merged_cells.ranges
             for merged_cell in merged_cells_range:
-                if ord(re.sub(r"\d+", "", str(merged_cell).split(":")[0]).lower()) - 96 < 7:
+                if (
+                    ord(re.sub(r"\d+", "", str(merged_cell).split(":")[0]).lower()) - 96
+                    < 7
+                ):
                     merged_cell.shift(0, 1)
             worksheet.insert_roworksheet(row)
     cell = worksheet.cell(row, 1)
@@ -69,7 +72,10 @@ def edit_row(info: list, book_name, row=None):  # edit a row
             cell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
         cell.font = Font(bold=False)
         thin_border = Border(
-            left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin")
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin"),
         )
         cell.border = thin_border
         workbook.save(c.Config.RECLAIM_ROUTE + book_name)
