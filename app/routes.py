@@ -213,7 +213,8 @@ def edit_data(file_id, row):
                     return redirect(
                         url_for("edit_data", file_id=file_id, row=row)
                     )  # reload
-            else:  # if mileage isnt present, only total will be present, the below lines prevent an error from occuring
+            else:
+                # if mileage isn't present, only total will be present, the below lines prevent an error from occuring
                 if float(my_form.total.data) < 0:  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
                     return redirect(

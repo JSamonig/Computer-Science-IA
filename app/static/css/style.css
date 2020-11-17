@@ -103,3 +103,7 @@ big {
 .btn-white:hover{
     background-color:#ECECEC;
 }
+
+.helper{
+    font-size: 12.8px;
+}

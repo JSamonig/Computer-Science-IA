@@ -46,7 +46,8 @@ function initialize() {
         <form method="post" role="form" autocomplete="off">
             {{ form.hidden_tag() }}
             {{ wtf.form_errors(form, hiddens="only") }}
-            {{ wtf.form_field(form.description, placeholder="Purpose of journey") }}
+            {{ wtf.form_field(form.description, onInput="TextCounter(this, 140);", placeholder="Purpose of journey") }}
+            <p class="helper d-none">0 / 140</p>
             {{ wtf.form_field(form.start,id="autocomplete2") }}
             {{ wtf.form_field(form.destination,id="autocomplete")}}
             {{ wtf.form_field(form.return_trip)}}

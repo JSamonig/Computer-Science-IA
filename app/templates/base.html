@@ -71,7 +71,28 @@
             }
         }
         })
+        // display how many characters are left in textbox (initialization)
+        if(typeof $('#description') != "undefined") {
+            $('#description').parent('.form-group').css('margin-bottom','2px');
+            console.log($('#description').parent('.form-group'));
+            var limit = $('.helper').text().split("/")[1];
+            $('.helper').removeClass("d-none");
+            TextCounter($('#description'), limit)
+        }
     });
+    // display how many characters are left in textbox
+    function TextCounter(field, limit) {
+        var typedChars = $(field).val().length;
+        $('.helper').text(typedChars == 0 ? '0 / '+ limit : typedChars + ' / ' + limit);
+        if (typedChars > limit){
+            $(field).addClass('is-invalid');
+            $(".helper").css('color','#dc3545');
+        }
+        if (typedChars <= limit && $(field).hasClass('is-invalid') ){
+            $(field).removeClass('is-invalid');
+            $(".helper").css('color','#000000');
+            }
+        };
     </script>
     {% block scripts %}
     {% endblock %}
