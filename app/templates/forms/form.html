@@ -39,6 +39,7 @@ $( document ).ready(function() {
                         target.append('<option data-subtext="' + response["Data"][x] + '">'+ x +'</option>');
                     }
                     target.selectpicker('refresh');
+                    target.prop('required', true);
                     if (centre){
                     target.selectpicker('val', centre[0]);
                     }
@@ -60,6 +61,14 @@ $( document ).ready(function() {
       target_parent.removeClass("d-none");
       // show second field
     });
+
+    $('#miles').on('focusout', function () {
+        if($('#miles').val() && !($('#total').val()) && !(Number.isNaN($('#miles').val())) ){
+            $('#total').val($('#miles').val() * 0.45);
+        }
+     });
+
+        
 });
 
 </script>
@@ -102,7 +111,7 @@ $( document ).ready(function() {
                 <label class="control label" for="accountCode2">Account code</label>
                 <select class="form-control rounded-right selectpicker show-tick" id="accountCode2"
                         name="accountCode2" liveSearchStyle='contains' data-live-search="true"
-                        data-header="Select an account code" title="Nothing selected" required>
+                        data-header="Select an account code" title="Nothing selected">
                 </select>
             </div>
             {% if start %}

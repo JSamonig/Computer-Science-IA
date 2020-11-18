@@ -3,35 +3,38 @@
 {% block scripts %}
 <script>
 // datepicker from https://bootstrap-datepicker.readthedocs.io
-    $(document).ready(function(){
-      var date_input = $('.date'); //our date input has the name "date"
-      var options = {
-        format: 'dd/mm/yyyy',
-        todayHighlight: true,
-        autoclose: true,
-      };
-      date_input.datepicker(options);
-    })
-    $('.datepicker').on('click', function(e) {
-   e.preventDefault();
-   $(this).attr("autocomplete", "off");
+
+$(document).ready(function(){
+    var date_input = $('.date'); //our date input has the class "date"
+    var options = {
+    format: 'dd/mm/yyyy',
+    todayHighlight: true,
+    autoclose: true,
+    };
+
+    date_input.datepicker(options).on('changeDate', function(e) {
+        if ( !( $('#date_end').val() && $(this).val() )) {
+            $('#date_end').datepicker('setDate',$(this).val());
+        }
+    });
 });
 
 var autocomplete;
 function initialize() {
   var autocomplete = new google.maps.places.Autocomplete(
       (document.getElementById('autocomplete')),
-      { types: ['geocode','establishment'] });
+      { types: ['geocode','establishment'] }
+    );
   var autocomplete2 = new google.maps.places.Autocomplete(
       (document.getElementById('autocomplete2')),
-      { types: ['geocode','establishment'] });
+      { types: ['geocode','establishment'] }
+      );
 
   google.maps.event.addListener(autocomplete, 'place_changed', function() {
   });
   google.maps.event.addListener(autocomplete2, 'place_changed', function() {
   });
 }
-
 
 </script>
 {% endblock %}
