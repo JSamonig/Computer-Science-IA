@@ -7,6 +7,11 @@ import config as c
 import requests
 import datetime
 import concurrent.futures
+from currency_converter import CurrencyConverter
+
+CurrencyConverter = CurrencyConverter(
+    fallback_on_missing_rate=True, fallback_on_wrong_date=True
+)
 
 # change this depending on location
 pytesseract.pytesseract.tesseract_cmd = c.Config.TESSERACT_LOCATION
@@ -74,7 +79,7 @@ def recognise(filename, taggun=False):
         total = find_total(text)
     else:
         # <-- adapted from https://www.taggun.io/
-        url = "https://api.taggun.io/api/receipt/v1/simple/file"
+        url = "https://api.taggun.io/api/receipt/v1/verbose/file"
         headers = {"apikey": c.Config.TAGGUN_KEY}
         files = {
             "file": (
@@ -91,24 +96,42 @@ def recognise(filename, taggun=False):
         response = requests.post(url, files=files, headers=headers).json()
         # -->
         try:
-            date = datetime.datetime.strptime(
+            date_obj = datetime.datetime.strptime(
                 response["date"]["data"].split("T")[0].replace("-", ""), "%Y%m%d"
             ).date()
-            date = str(date.strftime("%d/%m/%Y"))
+            date = str(date_obj.strftime("%d/%m/%Y"))
         except KeyError:
             date = None
         try:
-            total = round(float(response["totalAmount"]["data"]), 2)
+            total = response["totalAmount"]["data"]  # get date
+            try:
+                currency = response["totalAmount"][
+                    "currencyCode"
+                ]  # try to get currency
+                if date_obj:  # if we have a date
+                    total = CurrencyConverter.convert(
+                        total,
+                        currency,
+                        "GBP",  # convert to GBP
+                        date_obj,
+                    )
+                else:
+                    total = CurrencyConverter.convert(total, currency, "GBP")
+                    # If no date, just convert using historic rate
+                total = round(total, 2)
+                return {"date_receipt": date, "total": total, "currency": currency}
+            except KeyError:
+                total = round(total, 2)  # if we don't have a currency, don't convert
         except KeyError:
-            total = None
-    return {"date_receipt": date, "Total": total}
+            total = None  # if everthing fails don't give a total
+    return {"date_receipt": date, "total": total, "currency": None}
 
 
 def run(filename, taggun=False):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(recognise, filename, taggun)
         try:
-            return_value = future.result(timeout=10)  # set 10 second timeout
+            return_value = future.result(timeout=12)  # set 12 second timeout
         except concurrent.futures.TimeoutError:
-            return_value = {"date_receipt": None, "Total": None}
+            return_value = {"date_receipt": None, "total": None}
         return return_value

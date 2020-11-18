@@ -132,7 +132,7 @@ def upload(file_id: str, row: str):
             if not details:  # create new row if it doesn't exist
                 details = reclaim_forms_details(
                     date_receipt=data["date_receipt"],
-                    Total=data["Total"],
+                    Total=data["total"],
                     image_name=filename,
                     made_by=current_user.id,
                     row_id=row,
@@ -141,7 +141,7 @@ def upload(file_id: str, row: str):
                 db.session.add(details)  # add to session
             else:
                 details.date_receipt = data["date_receipt"]
-                details.Total = data["Total"]
+                details.Total = data["total"]
                 details.image_name = filename  # results of OCR
             db.session.commit()  # commit to DB
         except AttributeError:  # if any of the database values do not exist, or there is an unexpected AttributeError
@@ -158,6 +158,13 @@ def upload(file_id: str, row: str):
             flash(
                 "Could not recognise price or total. Optical character recognition is never 100% accurate.",
                 category="alert alert-danger",
+            )
+        elif data["currency"]:
+            flash(
+                "Please check the information is correct. Converted {} to GBP.".format(
+                    data["currency"]
+                ),
+                category="alert alert-secondary",
             )
         else:  # General warning
             flash(
@@ -257,7 +264,7 @@ def edit_data(file_id, row):
                 ).days > 29
                 if result:  # Give a warning that expense is older than 4 weeks
                     flash(
-                        "Warning: the date of expense for row {} is older than 4 weeks, refund is not guaranteed.".format(
+                        "Warning: the date of expense for row {} is older than 4 weeks. Refund is not guaranteed.".format(
                             str(int(row) - 6)
                         ),
                         category="alert alert-warning ",
