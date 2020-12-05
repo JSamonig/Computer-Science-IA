@@ -518,7 +518,6 @@ def download(file_id):
 
 
 @app.route("/view_forms", methods=["GET", "POST"])
-@app.route("/view_forms", methods=["GET", "POST"])
 @login_required
 def view_forms():
     """
@@ -681,7 +680,7 @@ def logout():
     :return: HTML
     """
     logout_user()
-    return redirect(url_for("index"))
+    return redirect(url_for("login"))
 
 
 @app.route("/register", methods=["GET", "POST"])
