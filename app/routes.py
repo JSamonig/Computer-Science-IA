@@ -680,6 +680,10 @@ def logout():
     :return: HTML
     """
     logout_user()
+    flash(
+        "Successfully logged out.",
+        category="alert alert-success",
+    )
     return redirect(url_for("login"))
 
 
