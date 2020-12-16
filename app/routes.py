@@ -769,7 +769,7 @@ def settings():
         db.session.commit()  # update database
         return redirect(url_for("view_forms"))  # Redirect
     elif request.method == "GET":
-        # prefill fields
+        # pre-fill fields
         setting_form.first_name.data = user.first_name
         setting_form.last_name.data = user.last_name
         setting_form.email.data = user.email
