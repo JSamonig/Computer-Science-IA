@@ -152,7 +152,7 @@ def verify_token(token, word, table=User, attribute="id"):
     Verify a token
     :param token: token string
     :param word: word to decode (pw = reset_password, email=verify_email, sign= sign_form)
-    :param table: table from which the return value should origniate from
+    :param table: table from which the return value should originate from
     :param attribute: attribute of object which is to be returned
     :return: Database entry
     """
