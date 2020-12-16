@@ -172,4 +172,4 @@ def verify_token(token, word, table=User, attribute="id"):
         jwt.ExpiredSignature,
         TypeError,
     ):
-        pass
+        return None
