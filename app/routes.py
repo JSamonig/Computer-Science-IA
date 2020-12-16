@@ -72,7 +72,7 @@ def upload(file_id: str, row: str):
             )  # if a new row is added, the index will be one more than the previous row
         else:
             row = 7  # If there are now previous rows, we will start at row 7 in the excel sheet.
-    my_form = forms.UploadForm()
+    upload_form = forms.UploadForm()
     if request.method == "POST" and "submit" in request.form:
         try:
             file = (
@@ -98,17 +98,17 @@ def upload(file_id: str, row: str):
                     details.image_name = None
                     db.session.commit()
             detected_extension = handlefiles.validate_image(
-                my_form.file.data.stream
+                upload_form.file.data.stream
             )  # detect extension of image
             if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
                 flash(
                     "Incorrect file extension", category="alert alert-danger"
                 )  # error if the extension is not allowed
                 return render_template(
-                    "forms/upload.html", form=my_form, dark=current_user.dark
+                    "forms/upload.html", form=upload_form, dark=current_user.dark
                 )
             filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
-            my_form.file.data.save(
+            upload_form.file.data.save(
                 app.config["IMAGE_UPLOADS"] + filename
             )  # save image under filename
             user = User.query.filter_by(
@@ -150,7 +150,7 @@ def upload(file_id: str, row: str):
                 category="alert alert-danger",
             )
             return render_template(
-                "forms/upload.html", form=my_form, dark=current_user.dark
+                "forms/upload.html", form=upload_form, dark=current_user.dark
             )
         if (
             details.Total is None or details.date_receipt is None
@@ -175,7 +175,7 @@ def upload(file_id: str, row: str):
             "/edit_data/{}/{}".format(file_id, row)
         )  # redirect to edit_data
     return render_template(
-        "forms/upload.html", form=my_form, dark=current_user.dark
+        "forms/upload.html", form=upload_form, dark=current_user.dark
     )  # GET request
 
 
@@ -188,7 +188,7 @@ def edit_data(file_id, row):
     :return: HTML template contained in app/templates/forms
     Edit any data which came in through Mileage or Upload
     """
-    my_form = forms.EditOutput()
+    edit_output_form = forms.EditOutput()
     details = (
         db.session.query(reclaim_forms_details)
         .filter_by(made_by=current_user.id)
@@ -211,10 +211,11 @@ def edit_data(file_id, row):
         )  # append all accounts to a list
     accounts_list.append(["N/A", "N/A"])
     if request.method == "POST":
-        if my_form.validate_on_submit():
-            if my_form.miles.data:  # if there is data for mileage
+        if edit_output_form.validate_on_submit():
+            if edit_output_form.miles.data:  # if there is data for mileage
                 if (
-                    float(my_form.miles.data) < 0 or float(my_form.total.data) < 0
+                    float(edit_output_form.miles.data) < 0
+                    or float(edit_output_form.total.data) < 0
                 ):  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
                     return redirect(
@@ -222,22 +223,28 @@ def edit_data(file_id, row):
                     )  # reload
             else:
                 # if mileage isn't present, only total will be present, the below lines prevent an error from occuring
-                if float(my_form.total.data) < 0:  # check if there are negatives
+                if (
+                    float(edit_output_form.total.data) < 0
+                ):  # check if there are negatives
                     flash("Only input positive values", category="alert alert-danger")
                     return redirect(
                         url_for("edit_data", file_id=file_id, row=row)
                     )  # reload
             if details:  # if there is a reclaim form
-                details.date_receipt = my_form.date.data
-                details.description = my_form.description.data  # load data into DB
-                details.miles = my_form.miles.data
+                details.date_receipt = edit_output_form.date.data
+                details.description = (
+                    edit_output_form.description.data
+                )  # load data into DB
+                details.miles = edit_output_form.miles.data
                 # Format of account_id is for example: ART(110)-43214
                 cost_centre = (
                     db.session.query(Account_codes)
-                    .filter_by(account_id=my_form.accountCode.data)
+                    .filter_by(account_id=edit_output_form.accountCode.data)
                     .first_or_404()
                 )  # number associated with 3 letter code (110)
-                account_code = my_form.accountCode2.data  # this is the 43214 suffix
+                account_code = (
+                    edit_output_form.accountCode2.data
+                )  # this is the 43214 suffix
                 if cost_centre.cost_centre:
                     details.account_id = "{}({})-{}".format(
                         str(cost_centre.account_id),
@@ -249,9 +256,9 @@ def edit_data(file_id, row):
                         str(cost_centre.account_id), str(account_code)
                     )
                 details.Total = (
-                    my_form.total.data
-                    if str(my_form.total.data) != "None"
-                    else my_form.miles.data * c.Config.MILEAGE_RATE
+                    edit_output_form.total.data
+                    if str(edit_output_form.total.data) != "None"
+                    else edit_output_form.miles.data * c.Config.MILEAGE_RATE
                 )
                 # multiply by mileage rate
                 db.session.commit()  # commit changes to DB
@@ -309,8 +316,8 @@ def edit_data(file_id, row):
             dict_cost_centres["N/A"] = "N/A"  # add a N/A option
             return jsonify({"Data": dict_cost_centres})  # return dict
     # GET request
-    my_form.date.data = details.date_receipt
-    my_form.description.data = details.description
+    edit_output_form.date.data = details.date_receipt
+    edit_output_form.description.data = details.description
     if details.account_id is not None:
         current_account = details.account_id.split("-")  # E.g. [ART(110), 43214]
         current_account[0] = current_account[0].split("(")[
@@ -340,16 +347,16 @@ def edit_data(file_id, row):
     else:
         cost_centre, account = None, None
     if details.Total is not None:
-        my_form.total.data = round(float(details.Total), 2)  # Round total
+        edit_output_form.total.data = round(float(details.Total), 2)  # Round total
     if details.start and details.destination:  # if a route is attached
         destination = urllib_parse.quote_plus(
             details.destination
         )  # put start and destination into url format
         origin = urllib_parse.quote_plus(details.start)
-        my_form.miles.data = details.miles  # load mileage into edit form
+        edit_output_form.miles.data = details.miles  # load mileage into edit form
         return render_template(
             "forms/form.html",
-            form=my_form,
+            form=edit_output_form,
             include=True,
             start=origin,
             end=destination,
@@ -376,7 +383,7 @@ def edit_data(file_id, row):
         """
     return render_template(
         "forms/form.html",
-        form=my_form,
+        form=edit_output_form,
         filename=c.Config.IMAGE_ROUTE + details.image_name,
         dark=current_user.dark,
         accounts=accounts_list,
@@ -732,42 +739,47 @@ def settings():
     Settings page
     :return: HTML
     """
-    my_form = forms.Settings(current_user.id)
-    user = User.query.get(current_user.id)
-    if my_form.validate_on_submit():
-        user.first_name = my_form.first_name.data
-        user.last_name = my_form.last_name.data
-        user.accounting_email = my_form.accounting_email.data
-        if my_form.email.data != user.email:
-            # if email is changed, logout user and make them verify the new email
-            user.email = my_form.email.data
+    setting_form = forms.Settings(current_user.id)  # Get form object
+    user = User.query.get(current_user.id)  # Get user object
+    if (
+        setting_form.validate_on_submit()
+    ):  # If the web-form is correctly passes validation
+        user.first_name = setting_form.first_name.data  # Update database fields
+        user.last_name = setting_form.last_name.data
+        user.accounting_email = setting_form.accounting_email.data
+        if setting_form.email.data != user.email:
+            # if email is changed, logout user, and make them verify the new email
+            user.email = setting_form.email.data
             user.is_verified = False
-            send_verify_email(user)
+            send_verify_email(user)  # Send email
             logout_user()
+            # Flash notification that user was logged out and needs to verify his/her email.
             flash(
                 Markup(
                     'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> '
                     "to send another email.".format(
-                        my_form.accounting_email.data, url_for("verify_email_request")
+                        setting_form.accounting_email.data,
+                        url_for("verify_email_request"),
                     )
                 ),
                 category="alert alert-success",
             )
-        user.use_taggun = my_form.taggun.data
-        user.dark = my_form.dark.data
-        db.session.commit()
-        return redirect(url_for("view_forms"))
+        user.use_taggun = setting_form.taggun.data
+        user.dark = setting_form.dark.data
+        db.session.commit()  # update database
+        return redirect(url_for("view_forms"))  # Redirect
     elif request.method == "GET":
         # prefill fields
-        my_form.first_name.data = user.first_name
-        my_form.last_name.data = user.last_name
-        my_form.email.data = user.email
-        my_form.accounting_email.data = user.accounting_email
-        my_form.taggun.data = user.use_taggun
-        my_form.dark.data = user.dark
+        setting_form.first_name.data = user.first_name
+        setting_form.last_name.data = user.last_name
+        setting_form.email.data = user.email
+        setting_form.accounting_email.data = user.accounting_email
+        setting_form.taggun.data = user.use_taggun
+        setting_form.dark.data = user.dark
+    # Render settings.html template with updated information
     return render_template(
         "user/settings.html",
-        form=my_form,
+        form=setting_form,
         title="Settings",
         dark=current_user.dark,
         email=user.email,
