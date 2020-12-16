@@ -753,11 +753,11 @@ def settings():
             user.is_verified = False
             send_verify_email(user)  # Send email
             logout_user()
-            # Flash notification that user was logged out and needs to verify his/her email.
+            # Flash (html) notification that user was logged out and needs to verify his/her email.
             flash(
                 Markup(
-                    'You have been logged out. Please verify {} to login. Click <a href="{}" class="alert-link">here</a> '
-                    "to send another email.".format(
+                    'You have been logged out. Please verify {} to login. Click '
+                    '<a href="{}" class="alert-link">here</a> to send another email.'.format(
                         setting_form.accounting_email.data,
                         url_for("verify_email_request"),
                     )
