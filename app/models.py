@@ -52,7 +52,7 @@ class reclaim_forms(db.Model):
 
     __tablename__ = "reclaim_forms"
     id = db.Column(db.String(36), index=True, primary_key=True, default=uuid.uuid4)
-    filename = db.Column(db.String(60), index=True)  # need to edit once multiple users
+    filename = db.Column(db.String(60), index=True)
     description = db.Column(db.String(120), index=True)
     sent = db.Column(db.String(20), default="Draft", nullable=False)
     made_by = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
