@@ -86,21 +86,21 @@ def edit_row(info: list, book_name, row=None):  # Edit a row
     workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save reclaim form
 
 
-def add_images(book_name, row, filename: str):
+def add_images(book_name, row, filename):
     """
+    Add images to excel file
     :param book_name: file name of form
     :param row: row number
     :param filename: image filename
-    :return:
     """
-    workbook = get_book(book_name)
+    workbook = get_book(book_name)  # Get workbook
     sheet_name = "Receipt for row " + str(row)
-    workbook.create_sheet(sheet_name)
+    workbook.create_sheet(sheet_name)  # Create a new sheet
     worksheet = workbook[sheet_name]
     img = Image(c.Config.IMAGE_UPLOADS + filename)
     img.anchor = "A1"
-    worksheet.add_image(img)
-    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
+    worksheet.add_image(img)  # Add image
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save workbook
 
 
 def add_signature(signature, book_name, date):
