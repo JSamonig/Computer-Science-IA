@@ -16,29 +16,31 @@ import os
 """
 
 
-def requirements(name: list, date, book_name):  # Add dates and names
+def requirements(name: list, date, book_name):
     """
+    Add dates and names
     :param name: user name [first, last]
     :param date: date
     :param book_name: book file name
     :return: file
     """
-    workbook = get_book(book_name)
-    worksheet = workbook["Expense Claim Form 14-11-19"]
-    bottom_row = 28
-    if find_available_row(worksheet) >= 27:
-        bottom_row = find_available_row(worksheet) + 1  # avoid overflow
+    workbook = get_book(book_name)  # Get workbook
+    worksheet = workbook["Expense Claim Form 14-11-19"]  # Get sheet
+    if find_available_row(worksheet) >= 27:  # Define bottom row based on empty rows
+        bottom_row = find_available_row(worksheet) + 1  # Avoid overflow
+    else:
+        bottom_row = 28  # Default row if there are no entries
     # Name at top
-    for i in range(2, 4):
-        name_cell = worksheet.cell(4, i)
-        name_cell.value = name[i - 2]
-    # Date at bottom
+    for column in range(2, 4):  # Column B-C
+        name_cell = worksheet.cell(4, column)
+        name_cell.value = name[column - 2]
+    # Date at bottom (Column F)
     date_cell = worksheet.cell(bottom_row, 6)
     date_cell.value = date
-    # Name at bottom
+    # Name at bottom (Column C)
     name_cell = worksheet.cell(bottom_row, 3)
     name_cell.value = name[0] + " " + name[1]
-    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save workbook
 
 
 def edit_row(info: list, book_name, row=None):  # Edit a row
