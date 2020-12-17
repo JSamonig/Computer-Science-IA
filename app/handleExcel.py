@@ -83,7 +83,7 @@ def edit_row(info: list, book_name, row=None):  # edit a row
             bottom=Side(style="thin"),
         )
         cell.border = thin_border  # Persistent border style
-        workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save reclaim form
+    workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save reclaim form
 
 
 def add_images(book_name, row, filename: str):
