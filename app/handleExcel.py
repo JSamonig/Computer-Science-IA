@@ -60,7 +60,7 @@ def edit_row(info: list, book_name, row=None):  # Edit a row
                 if (
                     ord(re.sub(r"\d+", "", str(merged_cell).split(":")[0]).lower()) - 96
                     < 7
-                ):  # If cell letter is > F
+                ):  # If cell letter is < F
                     merged_cell.shift(0, 1)  # Move unmerged cell down by one
             worksheet.insert_roworksheet(row)  # Insert a new row
     cell = worksheet.cell(row, 1)
