@@ -47,28 +47,33 @@ def edit_row(info: list, book_name, row=None):  # edit a row
     :param book_name: file name of sheet
     :param row: row number to edit
     """
-    workbook = get_book(book_name)
-    worksheet = workbook["Expense Claim Form 14-11-19"]
+    workbook = get_book(book_name)  # Get workbook
+    worksheet = workbook["Expense Claim Form 14-11-19"]  # Open worksheet
     if not row:
-        row = find_available_row(worksheet)
+        # If no explicit row is given
+        row = find_available_row(worksheet)  # Find the next available row
         if worksheet.cell(row, 5).value:
+            # If there is no free space
             merged_cells_range = worksheet.merged_cells.ranges
+            # Move all unmerged cells
             for merged_cell in merged_cells_range:
                 if (
                     ord(re.sub(r"\d+", "", str(merged_cell).split(":")[0]).lower()) - 96
                     < 7
-                ):
-                    merged_cell.shift(0, 1)
-            worksheet.insert_roworksheet(row)
+                ):  # If cell letter is > F
+                    merged_cell.shift(0, 1)  # Move unmerged cell down by one
+            worksheet.insert_roworksheet(row)  # Insert a new row
     cell = worksheet.cell(row, 1)
-    cell.value = row - 6
-    for j in range(1, 7):  # row 2 - row 5 (last value is calculated)
-        if j != 1:
-            cell = worksheet.cell(row, j)
-            cell.value = info[j - 2]
-            grey = colors.Color(rgb="D9D9D9")
-            cell.fill = fills.PatternFill(patternType="solid", fgColor=grey)
-        if j == 6:
+    cell.value = row - 6  # Add row index
+    for column in range(2, 7):  # column B - column F
+        # Fill in data
+        cell = worksheet.cell(row, column)
+        cell.value = info[column - 2]
+        # Consistent formatting
+        grey = colors.Color(rgb="D9D9D9")
+        cell.fill = fills.PatternFill(patternType="solid", fgColor=grey)
+        if column == 6:  # Column F
+            # Excel formatting (source: Excel)
             cell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
         cell.font = Font(bold=False)
         thin_border = Border(
@@ -77,8 +82,8 @@ def edit_row(info: list, book_name, row=None):  # edit a row
             top=Side(style="thin"),
             bottom=Side(style="thin"),
         )
-        cell.border = thin_border
-        workbook.save(c.Config.RECLAIM_ROUTE + book_name)
+        cell.border = thin_border  # Persistent border style
+        workbook.save(c.Config.RECLAIM_ROUTE + book_name)  # Save reclaim form
 
 
 def add_images(book_name, row, filename: str):
