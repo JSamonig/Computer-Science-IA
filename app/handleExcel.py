@@ -141,15 +141,6 @@ def delete_all_sheets():
         os.remove(os.path.join(c.Config.RECLAIM_ROUTE, f))
 
 
-def create_new_sheet(book_name):
-    """
-    create a new excel sheet
-    :param book_name: file name of book
-    """
-    workbook = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
-    workbook.save(c.Config.RECLAIM_ROUTE + book_name)
-
-
 def get_book(book_name):
     """
     :param book_name: filename of expenses form
@@ -157,5 +148,6 @@ def get_book(book_name):
     try:
         load_workbook(c.Config.RECLAIM_ROUTE + book_name)
     except FileNotFoundError:
-        create_new_sheet(book_name)
+        workbook = load_workbook(c.Config.STATIC + "Expenses form.xlsx")
+        workbook.save(c.Config.RECLAIM_ROUTE + book_name)
     return load_workbook(c.Config.RECLAIM_ROUTE + book_name)
