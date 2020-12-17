@@ -43,37 +43,43 @@ def validate_excel(filename):
 
 def create_excel(file_id, current_user, signature=None):
     """
-    create an excel sheet
+    Create an excel sheet
     :param file_id: file id of reclaim form
     :param current_user: current user object
     :param signature: signature file name
     """
+    # Delete sheets in the reclaim form folder - avoid corruption
     handleExcel.delete_all_sheets()
     file = (
         db.session.query(reclaim_forms)
         .filter_by(made_by=current_user.id)
         .filter_by(id=file_id)
         .first_or_404()
-    )
+    )  # Query reclaim form file
     rows = (
         db.session.query(reclaim_forms_details)
         .filter_by(made_by=current_user.id)
         .filter_by(form_id=file_id)
         .all()
-    )
-    user = User.query.get(current_user.id)
-    date = datetime.datetime.now().strftime("%d/%m/%Y")
+    )  # Query reclaim form rows
+    user = User.query.get(current_user.id)  # Query current user
+    date = datetime.datetime.now().strftime(
+        "%d/%m/%Y"
+    )  # Get current date in string format
     handleExcel.requirements(
         [str(user.first_name), str(user.last_name)], str(date), str(file.filename)
-    )
+    )  # Fill in Date and name
     if signature:
+        # Add a signature if one is present
         handleExcel.add_signature(signature, file.filename, date)
     for row in rows:
+        # Fill in all the rows
         info = [row.date_receipt, row.description, row.miles, row.account_id, row.Total]
         handleExcel.edit_row(info, file.filename, row.row_id)
         if row.image_name:
+            # If there is a receipt, paste it into the sheet
             handleExcel.add_images(file.filename, row.row_id, row.image_name)
-    return file
+    return file  # Return the file database object
 
 
 # https://stackoverflow.com/questions/876853/generating-color-ranges-in-python
