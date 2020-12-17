@@ -73,7 +73,7 @@ def edit_row(info: list, book_name, row=None):  # edit a row
         grey = colors.Color(rgb="D9D9D9")
         cell.fill = fills.PatternFill(patternType="solid", fgColor=grey)
         if column == 6:  # Column F
-            # Excel formatting (source: Excel)
+            # Excel formatting as currency (source: Excel)
             cell.number_format = '_-[$£-en-GB]* #,##0.00_-;-[$£-en-GB]* #,##0.00_-;_-[$£-en-GB]* "-"??_-;_-@_-'
         cell.font = Font(bold=False)
         thin_border = Border(
