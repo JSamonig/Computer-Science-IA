@@ -41,7 +41,7 @@ def requirements(name: list, date, book_name):  # Add dates and names
     workbook.save(c.Config.RECLAIM_ROUTE + book_name)
 
 
-def edit_row(info: list, book_name, row=None):  # edit a row
+def edit_row(info: list, book_name, row=None):  # Edit a row
     """
     :param info: info = [date, amount of miles and description, amount of miles, account code, total calculated]
     :param book_name: file name of sheet
