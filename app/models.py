@@ -168,5 +168,6 @@ def verify_token(token, word, table=User, attribute="id"):
         AttributeError,
         jwt.ExpiredSignature,
         TypeError,
+        KeyError,
     ):
         return None
