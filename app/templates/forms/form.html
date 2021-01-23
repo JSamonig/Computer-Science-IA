@@ -11,67 +11,66 @@ $(document).ready(function(){
     format: 'dd/mm/yyyy',
     todayHighlight: true,
     autoclose: true,
-  };
+  }; // Settings for date input
   date_input.datepicker(options);
 })
+
 $('.datepicker').on('click', function(e) {
 e.preventDefault();
 $(this).attr("autocomplete", "off");
-});
+}); //Disable autocomplete
 
 $( document ).ready(function() {
-    // ajax selected account codes
-    var target = $('#accountCode2');
-    var target_parent = $("#accountCode2_parent")
+    // AJAX selected account codes
+    var target = $('#accountCode2'); // Second account code field
+    var target_parent = $("#accountCode2_parent") // Parent of second account code field
 
     function getCentres(id, centre=null) {
         $.ajax({
-            url: window.location.href,
+            url: window.location.href, // AJAX to current URL
             type: 'post',
-            data: {data: id},
+            data: {data: id}, // AJAX current selected ID (e.g. ART or ARC)
             success: function(response){
                 target.empty();
-                if (response["Data"]){
-                    target_parent.removeClass("d-none");
-                    // show second field
-                    var x;
+                if (response["Data"]){ // response["Data"] contains a list of associated cost centres
+                    target_parent.removeClass("d-none"); // show account code second field
+                    var x; // counter variable
                     for (x in response["Data"]) {
                         target.append('<option data-subtext="' + response["Data"][x] + '">'+ x +'</option>');
-                    }
-                    target.selectpicker('refresh');
-                    target.prop('required', true);
+                    } // Add cost centre option to picker
+                    target.selectpicker('refresh'); // Refresh picker
+                    target.prop('required', true); // Add required tag
                     if (centre){
                     target.selectpicker('val', centre[0]);
-                    }
+                    } // If the user has already completed these fields (is returning to edit), load selected cost centre
                 }
             }
         });
     }
 
-    var cost_centre = $('#cost_centre').data()["other"].split("'");
-    var account = $('#account').data()["other"].split("'");
-    account = [account[1], account[3]]
-    cost_centre = [cost_centre[1], cost_centre[3]]
-    getCentres(account[0], cost_centre);
+    var cost_centre = $('#cost_centre').data()["other"].split("'"); // Cost centre chosen e.g. ['21006', 'Minibus Charges']
+    var account = $('#account').data()["other"].split("'"); // Account code chosen e.g. ['ARC', 'Archery']
+    account = [account[1], account[3]] // ["[", "ARC", ", ", "Archery", "]"]
+    cost_centre = [cost_centre[1], cost_centre[3]] // ["[", "21006", ", ", "Minibus Charges", "]"]
+    getCentres(account[1], cost_centre[1]); // AJAX
 
     $('#accountCode').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-      var $option = $(this).find('option:selected'),
-      id = $option.val();
-      getCentres(id);
-      target_parent.removeClass("d-none");
-      // show second field
+      var $option = $(this).find('option:selected');
+      id = $option.val(); // Get current selected account id (e.g. ART)
+      getCentres(id); // AJAX back to server to get dynamic list of associated cost centres (e.g. 50001)
+      target_parent.removeClass("d-none"); // show second account code field
     });
 
     $('#miles').on('focusout', function () {
         if($('#miles').val() && !($('#total').val()) && !(Number.isNaN($('#miles').val())) ){
             $('#total').val($('#miles').val() * 0.45);
+            // Autocomplete total if miles contains a number and total is empty
         }
      });
-
-        
 });
 
 </script>
+
 {% endblock %}
 
 {% block app_content %}

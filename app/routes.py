@@ -74,84 +74,88 @@ def upload(file_id: str, row: str):
             row = 7  # If there are now previous rows, we will start at row 7 in the excel sheet.
     upload_form = forms.UploadForm()
     if request.method == "POST" and "submit" in request.form:
-        try:
-            file = (
-                db.session.query(reclaim_forms).filter_by(id=file_id).first()
-            )  # find reclaim form
-            handlefiles.revert_to_draft(file)
-            details = (
-                db.session.query(reclaim_forms_details)
-                .filter_by(made_by=current_user.id)
-                .filter_by(form_id=file_id)
-                .filter_by(row_id=int(row))
-                .first()
-            )  # find specific entry
-            if details:  # if the entry exists
-                try:
-                    if details.image_name:  # if an image is already uploaded
-                        os.remove(
-                            os.path.join(
-                                app.config["IMAGE_UPLOADS"], details.image_name
-                            )
-                        )  # delete the existing image
-                except FileNotFoundError:
-                    details.image_name = None
-                    db.session.commit()
-            detected_extension = handlefiles.validate_image(
-                upload_form.file.data.stream
-            )  # detect extension of image
-            if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
-                flash(
-                    "Incorrect file extension", category="alert alert-danger"
-                )  # error if the extension is not allowed
-                return render_template(
-                    "forms/upload.html", form=upload_form, dark=current_user.dark
-                )
-            filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
-            upload_form.file.data.save(
-                app.config["IMAGE_UPLOADS"] + filename
-            )  # save image under filename
-            user = User.query.filter_by(
-                id=current_user.id
-            ).first_or_404()  # get the user
-            data = OCR.run(
-                filename, user.use_taggun
-            )  # run OCR, with users taggun option
-            img = Image.open(
-                app.config["IMAGE_UPLOADS"] + filename
-            )  # resize image after OCR
-            """
-            From:
-            https://stackoverflow.com/questions/273946/how-do-i-resize-an-image-using-pil-and-maintain-its-aspect-ratio
-            """
-            base_width = 500
-            w_percent = base_width / float(img.size[0])
-            h_size = int((float(img.size[1]) * float(w_percent)))
-            img = img.resize((base_width, h_size), Image.ANTIALIAS)
-            img.save(app.config["IMAGE_UPLOADS"] + filename)
-            if not details:  # create new row if it doesn't exist
-                details = reclaim_forms_details(
-                    date_receipt=data["date_receipt"],
-                    Total=data["total"],
-                    image_name=filename,
-                    made_by=current_user.id,
-                    row_id=row,
-                    form_id=file_id,
-                )
-                db.session.add(details)  # add to session
-            else:
-                details.date_receipt = data["date_receipt"]
-                details.Total = data["total"]
-                details.image_name = filename  # results of OCR
-            db.session.commit()  # commit to DB
-        except AttributeError:  # if any of the database values do not exist, or there is an unexpected AttributeError
-            flash(
-                "Please try again or use a different file.",
+
+        file = (
+            db.session.query(reclaim_forms).filter_by(id=file_id).first()
+        )  # find reclaim form
+        handlefiles.revert_to_draft(file)
+        details = (
+            db.session.query(reclaim_forms_details)
+            .filter_by(made_by=current_user.id)
+            .filter_by(form_id=file_id)
+            .filter_by(row_id=int(row))
+            .first()
+        )  # find specific entry
+        if details:  # if the entry exists
+            try:
+                if details.image_name:  # if an image is already uploaded
+                    os.remove(
+                        os.path.join(
+                            app.config["IMAGE_UPLOADS"], details.image_name
+                        )
+                    )  # delete the existing image
+            except FileNotFoundError:
+                details.image_name = None
+                db.session.commit()
+        detected_extension = handlefiles.validate_image(
+            upload_form.file.data.stream
+        )  # detect extension of image
+        # Fix .jpg bug
+        if (
+            upload_form.file.data.filename.split(".")[1] == "jpg"
+            and detected_extension is None
+        ):
+            detected_extension = "jpg"
+        if detected_extension not in c.Config.ALLOWED_EXTENSIONS_IMAGES:
+            flash(Markup(
+                "Incorrect file extension. Only <b>{}</b> file types are allowed.".format(
+                    ", ".join(c.Config.ALLOWED_EXTENSIONS_IMAGES[:-1])
+                    + ", and "
+                    + c.Config.ALLOWED_EXTENSIONS_IMAGES[-1]
+                )),
                 category="alert alert-danger",
-            )
+            )  # error if the extension is not allowed
             return render_template(
                 "forms/upload.html", form=upload_form, dark=current_user.dark
             )
+        filename = str(uuid.uuid4()) + "." + detected_extension  # make new filename
+        upload_form.file.data.save(
+            app.config["IMAGE_UPLOADS"] + filename
+        )  # save image under filename
+        user = User.query.filter_by(
+            id=current_user.id
+        ).first_or_404()  # get the user
+        data = OCR.run(
+            filename, user.use_taggun
+        )  # run OCR, with users taggun option
+        img = Image.open(
+            app.config["IMAGE_UPLOADS"] + filename
+        )  # resize image after OCR
+        """
+        From:
+        https://stackoverflow.com/questions/273946/how-do-i-resize-an-image-using-pil-and-maintain-its-aspect-ratio
+        """
+        base_width = 500
+        w_percent = base_width / float(img.size[0])
+        h_size = int((float(img.size[1]) * float(w_percent)))
+        img = img.resize((base_width, h_size), Image.ANTIALIAS)
+        img.save(app.config["IMAGE_UPLOADS"] + filename)
+        if not details:  # create new row if it doesn't exist
+            details = reclaim_forms_details(
+                date_receipt=data["date_receipt"],
+                Total=data["total"],
+                image_name=filename,
+                made_by=current_user.id,
+                row_id=row,
+                form_id=file_id,
+            )
+            db.session.add(details)  # add to session
+        else:
+            details.date_receipt = data["date_receipt"]
+            details.Total = data["total"]
+            details.image_name = filename  # results of OCR
+        db.session.commit()  # commit to DB
+
         if (
             details.Total is None or details.date_receipt is None
         ):  # If OCR could not find a value
@@ -725,7 +729,7 @@ def register():
         )
         return redirect(url_for("login"))
     return render_template(
-        "user/register.html", title="Register", form_title="Register", form=my_form
+        "user/register. html", title="Register", form_title="Register", form=my_form
     )
 
 

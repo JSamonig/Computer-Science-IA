@@ -134,14 +134,11 @@ def get_token(my_object, word, user, expires_in=600):
     :return: token string
     """
     to_decode = my_object.id
+    user_decode = user
     if hasattr(user, "email"):  # if user is an object not a string
-        return jwt.encode(
-            {word: to_decode, "exp": time.time() + expires_in, "user": user.email},
-            app.config["SECRET_KEY"],
-            algorithm="HS256",
-        ).decode("utf-8")
+        user_decode = user.email
     return jwt.encode(
-        {word: to_decode, "exp": time.time() + expires_in, "user": user},
+        {word: to_decode, "exp": time.time() + expires_in, "user": user_decode},
         app.config["SECRET_KEY"],
         algorithm="HS256",
     ).decode("utf-8")
