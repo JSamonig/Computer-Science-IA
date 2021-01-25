@@ -1452,11 +1452,8 @@ def sign_form(form_hash, is_hod):
         data = handlefiles.create_signature_back(
             email_user.split("@")[0]
         )  # create image to sign over
-        print("hi")
         if request.method == "POST":
-            print("hi1")
             if request.data:
-                print("hi23")
                 returned_bytes = bytearray(request.data)  # get back signature
                 image = Image.open(io.BytesIO(returned_bytes))  # convert bytes to image
                 signature = str(uuid.uuid4()) + ".png"
