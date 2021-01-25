@@ -729,7 +729,7 @@ def register():
         )
         return redirect(url_for("login"))
     return render_template(
-        "user/register. html", title="Register", form_title="Register", form=my_form
+        "user/register.html", title="Register", form_title="Register", form=my_form
     )
 
 
@@ -1416,7 +1416,7 @@ def line(year):
 
 
 @app.route("/sign_form/<form_hash>/<is_hod>", methods=["GET", "POST"])
-@app.route("/sign_form/<form_hash>", defaults={"is_hod": 0})
+@app.route("/sign_form/<form_hash>", defaults={"is_hod": 0}, methods=["GET", "POST"])
 def sign_form(form_hash, is_hod):
     """
     Authorise a reclaim form, by signing it
@@ -1452,8 +1452,11 @@ def sign_form(form_hash, is_hod):
         data = handlefiles.create_signature_back(
             email_user.split("@")[0]
         )  # create image to sign over
+        print("hi")
         if request.method == "POST":
+            print("hi1")
             if request.data:
+                print("hi23")
                 returned_bytes = bytearray(request.data)  # get back signature
                 image = Image.open(io.BytesIO(returned_bytes))  # convert bytes to image
                 signature = str(uuid.uuid4()) + ".png"
