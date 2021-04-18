@@ -1,24 +1,22 @@
-# Jakob Samonig Computer Science IA
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/JSamonig/IA.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JSamonig/IA/context:javascript)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/JSamonig/IA.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JSamonig/IA/context:python)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![Screenshot of app](for_readme.png)
+# Computer Science IA
 
 This project was made as part of my computer science IA. The purpose of this application is to automise expense
 reclaiming at my school, which is done manually using excel sheets. The application uses Python's Flask, HTML, CSS, 
 Javascript, and bootstrap.
 
 ## Setup
-1) make a pull request to download the files
-2) cd to directory containing IA
-2) install packages from `requirements.txt`
-3) set environment variable: `set FLASK_APP=run.py`
-4) run `flask db init`
-5) run `flask db migrate`
-6) run `flask db upgrade`
-6) run `IA/app/updating/update_database.py`
-7) run `flask run`
-8) open `localhost:5000`
+1) locate the project files
+2) cd to directory containing the `app` folder
+3) Setup python virtual environment
+4) Install Tesseract.exe from [here](https://github.com/tesseract-ocr/tessdoc/blob/master/Downloads.md), and update `TESSERACT_LOCATION` in `config.py`
+5) Install packages from `requirements.txt`
+6) set environment variable: `set FLASK_APP=run.py`
+7) run `flask db init`
+8) run `flask db migrate`
+9) run `flask db upgrade`
+10) run `IA/app/updating/update_database.py`
+11) run `flask run`
+12) open `localhost:5000`
 
 ### Running
 1) set environment variable: `set FLASK_APP=run.py`
