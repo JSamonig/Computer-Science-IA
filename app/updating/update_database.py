@@ -47,3 +47,12 @@ def main():
 
 
 main()  # run to initialize database
+
+'''
+Before running:
+Make sure config.env has been imported, and that the following commands have been run:
+
+flask db init
+flask db migrate
+flask db upgrade
+'''
